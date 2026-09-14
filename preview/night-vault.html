@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>A · Night Vault · Blingiton Looks</title>
+<meta name="theme-color" content="#111110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;1,6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@300;400;500&amp;display=swap">
+<link rel="stylesheet" href="assets/shell.css">
+<style>
+  body { background: #0D0C0B; }
+  .look-a { position: relative; overflow: hidden; color: #ECEAE4; font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; background: radial-gradient(560px circle at var(--lx) var(--ly), rgba(240,232,214,var(--ambient-a)), rgba(240,232,214,0) 70%), #0D0C0B;
+    --metal: linear-gradient(100deg, #8C8983 0%, #E9E6DF 30%, #9D9A93 52%, #F5F3EE 70%, #85827C 100%); --metal-solid: #ECEAE4; }
+  body[data-metal="gold"] .look-a { --metal: linear-gradient(100deg, #8A6A2E 0%, #F1D58F 30%, #A9843F 52%, #FFF0C4 70%, #8A6A2E 100%); --metal-solid: #E6C77E; }
+  .a-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 4vw, 56px); border-bottom: 1px solid rgba(236,234,228,0.08); }
+  .a-side { flex: 1; display: flex; align-items: center; gap: 30px; color: #B9B5AC; font-size: 14px; letter-spacing: 0.04em; }
+  .a-side.end { justify-content: flex-end; gap: 22px; }
+  .a-nav { display: none; gap: 30px; }
+  .a-logo { font-family: "Bodoni Moda", Didot, serif; font-size: clamp(19px, 2vw, 26px); font-weight: 500; letter-spacing: 0.3em; padding-inline-start: 0.3em; }
+  .a-search { display: none; }
+  @media (min-width: 900px) { .a-nav { display: flex; } .a-menu { display: none; } .a-search { display: block; } }
+  .a-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; padding: 44px clamp(20px, 4vw, 56px) 64px; align-items: center; }
+  .a-hero > * { min-width: 0; }
+  @media (min-width: 900px) { .a-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 56px; padding-block: 72px 96px; } }
+  @media (min-width: 1240px) { .a-hero { grid-template-columns: minmax(0, 1fr) 520px; } }
+  .a-eyebrow { display: flex; align-items: center; gap: 14px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #8E8A80; }
+  .a-eyebrow::before { content: ""; flex: 0 0 36px; height: 1px; background: currentColor; }
+  .a-h1 { margin: 24px 0 0; font-family: "Bodoni Moda", Didot, "Times New Roman", serif; font-weight: 400; font-size: clamp(58px, 10.5vw, 128px); line-height: 0.95; letter-spacing: -0.02em; }
+  .a-h1 em { --sr: 260px; }
+  .a-lede { margin: 28px 0 0; max-width: 30em; font-size: clamp(16px, 1.4vw, 18px); line-height: 1.6; font-weight: 300; color: #B9B5AC; text-wrap: pretty; }
+  .a-plate { margin-top: 36px; display: flex; flex-direction: column; max-width: 580px; border: 1px solid rgba(236,234,228,0.22); border-radius: 2px; }
+  .a-plate:focus-within { border-color: rgba(236,234,228,0.6); }
+  .a-plate label { flex: 1; display: flex; align-items: center; min-height: 60px; padding: 0 20px; }
+  .a-plate input { flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE4; font-size: 18px; outline: none; }
+  .a-plate input::placeholder { color: #6F6B63; }
+  .a-plate a { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; background: var(--metal-solid); color: #0D0C0B; font-size: 15px; font-weight: 500; }
+  @media (min-width: 600px) { .a-plate { flex-direction: row; } .a-plate label { min-height: 64px; } }
+  .a-name { margin: 22px 0 0; min-height: 1.3em; font-family: "Bodoni Moda", Didot, serif; font-style: italic; font-size: clamp(44px, 6vw, 68px); line-height: 1.3; text-align: left; overflow-wrap: anywhere; --sr: 180px; }
+  .a-name[data-script="ar"] { font-family: "Aref Ruqaa", "Bodoni Moda", serif; font-style: normal; }
+  .a-note { margin-top: 6px; font-size: 13px; color: #8E8A80; }
+  .a-arch { position: relative; margin: 0; width: 100%; max-width: 520px; justify-self: center; aspect-ratio: 520 / 680; overflow: hidden; background: #1A1917; border: 1px solid rgba(236,234,228,0.14); border-radius: 50% 50% 4px 4px / 38% 38% 4px 4px; }
+  .a-arch img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85) contrast(1.05); }
+  .a-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,12,11,0) 58%, rgba(13,12,11,0.9) 100%); }
+  .a-arch figcaption { position: absolute; left: 24px; right: 24px; bottom: 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .a-arch figcaption b { font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(19px, 2vw, 24px); }
+  .a-arch figcaption span { font-size: 15px; color: #B9B5AC; white-space: nowrap; }
+  .a-loved { padding: 0 clamp(20px, 4vw, 56px) 72px; }
+  .a-loved-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
+  .a-loved h2 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(32px, 4vw, 48px); }
+  .a-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #B9B5AC; letter-spacing: 0.04em; white-space: nowrap; }
+  .a-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 14px; }
+  @media (min-width: 900px) { .a-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; } }
+  .a-card-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 2px; background: #1A1917; }
+  .a-card-img img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.9); }
+  .a-card-name { margin-top: 12px; font-size: clamp(15px, 1.3vw, 17px); line-height: 1.35; }
+  .a-card-meta { margin-top: 4px; font-size: 13px; color: #8E8A80; }
+  .a-card-meta b { font-weight: 400; color: #B9B5AC; }
+  .a-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 32px; padding: 24px clamp(20px, 4vw, 56px); border-top: 1px solid rgba(236,234,228,0.08); font-size: 14px; color: #B9B5AC; }
+</style>
+</head>
+<body data-metal="silver">
+
+<div class="bar">
+  <a class="bar-back" href="index.html" aria-label="All looks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg><span>All looks</span></a>
+  <nav class="bar-tabs" aria-label="Looks">
+    <a href="night-vault.html" aria-current="page">A<span class="full">Night Vault</span></a>
+    <a href="hallmark-gallery.html">B<span class="full">Hallmark</span></a>
+    <a href="chrome-candy.html">C<span class="full">Chrome Candy</span></a>
+  </nav>
+  <div class="bar-tools">
+    <button class="icon-btn" id="tilt" type="button" aria-pressed="false" aria-label="Tilt your phone to move the light" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><path d="M3 9c-1 2-1 4 0 6"></path><path d="M21 9c1 2 1 4 0 6"></path></svg></button>
+    <button class="metal-btn" id="metal" type="button" aria-pressed="false"><span class="metal-dot" aria-hidden="true"></span><span id="metal-label">Silver</span></button>
+  </div>
+</div>
+
+<main class="look-a lit">
+  <header class="a-head">
+    <div class="a-side">
+      <svg class="a-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 8h16"></path><path d="M4 16h16"></path></svg>
+      <nav class="a-nav"><a href="#">Shop</a><a href="#">Name pieces</a><a href="#">Palestine</a><a href="#">Commissions</a></nav>
+    </div>
+    <div class="a-logo">BLINGITON</div>
+    <div class="a-side end">
+      <span lang="ar" dir="rtl" style="font-size: 15px;">عربي</span>
+      <svg class="a-search" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
+    </div>
+  </header>
+
+  <section class="a-hero">
+    <div>
+      <div class="a-eyebrow">925 Sterling Silver · Handcrafted in Jordan</div>
+      <h1 class="a-h1">Silver that<br>catches<br><em class="shine lit">the light.</em></h1>
+      <p class="a-lede">Timeless 925 sterling silver you'll love forever, plus names, words and verses made to order, ready in 4 days.</p>
+      <div class="a-plate">
+        <label for="name-a"><input id="name-a" data-name-input="out-a" type="text" maxlength="18" autocomplete="off" placeholder="Type a name / اكتب اسماً"></label>
+        <a href="#">Make it silver <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+      </div>
+      <p class="a-name shine lit" id="out-a" dir="auto">سارة</p>
+      <div class="a-note">Name necklaces from 45 JOD · See it in 3D before you order</div>
+    </div>
+    <figure class="a-arch lit">
+      <img src="img/10830.jpg" alt="Birthstone Name Necklace held in a palm" width="594" height="916">
+      <div class="a-shade"></div>
+      <div class="glint"></div>
+      <figcaption><b>Birthstone Name Necklace</b><span>60 JOD</span></figcaption>
+    </figure>
+  </section>
+
+  <section class="a-loved">
+    <div class="a-loved-head">
+      <h2>Most loved</h2>
+      <a class="a-link" href="#">Shop everything <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+    </div>
+    <div class="a-grid">
+      <div>
+        <div class="a-card-img lit"><img src="img/14712.jpeg" alt="Embroidery Ring" loading="lazy" width="594" height="542"><div class="glint"></div></div>
+        <div class="a-card-name">Embroidery Ring</div>
+        <div class="a-card-meta"><b>70 JOD</b> · Rings, Palestine</div>
+      </div>
+      <div>
+        <div class="a-card-img lit"><img src="img/13427.jpg" alt="Ocean Whisper Name Necklace" loading="lazy" width="594" height="578"><div class="glint"></div></div>
+        <div class="a-card-name">Ocean Whisper Name Necklace</div>
+        <div class="a-card-meta"><b>65 JOD</b> · Name pieces</div>
+      </div>
+      <div>
+        <div class="a-card-img lit"><img src="img/13712.jpeg" alt="Letter Pearl Necklace" loading="lazy" width="594" height="643"><div class="glint"></div></div>
+        <div class="a-card-name">Letter Pearl Necklace</div>
+        <div class="a-card-meta"><b>45 JOD</b> · Letters, Pearl</div>
+      </div>
+      <div>
+        <div class="a-card-img lit"><img src="img/10722.jpg" alt="Kufi Letters Bracelet" loading="lazy" width="594" height="755"><div class="glint"></div></div>
+        <div class="a-card-name">Kufi Letters Bracelet</div>
+        <div class="a-card-meta"><b>45 JOD</b> · Bracelets</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="a-foot">
+    <span>Genuine 925 sterling silver</span>
+    <span>DHL Express, worldwide</span>
+    <span>Custom pieces ready in 4 days</span>
+    <span lang="ar" dir="rtl">مجوهرات فضة ٩٢٥ تدوم للأبد</span>
+  </footer>
+</main>
+
+<aside class="next">
+  <div>
+    <div class="next-eyebrow">Look A of 3</div>
+    <h2>Does this feel like Blingiton?</h2>
+    <p>Have a look at all three, then reply with A, B or C, or tell us what you'd mix.</p>
+  </div>
+  <a class="next-btn" href="hallmark-gallery.html">Next: B · Hallmark Gallery <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+</aside>
+
+<script src="assets/light.js"></script>
+</body>
+</html>

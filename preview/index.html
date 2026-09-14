@@ -9,607 +9,109 @@
 <meta name="theme-color" content="#111110">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Aref+Ruqaa:wght@700&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;1,6..96,400..500&amp;family=IBM+Plex+Mono:wght@400&amp;family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&amp;family=Marhey:wght@600&amp;family=Readex+Pro:wght@400&amp;family=Rubik:wght@400;500&amp;family=Unbounded:wght@600..900&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;1,6..96,400..500&amp;family=IBM+Plex+Mono:wght@400&amp;family=Marhey:wght@600&amp;family=Unbounded:wght@700..900&amp;display=swap">
+<link rel="stylesheet" href="assets/shell.css">
 <style>
-  *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body { margin: 0; background: #111110; color: #EDEBE6; font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
-  img { display: block; max-width: 100%; }
-  a { color: inherit; text-decoration: none; }
-  button, input { font: inherit; }
-  [hidden] { display: none !important; }
-  :focus-visible { outline: 2px solid #8FB0FF; outline-offset: 3px; }
-  svg { flex-shrink: 0; }
-
-  /* ---------- light engine hooks ---------- */
-  .lit { --lx: 70%; --ly: 30%; }
-  .shine { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: radial-gradient(var(--sr, 300px) circle at var(--lx) var(--ly), #FFFFFF 0%, rgba(255,255,255,0) 70%), var(--metal); }
-  .glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: radial-gradient(var(--gr, 260px) circle at var(--lx) var(--ly), rgba(255,255,255,0.8), rgba(255,255,255,0) 70%); }
-  .sweep { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0) 60%); background-size: 260% 100%; background-position: 160% 0; animation: sweep 4s ease-in-out infinite; }
-  @keyframes sweep { 0% { background-position: 160% 0; } 50%, 100% { background-position: -60% 0; } }
-  .twinkle { position: absolute; animation: twinkle 2.6s ease-in-out infinite; }
-  @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1); } }
-  @media (prefers-reduced-motion: reduce) { .sweep, .twinkle { animation: none; } .sweep { opacity: 0; } html { scroll-behavior: auto; } }
-
-  /* ---------- presentation shell ---------- */
-  .bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px clamp(12px, 3vw, 40px); background: rgba(17,17,16,0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(237,235,230,0.08); }
-  .bar-brand { font-family: "Bodoni Moda", Didot, serif; font-size: 17px; letter-spacing: 0.22em; }
-  .bar-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: #252422; }
-  .bar-tabs a { display: grid; place-items: center; min-width: 44px; height: 38px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #A7A49D; }
-  .bar-tabs a .full { display: none; margin-inline-start: 6px; font-weight: 400; }
-  .bar-tabs a[aria-current="true"] { background: #EDEBE6; color: #111110; }
-  .metal-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 8px; border-radius: 999px; border: 1px solid rgba(237,235,230,0.18); background: transparent; color: #EDEBE6; font-size: 14px; cursor: pointer; white-space: nowrap; }
-  .metal-dot { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #F5F3EE, #8C8983 55%, #E9E6DF); }
-  body[data-metal="gold"] .metal-dot { background: linear-gradient(135deg, #FFF0C4, #A9843F 55%, #F1D58F); }
-  @media (min-width: 760px) { .bar-tabs a .full { display: inline; } }
-  @media (max-width: 420px) { .bar-brand { display: none; } }
-
-  .intro { padding: 44px clamp(20px, 5vw, 56px) 36px; max-width: 820px; }
-  .intro h1 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(36px, 6vw, 60px); line-height: 1.04; letter-spacing: -0.01em; text-wrap: balance; }
+  .intro { padding: clamp(40px, 7vw, 80px) clamp(20px, 5vw, 56px) 36px; max-width: 860px; }
+  .intro-brand { font-family: "Bodoni Moda", Didot, serif; font-size: 15px; letter-spacing: 0.3em; color: #A7A49D; }
+  .intro h1 { margin: 18px 0 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(38px, 6vw, 64px); line-height: 1.04; letter-spacing: -0.01em; text-wrap: balance; }
   .intro p { margin: 18px 0 0; max-width: 58ch; color: #A7A49D; font-size: 17px; line-height: 1.6; }
   .intro p strong { color: #EDEBE6; font-weight: 500; }
-  .tilt-btn { margin-top: 22px; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border-radius: 999px; border: 0; background: #EDEBE6; color: #111110; font-size: 15px; font-weight: 500; cursor: pointer; }
-  .tilt-btn[aria-pressed="true"] { background: #2B2A27; color: #EDEBE6; }
 
-  .look-wrap { scroll-margin-top: 58px; }
-  .label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 52px clamp(20px, 5vw, 56px) 22px; border-top: 1px solid rgba(237,235,230,0.08); }
-  .label .letter { font-family: "Bodoni Moda", Didot, serif; font-size: 44px; line-height: 1; }
-  .label h2 { margin: 0; font-size: 22px; font-weight: 500; }
-  .label p { flex-basis: 100%; margin: 8px 0 0; max-width: 60ch; color: #A7A49D; font-size: 16px; line-height: 1.55; }
+  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 clamp(20px, 5vw, 56px); }
+  @media (min-width: 900px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
+  .card { display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; background: #1C1B19; border: 1px solid rgba(237,235,230,0.08); transition: transform 0.2s ease, border-color 0.2s ease; }
+  .card:hover { transform: translateY(-3px); border-color: rgba(237,235,230,0.24); }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+  .vis { position: relative; height: 260px; overflow: hidden; }
+  .card-body { flex: 1; display: flex; flex-direction: column; padding: 18px 20px 22px; }
+  .card-top { display: flex; align-items: baseline; gap: 12px; }
+  .card-letter { font-family: "Bodoni Moda", Didot, serif; font-size: 34px; line-height: 1; }
+  .card h2 { margin: 0; font-size: 20px; font-weight: 500; }
+  .card p { flex: 1; margin: 8px 0 0; color: #A7A49D; font-size: 15px; line-height: 1.55; }
+  .card-cta { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
 
-  .outro { padding: 64px clamp(20px, 5vw, 56px) 88px; max-width: 820px; border-top: 1px solid rgba(237,235,230,0.08); }
-  .outro h2 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(34px, 5vw, 52px); line-height: 1.08; text-wrap: balance; }
-  .outro p { margin: 16px 0 0; max-width: 58ch; color: #A7A49D; font-size: 17px; line-height: 1.6; }
-  .picks { margin-top: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 520px; }
-  .picks a { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 14px; border: 1px solid rgba(237,235,230,0.14); }
-  .picks b { font-family: "Bodoni Moda", Didot, serif; font-size: 32px; font-weight: 400; line-height: 1; }
-  .picks span { font-size: 13px; color: #A7A49D; }
+  .vis-a { color: #ECEAE4; background: radial-gradient(420px circle at var(--lx) var(--ly), rgba(240,232,214,var(--ambient-a)), rgba(240,232,214,0) 70%), #0D0C0B;
+    --metal: linear-gradient(100deg, #8C8983 0%, #E9E6DF 30%, #9D9A93 52%, #F5F3EE 70%, #85827C 100%); }
+  .vis-a .txt { position: absolute; z-index: 1; left: 22px; top: 26px; margin: 0; font-family: "Bodoni Moda", Didot, serif; font-size: 38px; line-height: 0.98; letter-spacing: -0.01em; }
+  .vis-a .txt em { --sr: 160px; }
+  .vis-a .arch { position: absolute; right: 22px; bottom: -1px; width: 40%; max-width: 170px; aspect-ratio: 520 / 680; overflow: hidden; border: 1px solid rgba(236,234,228,0.14); border-bottom: 0; border-radius: 50% 50% 0 0 / 38% 38% 0 0; }
+  .vis-a .arch img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85); }
 
-  /* ---------- A · Night Vault ---------- */
-  .look-a { position: relative; overflow: hidden; color: #ECEAE4; font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; background: radial-gradient(680px circle at var(--lx) var(--ly), rgba(240,232,214,0.11), rgba(240,232,214,0) 70%), #0D0C0B;
-    --metal: linear-gradient(100deg, #8C8983 0%, #E9E6DF 30%, #9D9A93 52%, #F5F3EE 70%, #85827C 100%); --metal-solid: #ECEAE4; }
-  body[data-metal="gold"] .look-a { --metal: linear-gradient(100deg, #8A6A2E 0%, #F1D58F 30%, #A9843F 52%, #FFF0C4 70%, #8A6A2E 100%); --metal-solid: #E6C77E; }
-  .a-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 4vw, 56px); border-bottom: 1px solid rgba(236,234,228,0.08); }
-  .a-side { flex: 1; display: flex; align-items: center; gap: 30px; color: #B9B5AC; font-size: 14px; letter-spacing: 0.04em; }
-  .a-side.end { justify-content: flex-end; gap: 22px; }
-  .a-nav { display: none; gap: 30px; }
-  .a-logo { font-family: "Bodoni Moda", Didot, serif; font-size: clamp(19px, 2vw, 26px); font-weight: 500; letter-spacing: 0.3em; padding-inline-start: 0.3em; }
-  .a-search { display: none; }
-  @media (min-width: 900px) { .a-nav { display: flex; } .a-menu { display: none; } .a-search { display: block; } }
-  .a-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; padding: 44px clamp(20px, 4vw, 56px) 64px; align-items: center; }
-  .a-hero > *, .c-hero > * { min-width: 0; }
-  @media (min-width: 900px) { .a-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 56px; padding-block: 72px 96px; } }
-  @media (min-width: 1240px) { .a-hero { grid-template-columns: minmax(0, 1fr) 520px; } }
-  .a-eyebrow { display: flex; align-items: center; gap: 14px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #8E8A80; }
-  .a-eyebrow::before { content: ""; width: 36px; height: 1px; background: currentColor; }
-  .a-h1 { margin: 24px 0 0; font-family: "Bodoni Moda", Didot, "Times New Roman", serif; font-weight: 400; font-size: clamp(58px, 10.5vw, 128px); line-height: 0.95; letter-spacing: -0.02em; }
-  .a-h1 em { --sr: 320px; }
-  .a-lede { margin: 28px 0 0; max-width: 30em; font-size: clamp(16px, 1.4vw, 18px); line-height: 1.6; font-weight: 300; color: #B9B5AC; text-wrap: pretty; }
-  .a-plate { margin-top: 36px; display: flex; flex-direction: column; max-width: 580px; border: 1px solid rgba(236,234,228,0.22); border-radius: 2px; }
-  .a-plate:focus-within { border-color: rgba(236,234,228,0.6); }
-  .a-plate label { flex: 1; display: flex; align-items: center; min-height: 60px; padding: 0 20px; }
-  .a-plate input { flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE4; font-size: 18px; outline: none; }
-  .a-plate input::placeholder { color: #6F6B63; }
-  .a-plate a { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; background: var(--metal-solid); color: #0D0C0B; font-size: 15px; font-weight: 500; }
-  @media (min-width: 600px) { .a-plate { flex-direction: row; } .a-plate label { min-height: 64px; } }
-  .a-name { margin: 22px 0 0; min-height: 1.3em; font-family: "Bodoni Moda", Didot, serif; font-style: italic; font-size: clamp(44px, 6vw, 68px); line-height: 1.3; text-align: left; overflow-wrap: anywhere; --sr: 220px; }
-  .a-name[data-script="ar"] { font-family: "Aref Ruqaa", "Bodoni Moda", serif; font-style: normal; }
-  .a-note { margin-top: 6px; font-size: 13px; color: #8E8A80; }
-  .a-arch { position: relative; margin: 0; width: 100%; max-width: 520px; justify-self: center; aspect-ratio: 520 / 680; overflow: hidden; background: #1A1917; border: 1px solid rgba(236,234,228,0.14); border-radius: 50% 50% 4px 4px / 38% 38% 4px 4px; }
-  .a-arch img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85) contrast(1.05); }
-  .a-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,12,11,0) 58%, rgba(13,12,11,0.9) 100%); }
-  .a-arch figcaption { position: absolute; left: 24px; right: 24px; bottom: 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .a-arch figcaption b { font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(19px, 2vw, 24px); }
-  .a-arch figcaption span { font-size: 15px; color: #B9B5AC; white-space: nowrap; }
-  .a-loved { padding: 0 clamp(20px, 4vw, 56px) 72px; }
-  .a-loved-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
-  .a-loved h3 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(32px, 4vw, 48px); }
-  .a-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #B9B5AC; letter-spacing: 0.04em; white-space: nowrap; }
-  .a-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 14px; }
-  @media (min-width: 900px) { .a-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; } }
-  .a-card-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 2px; background: #1A1917; }
-  .a-card-img img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.9); }
-  .a-card-name { margin-top: 12px; font-size: clamp(15px, 1.3vw, 17px); line-height: 1.35; }
-  .a-card-meta { margin-top: 4px; font-size: 13px; color: #8E8A80; }
-  .a-card-meta b { font-weight: 400; color: #B9B5AC; }
-  .a-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 32px; padding: 24px clamp(20px, 4vw, 56px); border-top: 1px solid rgba(236,234,228,0.08); font-size: 14px; color: #B9B5AC; }
-
-  /* ---------- B · Hallmark Gallery ---------- */
-  .look-b { position: relative; overflow: hidden; background: #F2F1ED; color: #151515; font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  .vis-b { color: #151515; background: #F2F1ED;
     --metal: linear-gradient(100deg, #5E5E5C 0%, #CFCFCB 22%, #7A7A78 40%, #E4E4E0 55%, #6C6C6A 72%, #B9B9B5 100%); }
-  body[data-metal="gold"] .look-b { --metal: linear-gradient(100deg, #7A5B22 0%, #D9B86A 22%, #8E6C2E 40%, #F7E3A8 55%, #7F6026 72%, #C9A45A 100%); }
-  .mono { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; }
-  .b-top { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 40px; padding: 9px 16px; background: #151515; color: #F2F1ED; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
-  .b-top [lang="ar"] { font-family: "Readex Pro", sans-serif; font-size: 13px; letter-spacing: 0; text-transform: none; }
-  .b-top .wide { display: none; }
-  @media (min-width: 700px) { .b-top .wide { display: inline; } }
-  .b-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px clamp(16px, 3vw, 40px); border-bottom: 1px solid #151515; }
-  .b-logo { font-size: clamp(18px, 2vw, 22px); font-weight: 800; font-stretch: 125%; letter-spacing: 0.06em; }
-  .b-nav { display: none; gap: 28px; font-size: 15px; }
-  .b-tools { display: flex; align-items: center; gap: 18px; font-size: 13px; }
-  @media (min-width: 900px) { .b-nav { display: flex; } }
-  .b-hero { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); padding: 14px clamp(16px, 3vw, 40px) 48px; }
-  .b-925 { grid-column: 1 / -1; grid-row: 1; margin-inline-start: -0.03em; font-size: clamp(150px, 38vw, 520px); line-height: 0.8; font-weight: 900; font-stretch: 125%; letter-spacing: -0.045em; --sr: 300px; }
-  .b-card { position: relative; grid-column: 4 / -1; grid-row: 2; margin-top: -12vw; display: flex; flex-direction: column; border: 1px solid #151515; background: #FFFFFF; }
-  .b-card-img { position: relative; aspect-ratio: 460 / 540; overflow: hidden; }
-  .b-card-img img { width: 100%; height: 100%; object-fit: cover; }
-  .b-card-cap { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 1px solid #151515; font-size: 12px; letter-spacing: 0.04em; }
-  .b-card-cap span:last-child { white-space: nowrap; }
-  .b-stamp { position: absolute; z-index: 2; left: clamp(-56px, -5vw, -36px); top: clamp(-48px, -4vw, -32px); width: clamp(84px, 9vw, 132px); height: auto; }
-  .b-copy { grid-column: 1 / -1; grid-row: 3; margin-top: 36px; }
-  @media (min-width: 900px) {
-    .b-hero { padding-top: 24px; }
-    .b-925 { font-size: clamp(260px, 36vw, 520px); }
-    .b-card { grid-column: 8 / -1; grid-row: 1 / span 2; align-self: start; margin-top: 44px; }
-    .b-copy { grid-column: 1 / 8; grid-row: 2; margin-top: 28px; padding-inline-end: 32px; }
-  }
-  .b-h1 { margin: 0; font-size: clamp(40px, 4.6vw, 64px); line-height: 1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
-  .b-ar { margin: 14px 0 0; font-family: "Readex Pro", "Segoe UI", sans-serif; font-size: clamp(22px, 2vw, 28px); color: #5A5A57; }
-  .b-engrave { margin-top: 28px; display: flex; flex-direction: column; gap: 8px; max-width: 460px; }
-  .b-engrave label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #5A5A57; }
-  .b-engrave input { height: 50px; padding: 0 14px; border: 1px solid #151515; border-radius: 0; background: #FFFFFF; color: #151515; font-size: 17px; outline: none; }
-  .b-engrave input:focus { box-shadow: 0 0 0 3px rgba(21,21,21,0.15); }
-  .b-name { margin: 14px 0 0; min-height: 1.15em; font-size: clamp(44px, 6vw, 72px); font-weight: 800; font-stretch: 112%; line-height: 1.15; letter-spacing: -0.02em; text-align: left; overflow-wrap: anywhere; --sr: 200px; }
-  .b-name[data-script="ar"] { font-family: "Readex Pro", Archivo, sans-serif; font-weight: 400; letter-spacing: 0; }
-  .b-ctas { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 12px; }
-  .b-btn { display: inline-flex; align-items: center; min-height: 54px; padding: 0 26px; border: 1px solid #151515; font-size: 15px; font-weight: 500; }
-  .b-btn.dark { background: #151515; color: #F2F1ED; }
-  .b-cat { border-top: 1px solid #151515; border-bottom: 1px solid #151515; }
-  .b-cat-head { display: flex; justify-content: space-between; gap: 12px; padding: 16px clamp(16px, 3vw, 40px); border-bottom: 1px solid #151515; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
-  .b-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #151515; }
-  @media (min-width: 900px) { .b-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .b-item { display: flex; flex-direction: column; padding: clamp(12px, 1.4vw, 20px); background: #F2F1ED; }
-  .b-item-img { position: relative; aspect-ratio: 1; overflow: hidden; background: #E6E5E0; }
-  .b-item-img img { width: 100%; height: 100%; object-fit: cover; }
-  .b-no { margin-top: 12px; font-size: 11px; color: #7A7A76; }
-  .b-item-name { margin-top: 4px; font-size: clamp(15px, 1.3vw, 18px); font-weight: 500; line-height: 1.3; flex: 1; }
-  .b-price { margin-top: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 15px; font-variant-numeric: tabular-nums; }
-  .b-price .mono { font-size: 12px; text-decoration: underline; }
-  .b-facts { display: grid; gap: 20px; padding: 24px clamp(16px, 3vw, 40px) 36px; }
-  @media (min-width: 900px) { .b-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; } }
-  .b-facts div { display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
-  .b-facts .mono { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #7A7A76; }
+  .vis-b .num { position: absolute; left: 14px; top: 10px; font-family: Archivo, "Helvetica Neue", Arial, sans-serif; font-weight: 900; font-stretch: 125%; font-size: clamp(96px, 10vw, 132px); line-height: 0.8; letter-spacing: -0.045em; --sr: 160px; }
+  .vis-b .frame { position: absolute; right: 22px; bottom: 22px; width: 46%; max-width: 190px; aspect-ratio: 1; overflow: hidden; border: 1px solid #151515; background: #FFFFFF; }
+  .vis-b .frame img { width: 100%; height: 100%; object-fit: cover; }
+  .vis-b .cap { position: absolute; left: 22px; bottom: 24px; max-width: 42%; font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 11px; line-height: 1.5; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A57; }
 
-  /* ---------- C · Chrome Candy ---------- */
-  .look-c { position: relative; overflow: hidden; background: #EDEBF2; color: #1E1A2B; font-family: Rubik, system-ui, sans-serif; --pink: #F3B4CD; --lime: #BFDC9E;
+  .vis-c { color: #1E1A2B; background: #EDEBF2;
     --metal: linear-gradient(180deg, #DADBE4 0%, #9FA0B2 34%, #3D3E52 50%, #C9CAD6 60%, #7A7B8F 100%); }
-  body[data-metal="gold"] .look-c { --metal: linear-gradient(180deg, #FFF3CF 0%, #E2BE6C 36%, #6E4F18 50%, #F2D78F 62%, #A8823A 100%); }
-  .look-c .shine { -webkit-text-stroke: 1px rgba(30,26,43,0.3); }
-  .unb { font-family: Unbounded, "Arial Black", sans-serif; }
-  .c-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 8px; padding: 16px clamp(16px, 3vw, 40px); }
-  .c-logo { order: 1; font-size: clamp(18px, 2vw, 24px); font-weight: 800; letter-spacing: -0.02em; --sr: 120px; }
-  .c-tools { order: 2; margin-inline-start: auto; display: flex; gap: 8px; }
-  .c-nav { order: 3; flex-basis: 100%; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 3vw, 40px)); padding-inline: clamp(16px, 3vw, 40px); }
-  .c-nav::-webkit-scrollbar { display: none; }
-  @media (min-width: 1000px) { .c-nav { order: 2; flex-basis: auto; margin: 0 auto; padding: 0; overflow: visible; } .c-tools { order: 3; margin-inline-start: 0; } }
-  .c-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 18px; border-radius: 999px; background: rgba(255,255,255,0.7); border: 1px solid rgba(30,26,43,0.1); font-size: 15px; white-space: nowrap; }
-  .c-pill.dark { background: #1E1A2B; border-color: #1E1A2B; color: #FFFFFF; }
-  .c-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 18px clamp(16px, 3vw, 40px) 56px; }
-  @media (min-width: 1000px) { .c-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 600px); gap: 24px; align-items: center; } }
-  .c-title { position: relative; display: inline-block; }
-  .c-h1 { margin: 0; font-weight: 900; font-size: clamp(84px, 15vw, 188px); line-height: 0.9; letter-spacing: -0.05em; --sr: 240px; }
-  .c-sticker { position: absolute; z-index: 2; right: -30%; bottom: 8%; transform: rotate(-8deg); padding: 6px 20px 10px; border-radius: 999px; background: var(--pink); font-family: Marhey, Rubik, sans-serif; font-size: clamp(22px, 2.6vw, 36px); font-weight: 600; white-space: nowrap; box-shadow: 0 10px 24px rgba(30,26,43,0.15); }
-  .c-lede { margin: 24px 0 0; max-width: 32em; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.5; text-wrap: pretty; }
-  .c-field { margin-top: 24px; display: flex; align-items: center; gap: 8px; max-width: 620px; height: 68px; padding: 0 6px 0 24px; border-radius: 999px; border: 2px solid transparent; background: linear-gradient(#FFFFFF, #FFFFFF) padding-box, linear-gradient(135deg, #FFFFFF, #9A9BAD, #FFFFFF, #6E6F82) border-box; box-shadow: 0 14px 30px rgba(30,26,43,0.08); }
-  .c-field:focus-within { box-shadow: 0 0 0 3px rgba(30,26,43,0.18), 0 14px 30px rgba(30,26,43,0.08); }
-  .c-field input { flex: 1; min-width: 0; border: 0; background: transparent; color: #1E1A2B; font-size: 18px; outline: none; }
-  .c-field input::placeholder { color: #8A8699; }
-  .c-go { display: inline-flex; align-items: center; gap: 8px; height: 54px; padding: 0 20px; border-radius: 999px; background: #1E1A2B; color: #FFFFFF; font-size: 14px; font-weight: 600; white-space: nowrap; }
-  .c-name { margin: 18px 0 0; min-height: 1.2em; font-weight: 800; font-size: clamp(44px, 6vw, 76px); line-height: 1.2; letter-spacing: -0.03em; text-align: left; overflow-wrap: anywhere; --sr: 180px; }
-  .c-name[data-script="ar"] { font-family: Marhey, Rubik, sans-serif; letter-spacing: 0; }
-  .c-facts { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
-  .c-facts span { padding: 9px 15px; border-radius: 999px; background: #FFFFFF; }
-  .c-cluster { position: relative; width: 100%; max-width: 600px; justify-self: center; aspect-ratio: 600 / 700; }
-  .c-photo { position: absolute; overflow: hidden; border: 5px solid #FFFFFF; box-shadow: 0 24px 50px rgba(30,26,43,0.18); }
-  .c-photo img { width: 100%; height: 100%; object-fit: cover; }
-  .c-p1 { left: 3%; top: 3%; width: 46%; height: 56%; border-radius: 999px; transform: rotate(-6deg); }
-  .c-p2 { right: 1%; top: 20%; width: 50%; height: 60%; border-radius: 28px; transform: rotate(5deg); }
-  .c-p3 { left: 7%; bottom: 3%; width: 38%; aspect-ratio: 1; border-radius: 50%; transform: rotate(-3deg); }
-  .c-tag { position: absolute; z-index: 2; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: clamp(12px, 1.3vw, 16px); box-shadow: 0 8px 18px rgba(30,26,43,0.12); }
-  .c-t1 { left: 12%; top: 55%; background: var(--lime); transform: rotate(8deg); }
-  .c-t2 { right: 5%; top: 16%; background: var(--pink); transform: rotate(-6deg); }
-  .c-t3 { left: 33%; bottom: 3%; background: #FFFFFF; transform: rotate(4deg); }
-  .c-loved { padding: 0 clamp(16px, 3vw, 40px) 64px; }
-  .c-loved-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; }
-  .c-loved h3 { margin: 0; font-size: clamp(28px, 3vw, 40px); font-weight: 700; letter-spacing: -0.03em; }
-  .c-chips { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-  .c-chips::-webkit-scrollbar { display: none; }
-  .c-chips span { padding: 10px 16px; border-radius: 999px; background: #FFFFFF; font-size: 14px; white-space: nowrap; }
-  .c-chips span.on { background: #1E1A2B; color: #FFFFFF; }
-  .c-grid { margin-top: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  @media (min-width: 900px) { .c-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; } }
-  .c-card { display: flex; flex-direction: column; padding: 10px; border-radius: 24px; background: #FFFFFF; }
-  .c-card-img { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 16px; }
-  .c-card-img img { width: 100%; height: 100%; object-fit: cover; }
-  .c-card-name { flex: 1; margin: 12px 6px 0; font-size: 15px; font-weight: 500; line-height: 1.3; }
-  .c-card-row { margin: 8px 6px 2px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .c-price { font-size: 15px; font-weight: 600; }
-  .c-add { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: #1E1A2B; color: #FFFFFF; }
+  .vis-c .word { position: absolute; z-index: 1; left: 18px; top: 22px; margin: 0; font-family: Unbounded, "Arial Black", sans-serif; font-weight: 900; font-size: 64px; line-height: 0.9; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(30,26,43,0.3); --sr: 140px; }
+  .vis-c .pill { position: absolute; right: 26px; top: 26px; width: 36%; max-width: 150px; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 999px; border: 4px solid #FFFFFF; transform: rotate(-6deg); box-shadow: 0 18px 36px rgba(30,26,43,0.18); }
+  .vis-c .pill img { width: 100%; height: 100%; object-fit: cover; }
+  .vis-c .sticker { position: absolute; z-index: 2; left: 22px; bottom: 28px; transform: rotate(-6deg); padding: 4px 14px 7px; border-radius: 999px; background: #F3B4CD; font-family: Marhey, sans-serif; font-size: 20px; font-weight: 600; }
+  .vis-c .tag { position: absolute; z-index: 2; right: 40px; bottom: 26px; transform: rotate(8deg); padding: 5px 11px; border-radius: 999px; background: #BFDC9E; font-family: Unbounded, "Arial Black", sans-serif; font-size: 12px; font-weight: 700; }
+
+  .outro { padding: 56px clamp(20px, 5vw, 56px) 80px; max-width: 860px; }
+  .outro h2 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(30px, 4.5vw, 44px); line-height: 1.1; text-wrap: balance; }
+  .outro p { margin: 14px 0 0; max-width: 58ch; color: #A7A49D; font-size: 16px; line-height: 1.6; }
 </style>
 </head>
 <body data-metal="silver">
 
-<div class="bar">
-  <div class="bar-brand">BLINGITON</div>
-  <nav class="bar-tabs" aria-label="Looks">
-    <a href="#a" aria-current="true">A<span class="full">Night Vault</span></a>
-    <a href="#b">B<span class="full">Hallmark</span></a>
-    <a href="#c">C<span class="full">Chrome Candy</span></a>
-  </nav>
-  <button class="metal-btn" id="metal" type="button" aria-pressed="false"><span class="metal-dot" aria-hidden="true"></span><span id="metal-label">Silver</span></button>
-</div>
-
 <header class="intro">
-  <h1>Three looks for the new Blingiton website</h1>
-  <p>These are early designs made with <strong>your real pieces and prices</strong>. The idea behind all three: the site behaves like silver catching the light. <strong>Drag your finger across a design</strong> and the shine follows you. Tap the Silver button at the top to see everything gold plated.</p>
-  <button class="tilt-btn" id="tilt" type="button" aria-pressed="false" hidden>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><path d="M3 9c-1 2-1 4 0 6"></path><path d="M21 9c1 2 1 4 0 6"></path></svg>
-    <span id="tilt-label">Tilt your phone to shine</span>
-  </button>
+  <div class="intro-brand">BLINGITON</div>
+  <h1>Three looks for the new website</h1>
+  <p>Early designs made with <strong>your real pieces and prices</strong>. The idea behind all three: the site behaves like silver catching the light. Open each look and <strong>drag your finger across it</strong> to move the shine. The Silver button at the top switches every piece to gold plated.</p>
 </header>
 
-<!-- ============ A ============ -->
-<div class="look-wrap" id="a" data-look="a">
-  <div class="label">
-    <span class="letter">A</span>
-    <h2>Night Vault</h2>
-    <p>Dark and premium, like a jeweller's display case at night. Silver shines hardest against black.</p>
-  </div>
-  <section class="look-a lit" aria-label="Look A, Night Vault">
-    <div class="a-head">
-      <div class="a-side">
-        <svg class="a-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 8h16"></path><path d="M4 16h16"></path></svg>
-        <nav class="a-nav"><a href="#a">Shop</a><a href="#a">Name pieces</a><a href="#a">Palestine</a><a href="#a">Commissions</a></nav>
-      </div>
-      <div class="a-logo">BLINGITON</div>
-      <div class="a-side end">
-        <span lang="ar" dir="rtl" style="font-size: 15px;">عربي</span>
-        <svg class="a-search" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
-      </div>
+<div class="cards">
+  <a class="card" href="night-vault.html">
+    <div class="vis vis-a lit" aria-hidden="true">
+      <p class="txt">Silver that<br>catches<br><em class="shine lit">the light.</em></p>
+      <div class="arch"><img src="img/10830.jpg" alt="" width="594" height="916"></div>
     </div>
+    <div class="card-body">
+      <div class="card-top"><span class="card-letter">A</span><h2>Night Vault</h2></div>
+      <p>Dark and premium, like a jeweller's display case at night. Silver shines hardest against black.</p>
+      <span class="card-cta">View look A <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
+    </div>
+  </a>
 
-    <div class="a-hero">
-      <div>
-        <div class="a-eyebrow">925 Sterling Silver · Handcrafted in Jordan</div>
-        <h2 class="a-h1">Silver that<br>catches<br><em class="shine lit">the light.</em></h2>
-        <p class="a-lede">Timeless 925 sterling silver you'll love forever, plus names, words and verses made to order, ready in 4 days.</p>
-        <div class="a-plate">
-          <label for="name-a"><input id="name-a" data-name-input="out-a" type="text" maxlength="18" autocomplete="off" placeholder="Type a name / اكتب اسماً"></label>
-          <a href="#a">Make it silver <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
-        </div>
-        <p class="a-name shine lit" id="out-a" dir="auto">سارة</p>
-        <div class="a-note">Name necklaces from 45 JOD · See it in 3D before you order</div>
-      </div>
-      <figure class="a-arch lit">
-        <img src="img/10830.jpg" alt="Birthstone Name Necklace held in a palm" width="594" height="916">
-        <div class="a-shade"></div>
-        <div class="glint"></div>
-        <figcaption><b>Birthstone Name Necklace</b><span>60 JOD</span></figcaption>
-      </figure>
+  <a class="card" href="hallmark-gallery.html">
+    <div class="vis vis-b" aria-hidden="true">
+      <div class="num shine lit">925</div>
+      <div class="cap">No. 14712<br>Embroidery Ring<br>70 JOD</div>
+      <div class="frame"><img src="img/14712.jpeg" alt="" width="594" height="542"></div>
     </div>
+    <div class="card-body">
+      <div class="card-top"><span class="card-letter">B</span><h2>Hallmark Gallery</h2></div>
+      <p>Bright and clean like a fashion gallery, built around the 925 stamp on every piece. Calm, confident, editorial.</p>
+      <span class="card-cta">View look B <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
+    </div>
+  </a>
 
-    <div class="a-loved">
-      <div class="a-loved-head">
-        <h3>Most loved</h3>
-        <a class="a-link" href="#a">Shop everything <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
-      </div>
-      <div class="a-grid">
-        <div>
-          <div class="a-card-img lit"><img src="img/14712.jpeg" alt="Embroidery Ring" loading="lazy" width="594" height="542"><div class="glint"></div></div>
-          <div class="a-card-name">Embroidery Ring</div>
-          <div class="a-card-meta"><b>70 JOD</b> · Rings, Palestine</div>
-        </div>
-        <div>
-          <div class="a-card-img lit"><img src="img/13427.jpg" alt="Ocean Whisper Name Necklace" loading="lazy" width="594" height="578"><div class="glint"></div></div>
-          <div class="a-card-name">Ocean Whisper Name Necklace</div>
-          <div class="a-card-meta"><b>65 JOD</b> · Name pieces</div>
-        </div>
-        <div>
-          <div class="a-card-img lit"><img src="img/13712.jpeg" alt="Letter Pearl Necklace" loading="lazy" width="594" height="643"><div class="glint"></div></div>
-          <div class="a-card-name">Letter Pearl Necklace</div>
-          <div class="a-card-meta"><b>45 JOD</b> · Letters, Pearl</div>
-        </div>
-        <div>
-          <div class="a-card-img lit"><img src="img/10722.jpg" alt="Kufi Letters Bracelet" loading="lazy" width="594" height="755"><div class="glint"></div></div>
-          <div class="a-card-name">Kufi Letters Bracelet</div>
-          <div class="a-card-meta"><b>45 JOD</b> · Bracelets</div>
-        </div>
-      </div>
+  <a class="card" href="chrome-candy.html">
+    <div class="vis vis-c" aria-hidden="true">
+      <p class="word shine lit">bling<br>it on</p>
+      <div class="pill"><img src="img/10722.jpg" alt="" width="594" height="755"></div>
+      <span class="sticker" lang="ar" dir="rtl">اسمك بالفضة</span>
+      <span class="tag">45 JOD</span>
     </div>
-
-    <div class="a-foot">
-      <span>Genuine 925 sterling silver</span>
-      <span>DHL Express, worldwide</span>
-      <span>Custom pieces ready in 4 days</span>
-      <span lang="ar" dir="rtl">مجوهرات فضة ٩٢٥ تدوم للأبد</span>
+    <div class="card-body">
+      <div class="card-top"><span class="card-letter">C</span><h2>Chrome Candy</h2></div>
+      <p>Playful and loud, leaning into the name "Bling it on": chrome lettering, sticker price tags, sparkle. Closest to the Instagram vibe.</p>
+      <span class="card-cta">View look C <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
     </div>
-  </section>
-</div>
-
-<!-- ============ B ============ -->
-<div class="look-wrap" id="b" data-look="b">
-  <div class="label">
-    <span class="letter">B</span>
-    <h2>Hallmark Gallery</h2>
-    <p>Bright and clean like a fashion gallery, built around the 925 stamp on every piece. Calm, confident, editorial.</p>
-  </div>
-  <section class="look-b" aria-label="Look B, Hallmark Gallery">
-    <div class="b-top mono">
-      <span>DHL Express worldwide</span>
-      <span lang="ar" dir="rtl">شحن سريع لكل العالم</span>
-      <span class="wide">Custom orders ready in 4 days</span>
-    </div>
-    <div class="b-head">
-      <div class="b-logo">BLINGITON</div>
-      <nav class="b-nav"><a href="#b">Shop</a><a href="#b">Names &amp; letters</a><a href="#b">Palestine</a><a href="#b">Commission</a></nav>
-      <div class="b-tools">
-        <span class="mono">EN / <span lang="ar" style="font-family: 'Readex Pro', sans-serif;">ع</span></span>
-        <span class="mono">Bag (0)</span>
-      </div>
-    </div>
-
-    <div class="b-hero">
-      <div class="b-925 shine lit" aria-hidden="true">925</div>
-      <div class="b-card">
-        <svg class="b-stamp" viewBox="0 0 132 132" aria-hidden="true">
-          <ellipse cx="66" cy="66" rx="60" ry="36" fill="#F2F1ED" stroke="#151515" stroke-width="2.5" transform="rotate(-14 66 66)"></ellipse>
-          <ellipse cx="66" cy="66" rx="52" ry="28" fill="none" stroke="#151515" stroke-width="1" transform="rotate(-14 66 66)"></ellipse>
-          <text x="66" y="76" text-anchor="middle" font-family="Archivo, Arial, sans-serif" font-size="30" font-weight="800" fill="#151515" transform="rotate(-14 66 66)">925</text>
-        </svg>
-        <div class="b-card-img lit"><img src="img/14712.jpeg" alt="Embroidery Ring pair on a white plinth" width="594" height="542"><div class="glint"></div></div>
-        <div class="b-card-cap mono"><span>No. 14712 · Embroidery Ring</span><span>70 JOD</span></div>
-      </div>
-      <div class="b-copy">
-        <h2 class="b-h1">Timeless silver<br>you'll love forever.</h2>
-        <p class="b-ar" lang="ar" dir="rtl" style="text-align: left;">فضة ٩٢٥ تدوم للأبد</p>
-        <div class="b-engrave">
-          <label class="mono" for="name-b">Engrave a name</label>
-          <input id="name-b" data-name-input="out-b" type="text" maxlength="18" autocomplete="off" placeholder="Lina / لينا">
-        </div>
-        <p class="b-name shine lit" id="out-b" dir="auto">Lina</p>
-        <div class="b-ctas">
-          <a class="b-btn dark" href="#b">Shop the collection</a>
-          <a class="b-btn" href="#b">Commission a piece</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="b-cat">
-      <div class="b-cat-head mono"><span>Catalogue · most loved</span><a href="#b">Shop everything →</a></div>
-      <div class="b-grid">
-        <div class="b-item">
-          <div class="b-item-img lit"><img src="img/13427.jpg" alt="Ocean Whisper Name Necklace" loading="lazy" width="594" height="578"><div class="glint"></div></div>
-          <span class="b-no mono">No. 13427</span>
-          <span class="b-item-name">Ocean Whisper Name Necklace</span>
-          <div class="b-price"><span>65 JOD</span><span class="mono">Personalise</span></div>
-        </div>
-        <div class="b-item">
-          <div class="b-item-img lit"><img src="img/10830.jpg" alt="Birthstone Name Necklace" loading="lazy" width="594" height="916"><div class="glint"></div></div>
-          <span class="b-no mono">No. 10830</span>
-          <span class="b-item-name">Birthstone Name Necklace</span>
-          <div class="b-price"><span>60 JOD</span><span class="mono">Personalise</span></div>
-        </div>
-        <div class="b-item">
-          <div class="b-item-img lit"><img src="img/17125.jpg" alt="Ayet AlKursi Bracelet" loading="lazy" width="594" height="777"><div class="glint"></div></div>
-          <span class="b-no mono">No. 17125</span>
-          <span class="b-item-name">Ayet AlKursi Bracelet</span>
-          <div class="b-price"><span>150 JOD</span></div>
-        </div>
-        <div class="b-item">
-          <div class="b-item-img lit"><img src="img/10722.jpg" alt="Kufi Letters Bracelet" loading="lazy" width="594" height="755"><div class="glint"></div></div>
-          <span class="b-no mono">No. 10722</span>
-          <span class="b-item-name">Kufi Letters Bracelet</span>
-          <div class="b-price"><span>45 JOD</span><span class="mono">Personalise</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="b-facts">
-      <div><span class="mono">Material</span><span>Genuine 925 sterling silver, or 18K gold plated</span></div>
-      <div><span class="mono">Shipping</span><span>DHL Express, worldwide</span></div>
-      <div><span class="mono">Custom</span><span>Names, words and verses, ready in 4 days</span></div>
-    </div>
-  </section>
-</div>
-
-<!-- ============ C ============ -->
-<div class="look-wrap" id="c" data-look="c">
-  <div class="label">
-    <span class="letter">C</span>
-    <h2>Chrome Candy</h2>
-    <p>Playful and loud, leaning into the name "Bling it on": chrome lettering, sticker price tags, sparkle. Closest to the Instagram vibe.</p>
-  </div>
-  <section class="look-c" aria-label="Look C, Chrome Candy">
-    <div class="c-head">
-      <div class="c-logo unb shine lit">bling it on</div>
-      <nav class="c-nav" aria-label="Look C categories">
-        <a class="c-pill dark" href="#c">shop</a>
-        <a class="c-pill" href="#c">names</a>
-        <a class="c-pill" href="#c">charmie</a>
-        <a class="c-pill" href="#c">palestine</a>
-        <a class="c-pill" href="#c">custom</a>
-      </nav>
-      <div class="c-tools">
-        <span class="c-pill" lang="ar" dir="rtl">عربي</span>
-        <span class="c-pill" style="padding: 0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></span>
-      </div>
-    </div>
-
-    <div class="c-hero">
-      <div>
-        <div class="c-title">
-          <h2 class="c-h1 unb shine lit">bling<br>it on</h2>
-          <span class="c-sticker" lang="ar" dir="rtl">اسمك بالفضة</span>
-        </div>
-        <p class="c-lede">Timeless 925 sterling silver with a little extra sparkle, and your name, made to order in 4 days.</p>
-        <label class="c-field" for="name-c">
-          <input id="name-c" data-name-input="out-c" type="text" maxlength="16" autocomplete="off" placeholder="type a name…">
-          <a class="c-go unb" href="#c">make it bling <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
-        </label>
-        <p class="c-name unb shine lit" id="out-c" dir="auto">Sara</p>
-        <div class="c-facts">
-          <span style="background: var(--lime);">925 sterling silver</span>
-          <span>DHL express worldwide</span>
-          <span style="background: var(--pink);">names from 45 JOD</span>
-        </div>
-      </div>
-      <div class="c-cluster">
-        <div class="c-photo c-p1"><img src="img/10722.jpg" alt="Kufi Letters Bracelet on orange" loading="lazy" width="594" height="755"><div class="sweep"></div></div>
-        <div class="c-photo c-p2"><img src="img/13427.jpg" alt="Ocean Whisper Name Necklace" loading="lazy" width="594" height="578"><div class="sweep" style="animation-delay: 1.3s;"></div></div>
-        <div class="c-photo c-p3"><img src="img/13712.jpeg" alt="Letter Pearl Necklace" loading="lazy" width="594" height="643"><div class="sweep" style="animation-delay: 2.6s;"></div></div>
-        <span class="c-tag c-t1 unb">45 JOD</span>
-        <span class="c-tag c-t2 unb">65 JOD</span>
-        <span class="c-tag c-t3 unb">45 JOD</span>
-        <svg class="twinkle" width="40" height="40" viewBox="0 0 24 24" style="right: 44%; top: 4%;" aria-hidden="true"><path d="M12 1c.6 5.4 5.6 10.4 11 11-5.4.6-10.4 5.6-11 11-.6-5.4-5.6-10.4-11-11 5.4-.6 10.4-5.6 11-11z" fill="#1E1A2B"></path></svg>
-        <svg class="twinkle" width="26" height="26" viewBox="0 0 24 24" style="right: 8%; bottom: 10%; animation-delay: 0.9s;" aria-hidden="true"><path d="M12 1c.6 5.4 5.6 10.4 11 11-5.4.6-10.4 5.6-11 11-.6-5.4-5.6-10.4-11-11 5.4-.6 10.4-5.6 11-11z" fill="#1E1A2B"></path></svg>
-        <svg class="twinkle" width="30" height="30" viewBox="0 0 24 24" style="left: 46%; top: 62%; animation-delay: 1.7s;" aria-hidden="true"><path d="M12 1c.6 5.4 5.6 10.4 11 11-5.4.6-10.4 5.6-11 11-.6-5.4-5.6-10.4-11-11 5.4-.6 10.4-5.6 11-11z" fill="#1E1A2B"></path></svg>
-      </div>
-    </div>
-
-    <div class="c-loved">
-      <div class="c-loved-head">
-        <h3 class="unb">most loved</h3>
-        <div class="c-chips"><span class="on">all</span><span>names</span><span>letters</span><span>rings</span><span>bracelets</span></div>
-      </div>
-      <div class="c-grid">
-        <div class="c-card">
-          <div class="c-card-img"><img src="img/14712.jpeg" alt="Embroidery Ring" loading="lazy" width="594" height="542"><div class="sweep" style="animation-delay: 0.4s;"></div></div>
-          <span class="c-card-name">Embroidery Ring</span>
-          <div class="c-card-row"><span class="c-price unb">70 JOD</span><span class="c-add" aria-label="Add Embroidery Ring"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span></div>
-        </div>
-        <div class="c-card">
-          <div class="c-card-img"><img src="img/10830.jpg" alt="Birthstone Name Necklace" loading="lazy" width="594" height="916"><div class="sweep" style="animation-delay: 1.4s;"></div></div>
-          <span class="c-card-name">Birthstone Name Necklace</span>
-          <div class="c-card-row"><span class="c-price unb">60 JOD</span><span class="c-add" aria-label="Add Birthstone Name Necklace"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span></div>
-        </div>
-        <div class="c-card">
-          <div class="c-card-img"><img src="img/16154.jpg" alt="Charming Tennis Bracelet" loading="lazy" width="594" height="792"><div class="sweep" style="animation-delay: 2.4s;"></div></div>
-          <span class="c-card-name">Charming Tennis Bracelet</span>
-          <div class="c-card-row"><span class="c-price unb">75 JOD</span><span class="c-add" aria-label="Add Charming Tennis Bracelet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span></div>
-        </div>
-        <div class="c-card">
-          <div class="c-card-img"><img src="img/17125.jpg" alt="Ayet AlKursi Bracelet" loading="lazy" width="594" height="777"><div class="sweep" style="animation-delay: 3.2s;"></div></div>
-          <span class="c-card-name">Ayet AlKursi Bracelet</span>
-          <div class="c-card-row"><span class="c-price unb">150 JOD</span><span class="c-add" aria-label="Add Ayet AlKursi Bracelet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span></div>
-        </div>
-      </div>
-    </div>
-  </section>
+  </a>
 </div>
 
 <footer class="outro">
   <h2>Which one feels like Blingiton?</h2>
-  <p>Reply with A, B or C, or tell us what to mix (for example "A's colours with C's price stickers"). Photos come from the current website; the finished site will look even better with a consistent photoshoot.</p>
-  <div class="picks">
-    <a href="#a"><b>A</b><span>Night Vault</span></a>
-    <a href="#b"><b>B</b><span>Hallmark</span></a>
-    <a href="#c"><b>C</b><span>Chrome Candy</span></a>
-  </div>
+  <p>Reply with A, B or C, or tell us what you'd mix (for example "A's colours with C's price stickers"). The photos come from the current website; the finished site will look even better after a consistent photoshoot.</p>
 </footer>
 
-<script>
-(() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-  // ---- light engine: one light source shared by every .lit element ----
-  const lit = new Set();
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) e.isIntersecting ? lit.add(e.target) : lit.delete(e.target);
-  }, { rootMargin: '120px' });
-  document.querySelectorAll('.lit').forEach((el) => io.observe(el));
-
-  let tx = innerWidth * 0.68, ty = innerHeight * 0.4, cx = tx, cy = ty;
-  let lastInput = -Infinity, tilt = null;
-  const point = (x, y) => { tx = x; ty = y; lastInput = performance.now(); };
-  addEventListener('pointermove', (e) => point(e.clientX, e.clientY), { passive: true });
-  addEventListener('touchstart', (e) => { const t = e.touches[0]; if (t) point(t.clientX, t.clientY); }, { passive: true });
-  addEventListener('touchmove', (e) => { const t = e.touches[0]; if (t) point(t.clientX, t.clientY); }, { passive: true });
-
-  function frame(now) {
-    const active = now - lastInput < 2000;
-    if (tilt) {
-      tx = innerWidth * clamp(0.5 + tilt.g / 45, 0, 1);
-      ty = innerHeight * clamp(0.5 + (tilt.b - 45) / 45, 0, 1);
-    } else if (!active && !reduce) {
-      tx = innerWidth * (0.5 + 0.4 * Math.sin(now / 2600));
-      ty = innerHeight * (0.45 + 0.32 * Math.sin(now / 1900 + 1.3));
-    }
-    const k = tilt ? 0.2 : active ? 0.35 : 0.05;
-    cx += (tx - cx) * k;
-    cy += (ty - cy) * k;
-    for (const el of lit) {
-      const r = el.getBoundingClientRect();
-      el.style.setProperty('--lx', (cx - r.left).toFixed(1) + 'px');
-      el.style.setProperty('--ly', (cy - r.top).toFixed(1) + 'px');
-    }
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-
-  // ---- tilt to shine (phones) ----
-  const tiltBtn = document.getElementById('tilt');
-  const tiltLabel = document.getElementById('tilt-label');
-  const onTilt = (e) => { if (e.gamma != null) tilt = { g: e.gamma, b: e.beta }; };
-  if ('DeviceOrientationEvent' in window && matchMedia('(pointer: coarse)').matches) {
-    tiltBtn.hidden = false;
-    tiltBtn.addEventListener('click', async () => {
-      if (tiltBtn.getAttribute('aria-pressed') === 'true') {
-        removeEventListener('deviceorientation', onTilt);
-        tilt = null;
-        tiltBtn.setAttribute('aria-pressed', 'false');
-        tiltLabel.textContent = 'Tilt your phone to shine';
-        return;
-      }
-      try {
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-          const state = await DeviceOrientationEvent.requestPermission();
-          if (state !== 'granted') { tiltLabel.textContent = 'Tilt is blocked, drag your finger instead'; return; }
-        }
-      } catch (err) {
-        tiltLabel.textContent = 'Tilt is blocked, drag your finger instead';
-        return;
-      }
-      addEventListener('deviceorientation', onTilt);
-      tiltBtn.setAttribute('aria-pressed', 'true');
-      tiltLabel.textContent = 'Tilt is on, tap to stop';
-    });
-  }
-
-  // ---- silver / gold ----
-  const metalBtn = document.getElementById('metal');
-  const metalLabel = document.getElementById('metal-label');
-  metalBtn.addEventListener('click', () => {
-    const gold = document.body.dataset.metal !== 'gold';
-    document.body.dataset.metal = gold ? 'gold' : 'silver';
-    metalBtn.setAttribute('aria-pressed', String(gold));
-    metalLabel.textContent = gold ? 'Gold' : 'Silver';
-  });
-
-  // ---- live name previews ----
-  const arabic = /[؀-ۿ]/;
-  document.querySelectorAll('[data-name-input]').forEach((input) => {
-    const out = document.getElementById(input.dataset.nameInput);
-    const sample = out.textContent;
-    const update = () => {
-      out.textContent = input.value.trim() || sample;
-      out.dataset.script = arabic.test(out.textContent) ? 'ar' : 'en';
-    };
-    input.addEventListener('input', update);
-    update();
-  });
-
-  // ---- highlight the look in view ----
-  const tabs = [...document.querySelectorAll('.bar-tabs a')];
-  const so = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      tabs.forEach((t) => t.setAttribute('aria-current', String(t.hash === '#' + e.target.dataset.look)));
-    }
-  }, { rootMargin: '-45% 0px -50% 0px' });
-  document.querySelectorAll('[data-look]').forEach((s) => so.observe(s));
-})();
-</script>
+<script src="assets/light.js"></script>
 </body>
 </html>
