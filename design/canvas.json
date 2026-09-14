@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "A · Night Vault", "x": 0, "y": 0, "w": 1440, "h": 1700, "is_interactive": true },
+    { "file": "HallmarkGallery.dc.html", "title": "B · Hallmark Gallery", "x": 1560, "y": 0, "w": 1440, "h": 1560, "is_interactive": true },
+    { "file": "ChromeCandy.dc.html", "title": "C · Chrome Candy", "x": 3120, "y": 0, "w": 1440, "h": 1560, "is_interactive": true }
+  ],
+  "annotations": [
+    { "id": "how-to-look", "x": 0, "y": -560, "w": 900, "text": "Three looks for the Light Play concept — pick one (or mix parts).\nMove your cursor across each design: the light follows it. The 'metal' switch above each board previews gold-plated.\nAll photos, names and prices are real pieces from blingitonjewels.com." },
+    { "id": "note-a", "x": 0, "y": -330, "w": 720, "text": "A · Night Vault\nSilver glints hardest on black — the cursor works like a jeweller's spotlight and pieces flare as it passes. Feels premium, and dark frames calm their mixed photo backgrounds.\nTradeoff: moodier and more 'luxury' than their 30–75 JOD, playful Instagram feel; colourful enamel charms look less at home." },
+    { "id": "note-b", "x": 1560, "y": -330, "w": 720, "text": "B · Hallmark Gallery\nBright gallery walls, a giant 925 hallmark that shines under the cursor, catalogue numbers on every piece. Clean, confident, the most fashion-editorial of the three.\nTradeoff: on a light background the glint is subtler, and their inconsistent photo backgrounds stand out more." },
+    { "id": "note-c", "x": 3120, "y": -330, "w": 720, "text": "C · Chrome Candy\nLeans into the name 'Bling it on': liquid-chrome lettering, sticker price tags, playful Arabic type. Closest to their Instagram crowd and the most unlike other jewelry sites.\nTradeoff: trend-led, so it may date faster, and it's a less natural home for Ayat al-Kursi and Palestine heritage pieces." }
+  ],
+  "launch": { "view": "canvas" }
+}

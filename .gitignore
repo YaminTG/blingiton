@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment files and secrets (API keys, payment credentials)
+.env
+.env.*
+!.env.example
+
+# Build output
+.next/
+out/
+dist/
+.vercel/
+
+# Generated design canvas (rebuilt from design/*.dc.html)
+design/blingiton-storefront.html
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
