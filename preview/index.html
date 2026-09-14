@@ -12,13 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;1,6..96,400..500&amp;family=IBM+Plex+Mono:wght@400&amp;family=Marhey:wght@600&amp;family=Unbounded:wght@700..900&amp;display=swap">
 <link rel="stylesheet" href="assets/shell.css">
 <style>
-  .intro { padding: clamp(40px, 7vw, 80px) clamp(20px, 5vw, 56px) 36px; max-width: 860px; }
-  .intro-brand { font-family: "Bodoni Moda", Didot, serif; font-size: 15px; letter-spacing: 0.3em; color: #A7A49D; }
-  .intro h1 { margin: 18px 0 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(38px, 6vw, 64px); line-height: 1.04; letter-spacing: -0.01em; text-wrap: balance; }
-  .intro p { margin: 18px 0 0; max-width: 58ch; color: #A7A49D; font-size: 17px; line-height: 1.6; }
-  .intro p strong { color: #EDEBE6; font-weight: 500; }
-
-  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 clamp(20px, 5vw, 56px); }
+  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: clamp(20px, 5vw, 56px) clamp(20px, 5vw, 56px) clamp(48px, 7vw, 80px); }
   @media (min-width: 900px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
   .card { display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; background: #1C1B19; border: 1px solid rgba(237,235,230,0.08); transition: transform 0.2s ease, border-color 0.2s ease; }
   .card:hover { transform: translateY(-3px); border-color: rgba(237,235,230,0.24); }
@@ -52,22 +46,12 @@
   .vis-c .pill img { width: 100%; height: 100%; object-fit: cover; }
   .vis-c .sticker { position: absolute; z-index: 2; left: 22px; bottom: 28px; transform: rotate(-6deg); padding: 4px 14px 7px; border-radius: 999px; background: #F3B4CD; font-family: Marhey, sans-serif; font-size: 20px; font-weight: 600; }
   .vis-c .tag { position: absolute; z-index: 2; right: 40px; bottom: 26px; transform: rotate(8deg); padding: 5px 11px; border-radius: 999px; background: #BFDC9E; font-family: Unbounded, "Arial Black", sans-serif; font-size: 12px; font-weight: 700; }
-
-  .outro { padding: 56px clamp(20px, 5vw, 56px) 80px; max-width: 860px; }
-  .outro h2 { margin: 0; font-family: "Bodoni Moda", Didot, serif; font-weight: 400; font-size: clamp(30px, 4.5vw, 44px); line-height: 1.1; text-wrap: balance; }
-  .outro p { margin: 14px 0 0; max-width: 58ch; color: #A7A49D; font-size: 16px; line-height: 1.6; }
 </style>
 </head>
 <body data-metal="silver">
 
-<header class="intro">
-  <div class="intro-brand">BLINGITON</div>
-  <h1>Three looks for the new website</h1>
-  <p>Early designs made with <strong>your real pieces and prices</strong>. The idea behind all three: the site behaves like silver catching the light. Open each look and <strong>drag your finger across it</strong> to move the shine. The Silver button at the top switches every piece to gold plated.</p>
-</header>
-
 <div class="cards">
-  <a class="card" href="night-vault.html">
+  <a class="card" href="night-vault">
     <div class="vis vis-a lit" aria-hidden="true">
       <p class="txt">Silver that<br>catches<br><em class="shine lit">the light.</em></p>
       <div class="arch"><img src="img/10830.jpg" alt="" width="594" height="916"></div>
@@ -79,7 +63,7 @@
     </div>
   </a>
 
-  <a class="card" href="hallmark-gallery.html">
+  <a class="card" href="hallmark-gallery">
     <div class="vis vis-b" aria-hidden="true">
       <div class="num shine lit">925</div>
       <div class="cap">No. 14712<br>Embroidery Ring<br>70 JOD</div>
@@ -92,7 +76,7 @@
     </div>
   </a>
 
-  <a class="card" href="chrome-candy.html">
+  <a class="card" href="chrome-candy">
     <div class="vis vis-c" aria-hidden="true">
       <p class="word shine lit">bling<br>it on</p>
       <div class="pill"><img src="img/10722.jpg" alt="" width="594" height="755"></div>
@@ -106,11 +90,6 @@
     </div>
   </a>
 </div>
-
-<footer class="outro">
-  <h2>Which one feels like Blingiton?</h2>
-  <p>Reply with A, B or C, or tell us what you'd mix (for example "A's colours with C's price stickers"). The photos come from the current website; the finished site will look even better after a consistent photoshoot.</p>
-</footer>
 
 <script src="assets/light.js"></script>
 </body>
