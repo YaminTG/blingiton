@@ -30,7 +30,7 @@ html[lang="ar"] { --font: "Tajawal", "Segoe UI", Tahoma, sans-serif; }
 body[data-metal="gold"] { --metal: var(--gold); }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 96px; }
 body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 img { display: block; max-width: 100%; }
 a { color: var(--pink); text-decoration: none; }
@@ -111,17 +111,11 @@ html[lang="ar"] .caps { letter-spacing: 0; text-transform: none; font-size: 14px
 .glitter { background: url(../img/logo.png) 50% 88% / 480% auto; }
 
 /* ---------- metallic name preview ---------- */
-.plate { position: relative; display: grid; place-items: center; min-height: 260px; padding: 72px 24px 40px; border-radius: var(--r); background: radial-gradient(120% 90% at 50% 0%, #FFFFFF 0%, var(--blush-soft) 60%, var(--blush) 100%); overflow: hidden; }
-.plate svg.chain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.plate .name { position: relative; max-width: 100%; color: transparent; background: var(--metal); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 1px 0 rgba(78,15,42,.28)) drop-shadow(0 6px 10px rgba(78,15,42,.12)); font-size: clamp(52px, 9vw, 88px); line-height: 1.25; white-space: nowrap; padding-inline: .12em; }
-.plate .name[data-style="script"] { font-family: "Great Vibes", cursive; }
-.plate .name[data-style="classic"] { font-family: "Playfair Display", serif; font-style: italic; font-weight: 600; font-size: clamp(44px, 7.5vw, 72px); }
-.plate .name[data-style="modern"] { font-family: "Nunito Sans", sans-serif; font-weight: 800; font-size: clamp(40px, 7vw, 64px); letter-spacing: -.01em; }
-.plate .name[data-script="ar"][data-style="script"] { font-family: "Aref Ruqaa", serif; font-weight: 700; }
-.plate .name[data-script="ar"][data-style="classic"] { font-family: "Amiri", serif; font-style: normal; font-weight: 700; }
-.plate .name[data-script="ar"][data-style="modern"] { font-family: "Reem Kufi", sans-serif; font-weight: 700; }
-.plate .gem { position: absolute; width: 16px; height: 16px; border-radius: 50%; box-shadow: inset -3px -3px 5px rgba(0,0,0,.25), inset 2px 2px 3px rgba(255,255,255,.7), 0 0 0 2.5px #fff, 0 2px 6px rgba(78,15,42,.3); }
-.plate .gem[hidden] { display: none; }
+.plate { position: relative; min-height: 260px; border-radius: var(--r); background: radial-gradient(90% 80% at 50% 45%, #FFF6F8 0%, var(--blush-soft) 45%, #F6C6D0 100%); overflow: hidden; }
+.plate canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* the real text stays in the page for screen readers; the necklace itself is drawn on the canvas */
+.plate .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.plate .gem { display: none; }
 
 /* ---------- product cards ---------- */
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }

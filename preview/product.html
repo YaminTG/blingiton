@@ -30,6 +30,8 @@
   .thumb .tb { width: 76px; height: 76px; border-radius: 16px; overflow: hidden; border: 3px solid transparent; box-shadow: var(--shadow-1); background: var(--blush-soft); display: grid; place-items: center; }
   .thumb .tb img { width: 100%; height: 100%; object-fit: cover; }
   .thumb .tb .mini { font-family: "Great Vibes", cursive; font-size: 26px; color: var(--ink-soft); }
+  .thumb .tb svg { width: 44px; height: 44px; }
+  .stage .plate.neck { background: #FFF6F7; }
   .thumb[aria-pressed="true"] { color: var(--ink); }
   .thumb[aria-pressed="true"] .tb { border-color: var(--pink); }
 
@@ -75,6 +77,7 @@
       <div class="stage">
         <span class="pill stage-label" id="stage-label"></span>
         <div class="plate" id="plate"><span class="name" data-style="script">Sara</span><span class="gem" hidden></span></div>
+        <div class="plate neck" id="neck" hidden><span class="name" data-style="script">Sara</span></div>
         <img class="photo" id="photo" alt="" hidden>
         <img class="sticker" src="img/logo.png" alt="" width="88" height="88">
       </div>
@@ -97,7 +100,7 @@
   window.PAGE_AR = { alsoH2: 'قد يعجبك أيضاً' };
   window.COPY = {
     en: {
-      home: 'Home', yourDesign: 'Your design', photo: 'Photo', preview: 'Live preview',
+      home: 'Home', yourDesign: 'Your design', photo: 'Photo', preview: 'Live preview', onBust: 'On a bust', neckLabel: 'Shown at {n} cm',
       fName: 'Your name', fLetters: 'Your letters', nameHelp: 'English or Arabic, up to 12 letters.', lettersHelp: 'Up to 6 letters.',
       nameErr: 'Type the name you want on your piece.', fStyle: 'Style', fFinish: 'Finish', fChain: 'Chain length', fStone: 'Birthstone colour', none: 'None',
       gift: 'This is a gift', giftHelp: 'We’ll hide the price and tuck your note into the pink box.', note: 'Gift note (optional)', notePh: 'Happy birthday, Lina!',
@@ -108,7 +111,7 @@
       a3: 'Silver care', a3b: 'Keep it dry, take it off before swimming or showering, and store it in its pink box to keep the shine.',
     },
     ar: {
-      home: 'الرئيسية', yourDesign: 'تصميمك', photo: 'الصورة', preview: 'معاينة مباشرة',
+      home: 'الرئيسية', yourDesign: 'تصميمك', photo: 'الصورة', preview: 'معاينة مباشرة', onBust: 'على المجسّم', neckLabel: 'بطول {n} سم',
       fName: 'الاسم', fLetters: 'الحروف', nameHelp: 'بالعربية أو الإنجليزية، حتى 12 حرفاً.', lettersHelp: 'حتى 6 أحرف.',
       nameErr: 'اكتب الاسم الذي تريده على القطعة.', fStyle: 'الخط', fFinish: 'اللون', fChain: 'طول السلسلة', fStone: 'لون حجر الميلاد', none: 'بدون',
       gift: 'هذه هدية', giftHelp: 'سنخفي السعر ونضع بطاقتك داخل العلبة الوردية.', note: 'بطاقة الإهداء (اختياري)', notePh: 'كل عام وأنتِ بخير يا لينا!',
@@ -143,22 +146,35 @@
     tried: false,
   };
 
-  const plateEl = $('#plate'), photo = $('#photo');
+  const plateEl = $('#plate'), neckEl = $('#neck'), photo = $('#photo');
   photo.src = p.img;
   const pv = personal ? plate(plateEl) : null;
+  const hasNeck = personal && p.kind === 'necklace';
+  const pvNeck = hasNeck ? plate(neckEl, { mode: 'neck' }) : null;
+
+  function stageLabel() {
+    const c = C();
+    const text = state.view === 'neck' ? c.neckLabel.replace('{n}', state.chain) : c.preview;
+    $('#stage-label').innerHTML = `${icon('sparkle')}<span>${text}</span>`;
+  }
 
   function setView(v) {
     state.view = v;
     plateEl.hidden = v !== 'design';
+    neckEl.hidden = v !== 'neck';
     photo.hidden = v !== 'photo';
-    $('#stage-label').hidden = v !== 'design';
+    $('#stage-label').hidden = v === 'photo';
+    stageLabel();
     $$('.thumb').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
     if (v === 'design' && pv) pv.draw();
+    if (v === 'neck' && pvNeck) pvNeck.draw();
   }
 
   function updatePreview() {
     if (!pv) return;
-    pv.set({ name: state.name, style: state.style, stone: p.stone ? state.stone : null });
+    const opts = { name: state.name, style: state.style, stone: p.stone ? state.stone : null };
+    pv.set(opts);
+    if (pvNeck) pvNeck.set({ ...opts, chain: state.chain });
   }
 
   function render() {
@@ -166,13 +182,16 @@
     document.title = `${pName(p)} · Blingiton`;
     const cat = BL.categories.find((x) => p.cats.includes(x.id));
     $('#crumbs').innerHTML = `<li><a href="./">${c.home}</a></li><li><a href="shop?cat=${cat.id}">${ar ? cat.ar : cat.en}</a></li><li aria-current="page">${esc(pName(p))}</li>`;
-    $('#stage-label').innerHTML = `${icon('sparkle')}<span>${c.preview}</span>`;
     photo.alt = pName(p);
+    const bustIcon = '<svg viewBox="0 0 44 44" aria-hidden="true"><path d="M17 4v13c0 4-8 7-14 10v17h38V27c-6-3-14-6-14-10V4z" fill="#ECB1BF"/><path d="M17 18c1 7 3 11 5 11s4-4 5-11" fill="none" stroke="#9D9CA5" stroke-width="1.3" stroke-dasharray="2 1.2"/><rect x="18.5" y="28" width="7" height="3" rx="1.5" fill="#B8B7BF"/></svg>';
     $('#thumbs').innerHTML = personal
       ? `<button class="thumb" type="button" data-view="design" aria-pressed="true"><span class="tb"><span class="mini">${ar ? 'اسم' : 'Aa'}</span></span>${c.yourDesign}</button>
+         ${hasNeck ? `<button class="thumb" type="button" data-view="neck" aria-pressed="false"><span class="tb">${bustIcon}</span>${c.onBust}</button>` : ''}
          <button class="thumb" type="button" data-view="photo" aria-pressed="false"><span class="tb"><img src="${p.img}" alt=""></span>${c.photo}</button>`
       : '';
-    plateEl.querySelector('.name').dataset.sample = letters ? (ar ? 'س ل' : 'SB') : (ar ? 'سارة' : 'Sara');
+    const sample = letters ? (ar ? 'س ل' : 'SB') : (ar ? 'سارة' : 'Sara');
+    plateEl.querySelector('.name').dataset.sample = sample;
+    neckEl.querySelector('.name').dataset.sample = sample;
 
     const styleChips = ['script', 'classic', 'modern'].map((s) => `<button class="chip" type="button" role="radio" data-style="${s}" aria-checked="${state.style === s}">${t(s)}</button>`).join('');
     const chainChips = chains.map((n) => `<button class="chip" type="button" role="radio" data-chain="${n}" aria-checked="${state.chain === n}">${n} ${t('cm')}</button>`).join('');
@@ -230,7 +249,7 @@
       state.name = e.target.value;
       $('#name-count').textContent = `${state.name.length}/${letters ? 6 : 12}`;
       if (state.name.trim()) { e.target.removeAttribute('aria-invalid'); $('#name-err').textContent = ''; }
-      if (state.view !== 'design') setView('design');
+      if (state.view === 'photo') setView('design');
       updatePreview();
     }
     if (e.target.id === 'note-in') state.note = e.target.value;
@@ -241,8 +260,8 @@
   document.addEventListener('click', (e) => {
     const v = e.target.closest('[data-view]'); if (v) { setView(v.dataset.view); return; }
     const s = e.target.closest('[data-style]:not(.name)'); if (s && s.closest('#info')) { state.style = s.dataset.style; render(); return; }
-    const ch = e.target.closest('[data-chain]'); if (ch) { state.chain = Number(ch.dataset.chain); render(); return; }
-    const st = e.target.closest('[data-stone]'); if (st) { state.stone = st.dataset.stone === 'none' ? null : Number(st.dataset.stone); render(); if (state.view !== 'design') setView('design'); return; }
+    const ch = e.target.closest('[data-chain]'); if (ch) { state.chain = Number(ch.dataset.chain); if (hasNeck) state.view = 'neck'; render(); return; }
+    const st = e.target.closest('[data-stone]'); if (st) { state.stone = st.dataset.stone === 'none' ? null : Number(st.dataset.stone); if (state.view === 'photo') state.view = 'design'; render(); return; }
   });
   document.addEventListener('submit', (e) => {
     if (e.target.id !== 'opts') return;

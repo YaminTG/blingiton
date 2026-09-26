@@ -23,8 +23,20 @@
   .row2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
   .row2 .opts { gap: 6px; }
   .row2 .chip { min-height: 40px; padding: 0 14px; font-size: 13px; }
-  .sort { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
-  .sort .select { min-height: 44px; width: auto; padding-block: 8px; border-radius: 999px; }
+  .sort { position: relative; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; }
+  .sort-btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 220px; min-height: 44px; padding: 0 14px 0 18px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--paper); font-weight: 700; font-size: 14px; transition: border-color .15s; }
+  html[dir="rtl"] .sort-btn { padding: 0 18px 0 14px; }
+  .sort-btn:hover, .sort-btn[aria-expanded="true"] { border-color: var(--pink); }
+  .sort-btn .icon { width: 18px; height: 18px; transition: transform .2s var(--ease); }
+  .sort-btn[aria-expanded="true"] .icon { transform: rotate(180deg); }
+  .sort-menu { position: absolute; z-index: 30; top: calc(100% + 8px); inset-inline-end: 0; min-width: 250px; margin: 0; padding: 6px; list-style: none; background: var(--paper); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-2); }
+  .sort-menu:focus { outline: none; }
+  .sort-menu li { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 14px; border-radius: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .sort-menu li:hover, .sort-menu li.active { background: var(--blush-soft); }
+  .sort-menu:focus-visible li.active { box-shadow: inset 0 0 0 2px var(--pink); }
+  .sort-menu li .icon { width: 18px; height: 18px; color: var(--pink); visibility: hidden; }
+  .sort-menu li[aria-selected="true"] { color: var(--pink); }
+  .sort-menu li[aria-selected="true"] .icon { visibility: visible; }
   .results { padding-block: 28px 80px; }
   .count-line { margin-bottom: 20px; color: var(--ink-soft); font-weight: 700; }
   .no-results { display: grid; justify-items: center; gap: 14px; padding: 56px 16px; text-align: center; color: var(--ink-soft); }
@@ -51,13 +63,15 @@
           <button class="chip" type="button" data-price="gt60" aria-pressed="false" data-i18n="pGt60">Over 60 JOD</button>
           <button class="chip" type="button" id="personal-chip" aria-pressed="false" data-i18n="personalOnly">Personalised only</button>
         </div>
-        <label class="sort"><span data-i18n="sortLabel">Sort</span>
-          <select class="select" id="sort">
-            <option value="loved" data-i18n="sLoved">Most loved</option>
-            <option value="low" data-i18n="sLow">Price: low to high</option>
-            <option value="high" data-i18n="sHigh">Price: high to low</option>
-          </select>
-        </label>
+        <div class="sort">
+          <span id="sort-label" data-i18n="sortLabel">Sort</span>
+          <button class="sort-btn" id="sort-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="sort-menu" aria-labelledby="sort-label sort-value"><span id="sort-value">Most loved</span><span class="chev"></span></button>
+          <ul class="sort-menu" id="sort-menu" role="listbox" aria-labelledby="sort-label" tabindex="-1" hidden>
+            <li role="option" id="sort-loved" data-value="loved" aria-selected="true"><span class="tick"></span><span data-i18n="sLoved">Most loved</span></li>
+            <li role="option" id="sort-low" data-value="low" aria-selected="false"><span class="tick"></span><span data-i18n="sLow">Price: low to high</span></li>
+            <li role="option" id="sort-high" data-value="high" aria-selected="false"><span class="tick"></span><span data-i18n="sHigh">Price: high to low</span></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -87,7 +101,7 @@
 <script src="assets/site.js"></script>
 <script>
 (() => {
-  const { $, $$, t, cardHTML, lang } = window.BLX;
+  const { $, $$, t, icon, cardHTML, lang } = window.BLX;
   const BL = window.BL;
   const q = new URLSearchParams(location.search);
   const state = {
@@ -96,7 +110,55 @@
     personal: q.get('personal') === '1',
     sort: q.get('sort') || 'loved',
   };
-  $('#sort').value = state.sort;
+  $('#sort-btn .chev').innerHTML = icon('chevron');
+  $$('#sort-menu .tick').forEach((el) => { el.innerHTML = icon('check'); });
+
+  /* ---- sort listbox ---- */
+  const btn = $('#sort-btn'), menu = $('#sort-menu');
+  const opts = () => $$('#sort-menu [role="option"]');
+  let activeIdx = 0;
+  function setActive(i) {
+    activeIdx = (i + opts().length) % opts().length;
+    opts().forEach((o, k) => o.classList.toggle('active', k === activeIdx));
+    menu.setAttribute('aria-activedescendant', opts()[activeIdx].id);
+  }
+  function openMenu() {
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    setActive(opts().findIndex((o) => o.dataset.value === state.sort));
+    menu.focus();
+  }
+  function closeMenu(refocus = true) {
+    if (menu.hidden) return;
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    if (refocus) btn.focus();
+  }
+  function choose(i) {
+    state.sort = opts()[i].dataset.value;
+    closeMenu();
+    render();
+  }
+  function syncSort() {
+    opts().forEach((o) => o.setAttribute('aria-selected', String(o.dataset.value === state.sort)));
+    const sel = opts().find((o) => o.dataset.value === state.sort);
+    $('#sort-value').textContent = sel.textContent.trim();
+  }
+  btn.addEventListener('click', () => (menu.hidden ? openMenu() : closeMenu()));
+  btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openMenu(); } });
+  menu.addEventListener('keydown', (e) => {
+    const k = e.key;
+    if (k === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); }
+    else if (k === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); }
+    else if (k === 'Home') { e.preventDefault(); setActive(0); }
+    else if (k === 'End') { e.preventDefault(); setActive(opts().length - 1); }
+    else if (k === 'Enter' || k === ' ') { e.preventDefault(); choose(activeIdx); }
+    else if (k === 'Escape') { e.preventDefault(); closeMenu(); }
+    else if (k === 'Tab') { closeMenu(false); }
+  });
+  menu.addEventListener('click', (e) => { const o = e.target.closest('[role="option"]'); if (o) choose(opts().indexOf(o)); });
+  menu.addEventListener('mousemove', (e) => { const o = e.target.closest('[role="option"]'); if (o) setActive(opts().indexOf(o)); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.sort')) closeMenu(false); });
 
   const loveRank = (id) => { const i = BL.mostLoved.indexOf(id); return i === -1 ? 99 + BL.products.findIndex((p) => p.id === id) : i; };
   const inPrice = (p) => !state.price || (state.price === 'lt40' && p.price < 40) || (state.price === '40to60' && p.price >= 40 && p.price <= 60) || (state.price === 'gt60' && p.price > 60);
@@ -129,6 +191,7 @@
     $('#no-results').hidden = list.length > 0;
     $('#no-results-text').textContent = t('noResults');
     $('#clear').textContent = t('clear');
+    syncSort();
     sync();
   }
 
@@ -140,7 +203,6 @@
     if (e.target.closest('#personal-chip')) { state.personal = !state.personal; render(); return; }
     if (e.target.closest('#clear')) { Object.assign(state, { cat: 'all', price: '', personal: false }); render(); }
   });
-  $('#sort').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
   document.addEventListener('bl:lang', render);
 })();
 </script>

@@ -31,21 +31,22 @@
   .hero-art .plate { min-height: clamp(260px, 34vw, 380px); border: 6px solid #fff; box-shadow: var(--shadow-2); }
   .hero-sticker { position: absolute; z-index: 2; top: -6px; inset-inline-end: -4px; width: clamp(96px, 13vw, 144px); height: auto; transform: rotate(12deg); }
   .hero-photo { position: absolute; z-index: 2; bottom: 0; inset-inline-start: -2px; width: clamp(88px, 14vw, 160px); margin: 0; padding: 7px 7px 10px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-2); transform: rotate(-6deg); }
-  .hero-photo img { aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+  .hero-photo img { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
   .hero-photo figcaption { margin-top: 6px; font-size: 12px; font-weight: 700; line-height: 1.3; }
   @media (max-width: 767px) { .hero-photo figcaption { display: none; } .hero-art .plate { min-height: 300px; } }
+  @media (min-width: 768px) { .hero-photo { bottom: -18px; inset-inline-start: -34px; } }
 
   .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 12px; }
   @media (min-width: 768px) { .cats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
   .cat { display: grid; justify-items: center; gap: 12px; color: var(--ink); font-weight: 800; text-align: center; }
   .cat:hover { color: var(--pink); }
-  .cat img { width: 100%; max-width: 156px; aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 0 2px var(--blush-deep), var(--shadow-1); transition: box-shadow .2s var(--ease), transform .2s var(--ease); }
+  .cat img { width: 100%; height: auto; max-width: 156px; aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 0 2px var(--blush-deep), var(--shadow-1); transition: box-shadow .2s var(--ease), transform .2s var(--ease); }
   .cat:hover img { box-shadow: 0 0 0 3px var(--pink), var(--shadow-1); transform: translateY(-3px); }
 
   .gift { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding: clamp(24px, 4vw, 56px); border-radius: var(--r-lg); background: var(--blush-soft); align-items: center; }
   @media (min-width: 1024px) { .gift { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; } }
   .gift-photo { position: relative; }
-  .gift-photo img.main { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 18%; border-radius: 24px; box-shadow: var(--shadow-2); }
+  .gift-photo img.main { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 18%; border-radius: 24px; box-shadow: var(--shadow-2); }
   .gift-photo .rope { position: absolute; left: 12%; right: 12%; bottom: -4px; }
   .gift-list { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 14px; }
   .gift-list li { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 17px; }
@@ -68,7 +69,7 @@
   .ig { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   @media (min-width: 768px) { .ig { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
   .ig a { display: block; overflow: hidden; border-radius: 18px; }
-  .ig img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .4s var(--ease); }
+  .ig img { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; transition: transform .4s var(--ease); }
   .ig a:hover img { transform: scale(1.05); }
 </style>
 </head>
@@ -182,10 +183,10 @@
         <a class="more" href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><span data-i18n="igCta">Follow on Instagram</span><span class="arrow-slot"></span></a>
       </div>
       <div class="ig">
-        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/17231.jpg" alt="Charmie Pink Necklace" loading="lazy" width="594" height="792"></a>
-        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/10852.jpg" alt="Enamel name necklaces in a pink Blingiton box" loading="lazy" width="594" height="1057"></a>
-        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/15214.jpeg" alt="Love Hugs earrings" loading="lazy" width="594" height="792"></a>
-        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/14705.jpeg" alt="Watermelon Map rings" loading="lazy" width="594" height="517"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/16160.jpg" alt="My Heart is Yours necklace, a puffed heart on a fine chain" loading="lazy" width="768" height="1024" style="object-position: 50% 72%"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/16164.jpg" alt="Enamel Ayet Kursi pendant with turquoise and navy enamel" loading="lazy" width="768" height="1024" style="object-position: 55% 58%"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/13019.jpg" alt="Pear Shaped Ring with a turquoise stone" loading="lazy" width="768" height="960" style="object-position: 48% 60%"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/17122.jpg" alt="Bouquet of Flowers necklace with green, blue and clear stones" loading="lazy" width="768" height="1024" style="object-position: 40% 70%"></a>
       </div>
     </div>
   </section>

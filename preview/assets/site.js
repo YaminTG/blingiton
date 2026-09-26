@@ -175,7 +175,7 @@
     const scrim = $('#scrim');
     if (scrim) { scrim.classList.remove('open'); setTimeout(() => { scrim.hidden = true; }, 250); }
     document.documentElement.style.overflow = '';
-    if (opener && opener.focus) opener.focus();
+    if (opener && opener.focus) opener.focus({ preventScroll: true });
   }
   function trapFocus(e) {
     const d = $('.drawer.open');
@@ -275,55 +275,242 @@
     </div>`;
   }
 
-  /* ---------- name preview on a chain ---------- */
-  let plateSeq = 0;
-  function plate(el) {
-    const id = 'g' + (++plateSeq);
-    el.insertAdjacentHTML('afterbegin', `<svg class="chain" aria-hidden="true"><defs>
-        <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F4F6"/><stop offset=".5" stop-color="#8E8D96"/><stop offset="1" stop-color="#D9D8DE"/></linearGradient>
-        <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1C9"/><stop offset=".5" stop-color="#A97C2B"/><stop offset="1" stop-color="#F1D38A"/></linearGradient>
-      </defs><path class="c1" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 2.4"/><path class="c2" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 2.4"/>
-      <circle class="r1" r="5" fill="none" stroke-width="2.2"/><circle class="r2" r="5" fill="none" stroke-width="2.2"/></svg>`);
-    const svg = el.querySelector('svg.chain');
+  /* ---------- name preview: a nameplate necklace drawn on canvas ---------- */
+  const METALS = {
+    silver: { stops: ['#FFFFFF', '#E4E3E8', '#A2A1AA', '#F1F1F4', '#C3C2CA'], edge: '#6E6D77', link: '#9D9CA5', shine: '#FAFAFC', ring: '#8C8B94' },
+    gold: { stops: ['#FFF8DF', '#F2D27F', '#B4862F', '#F7E2A4', '#D1A24A'], edge: '#8B6420', link: '#C49A45', shine: '#FFF3CC', ring: '#B38631' },
+  };
+  const FONTS = {
+    script: { en: ['', 400, '"Great Vibes", cursive'], ar: ['', 700, '"Aref Ruqaa", serif'] },
+    classic: { en: ['italic', 600, '"Playfair Display", serif'], ar: ['', 700, 'Amiri, serif'] },
+    modern: { en: ['', 800, '"Nunito Sans", sans-serif'], ar: ['', 700, '"Reem Kufi", sans-serif'] },
+  };
+  const DROP = { 40: 0.6, 45: 0.67, 50: 0.74, 16: 0.67, 18: 0.67, 20: 0.67 }; // where the pendant sits on the bust, by chain length
+  const fontStr = (f, px) => `${f[0]} ${f[1]} ${px}px ${f[2]}`.trim();
+
+  // opts.mode: 'plate' (name on a pink card) or 'neck' (hanging on a velvet bust); opts.metal forces a finish
+  function plate(el, opts = {}) {
+    const mode = opts.mode || 'plate';
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    el.prepend(canvas);
+    const ctx = canvas.getContext('2d');
     const nameEl = el.querySelector('.name');
-    const gem = el.querySelector('.gem');
+    let stoneIdx = null, chainLen = 45;
+
+    // points along a quadratic curve, evenly spaced by arc length, with their direction
+    function curvePoints(p0, p1, p2, gap) {
+      const N = 240, pts = [];
+      let prev = p0, len = 0, next = 0;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N, u = 1 - t;
+        const x = u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0];
+        const y = u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1];
+        len += Math.hypot(x - prev[0], y - prev[1]);
+        if (len >= next) {
+          const dx = 2 * u * (p1[0] - p0[0]) + 2 * t * (p2[0] - p1[0]);
+          const dy = 2 * u * (p1[1] - p0[1]) + 2 * t * (p2[1] - p1[1]);
+          pts.push([x, y, Math.atan2(dy, dx)]);
+          next += gap;
+        }
+        prev = [x, y];
+      }
+      return pts;
+    }
+
+    // cable chain: alternating flat and edge-on oval links
+    function drawChain(p0, p1, p2, m, scale = 1) {
+      const pts = curvePoints(p0, p1, p2, 5.2 * scale);
+      ctx.save();
+      ctx.shadowColor = 'rgba(78,15,42,.25)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+      pts.forEach(([x, y, a], i) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 3.4 * scale, (i % 2 ? 1.05 : 2.2) * scale, 0, 0, Math.PI * 2);
+        ctx.lineWidth = 1.35 * scale; ctx.strokeStyle = m.link; ctx.stroke();
+        ctx.restore();
+      });
+      ctx.restore();
+      pts.forEach(([x, y, a], i) => {
+        if (i % 2) return;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+        ctx.beginPath(); ctx.ellipse(0, 0, 3.4 * scale, 2.2 * scale, 0, Math.PI * 1.1, Math.PI * 1.6);
+        ctx.lineWidth = 0.8 * scale; ctx.strokeStyle = m.shine; ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function ring(x, y, m, scale = 1) {
+      ctx.beginPath(); ctx.arc(x, y, 4.2 * scale, 0, Math.PI * 2);
+      ctx.lineWidth = 2 * scale; ctx.strokeStyle = m.ring; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 4.2 * scale, Math.PI * 1.05, Math.PI * 1.55);
+      ctx.lineWidth = 0.9 * scale; ctx.strokeStyle = m.shine; ctx.stroke();
+    }
+
+    // draw the name invisibly and scan it to find where the first and last letters really are,
+    // so the rings attach to metal instead of to the edge of the text box
+    const probe = document.createElement('canvas');
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    function findEnds(text, font, dir, cx, base, top, h, left, right, W, H) {
+      probe.width = W; probe.height = H;
+      pctx.font = font; pctx.direction = dir; pctx.textAlign = 'center'; pctx.textBaseline = 'alphabetic';
+      pctx.fillStyle = '#000'; pctx.fillText(text, cx, base);
+      const d = pctx.getImageData(0, 0, W, H).data;
+      const y0 = Math.max(0, Math.round(top + h * 0.12)), y1 = Math.min(H - 1, Math.round(top + h * 0.72));
+      const hit = (x) => {
+        const ys = [];
+        for (let y = y0; y <= y1; y++) if (d[(y * W + x) * 4 + 3] > 110) ys.push(y);
+        return ys.length ? ys[Math.floor(ys.length / 2)] : null;
+      };
+      let l = null, r = null;
+      for (let x = Math.max(0, Math.floor(left) - 2); x < W && x <= cx; x++) { const y = hit(x); if (y !== null) { l = [x, y]; break; } }
+      for (let x = Math.min(W - 1, Math.ceil(right) + 2); x >= 0 && x >= cx; x--) { const y = hit(x); if (y !== null) { r = [x, y]; break; } }
+      const fy = top + h * 0.34;
+      return { l: l || [left, fy], r: r || [right, fy] };
+    }
+
+    // a blush velvet jewellery bust, like the ones in Blingiton's own product photos
+    function seeded(s) { return () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+    function drawBust(W, H) {
+      const cx = W / 2, nw = W * 0.24, nb = H * 0.4;
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#FFF6F7'); bg.addColorStop(1, '#FBE4E9');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      ctx.save();
+      ctx.shadowColor = 'rgba(120,30,60,.18)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+      ctx.beginPath();
+      ctx.moveTo(cx - nw / 2, -4);
+      ctx.lineTo(cx - nw / 2, nb);
+      ctx.bezierCurveTo(cx - nw / 2, nb + H * 0.1, cx - W * 0.3, H * 0.5, cx - W * 0.52, H * 0.6);
+      ctx.lineTo(cx - W * 0.62, H + 4); ctx.lineTo(cx + W * 0.62, H + 4); ctx.lineTo(cx + W * 0.52, H * 0.6);
+      ctx.bezierCurveTo(cx + W * 0.3, H * 0.5, cx + nw / 2, nb + H * 0.1, cx + nw / 2, nb);
+      ctx.lineTo(cx + nw / 2, -4); ctx.closePath();
+      const g = ctx.createLinearGradient(cx - W * 0.5, 0, cx + W * 0.5, 0);
+      g.addColorStop(0, '#D68A9E'); g.addColorStop(0.3, '#ECB1BF'); g.addColorStop(0.5, '#F4C5D0'); g.addColorStop(0.7, '#ECB1BF'); g.addColorStop(1, '#D68A9E');
+      ctx.fillStyle = g; ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.clip();
+      const r = ctx.createRadialGradient(cx, H * 0.72, 10, cx, H * 0.72, W * 0.5);
+      r.addColorStop(0, 'rgba(255,255,255,.32)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = r; ctx.fillRect(0, 0, W, H);
+      const ns = ctx.createLinearGradient(0, 0, 0, nb + H * 0.06);
+      ns.addColorStop(0, 'rgba(120,30,60,.2)'); ns.addColorStop(1, 'rgba(120,30,60,0)');
+      ctx.fillStyle = ns; ctx.fillRect(cx - nw / 2, 0, nw, nb + H * 0.06);
+      const rnd = seeded(7);
+      for (let i = 0; i < W * H / 55; i++) {
+        ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.10)' : 'rgba(90,20,50,.07)';
+        ctx.fillRect(rnd() * W, rnd() * H, 1, 1);
+      }
+      ctx.restore();
+      return { cx, nw, nb };
+    }
+
     function draw() {
       const W = el.clientWidth, H = el.clientHeight;
-      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      const pr = el.getBoundingClientRect(), nr = nameEl.getBoundingClientRect();
-      const L = nr.left - pr.left + nr.width * 0.04, R = nr.right - pr.left - nr.width * 0.04;
-      const cy = nr.top - pr.top + nr.height * 0.36;
-      const sx1 = Math.max(6, L - W * 0.16), sx2 = Math.min(W - 6, R + W * 0.16);
-      svg.querySelector('.c1').setAttribute('d', `M ${sx1} -4 Q ${sx1 + 4} ${cy * 0.85} ${L - 5} ${cy}`);
-      svg.querySelector('.c2').setAttribute('d', `M ${sx2} -4 Q ${sx2 - 4} ${cy * 0.85} ${R + 5} ${cy}`);
-      [['.r1', L], ['.r2', R]].forEach(([s, x]) => { const c = svg.querySelector(s); c.setAttribute('cx', x); c.setAttribute('cy', cy); });
-      const stroke = `url(#${id}${document.body.dataset.metal === 'gold' ? 'g' : 's'})`;
-      $$('path, circle', svg).forEach((p) => p.setAttribute('stroke', stroke));
-      if (gem) { gem.style.insetInlineStart = 'auto'; gem.style.left = `${R - 10}px`; gem.style.top = `${nr.top - pr.top + nr.height * 0.62}px`; }
+      if (!W || !H) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      const neck = mode === 'neck';
+      const bust = neck ? drawBust(W, H) : null;
+      const text = nameEl.textContent;
+      const ar = nameEl.dataset.script === 'ar';
+      const f = FONTS[nameEl.dataset.style || 'script'][ar ? 'ar' : 'en'];
+      const m = METALS[(opts.metal || document.body.dataset.metal) === 'gold' ? 'gold' : 'silver'];
+      ctx.direction = ar ? 'rtl' : 'ltr';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+
+      // largest size that fits the available width
+      const maxW = W * (neck ? 0.5 : 0.76);
+      let px = neck ? Math.min(Math.max(H * 0.16, W * 0.13), 88) : Math.min(H * 0.34, 120);
+      ctx.font = fontStr(f, px);
+      let mt = ctx.measureText(text);
+      const inkW = mt.actualBoundingBoxLeft + mt.actualBoundingBoxRight;
+      if (inkW > maxW) { px *= maxW / inkW; ctx.font = fontStr(f, px); mt = ctx.measureText(text); }
+      const scale = neck ? 0.9 : 1;
+
+      // centre the actual ink of the letters where the pendant should hang
+      const asc = mt.actualBoundingBoxAscent, desc = mt.actualBoundingBoxDescent;
+      const cx = W / 2 + (mt.actualBoundingBoxLeft - mt.actualBoundingBoxRight) / 2;
+      const targetY = neck ? H * (DROP[chainLen] || 0.67) : H * 0.56;
+      const base = targetY + (asc - desc) / 2;
+      const left = cx - mt.actualBoundingBoxLeft, right = cx + mt.actualBoundingBoxRight;
+      const top = base - asc;
+
+      // jump rings sit on the real first and last strokes of the name, then the chain runs up from them
+      const ends = findEnds(text, ctx.font, ctx.direction, cx, base, top, asc + desc, left, right, W, H);
+      const off = 3 * scale;
+      const lx = ends.l[0] - off, ly = ends.l[1], rx = ends.r[0] + off, ry = ends.r[1];
+      if (neck) {
+        // the chain comes out from around the neck and falls to the pendant
+        const sy = bust.nb - H * 0.03;
+        const slx = bust.cx - bust.nw / 2 + 2, srx = bust.cx + bust.nw / 2 - 2;
+        drawChain([slx, sy], [Math.min(slx, lx) - W * 0.02, sy + (ly - sy) * 0.8], [lx - off, ly], m, scale);
+        drawChain([srx, sy], [Math.max(srx, rx) + W * 0.02, sy + (ry - sy) * 0.8], [rx + off, ry], m, scale);
+      } else {
+        const spread = Math.max(W * 0.18, 40);
+        const sl = Math.max(8, lx - spread), sr = Math.min(W - 8, rx + spread);
+        drawChain([sl, -6], [sl + spread * 0.25, ly * 0.78], [lx - off, ly], m);
+        drawChain([sr, -6], [sr - spread * 0.25, ry * 0.78], [rx + off, ry], m);
+      }
+
+      // the name: soft drop shadow, a darker edge for thickness, then the polished face
+      const edge = Math.max(1, px * 0.018);
+      const grad = ctx.createLinearGradient(0, top, 0, top + asc + desc);
+      [0, 0.32, 0.5, 0.66, 1].forEach((o, i) => grad.addColorStop(o, m.stops[i]));
+      ctx.save();
+      ctx.shadowColor = neck ? 'rgba(90,20,50,.35)' : 'rgba(78,15,42,.25)'; ctx.shadowBlur = neck ? 8 : 16; ctx.shadowOffsetY = neck ? 4 : 8;
+      ctx.fillStyle = m.edge; ctx.fillText(text, cx, base + edge);
+      ctx.restore();
+      ctx.fillStyle = m.edge; ctx.fillText(text, cx, base + edge);
+      ctx.fillStyle = grad; ctx.fillText(text, cx, base);
+
+      ring(lx, ly, m, scale);
+      ring(rx, ry, m, scale);
+
+      // birthstone set beside the end of the name
+      if (stoneIdx !== null) {
+        const c = BL.stones[stoneIdx].c;
+        const r = 6.5 * scale;
+        const gx = ar ? lx : rx, gy = (ar ? ly : ry) + 17 * scale;
+        ctx.beginPath(); ctx.arc(gx, gy, r + 2 * scale, 0, Math.PI * 2); ctx.fillStyle = m.ring; ctx.fill();
+        const g = ctx.createRadialGradient(gx - 2 * scale, gy - 2 * scale, 1, gx, gy, r);
+        g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.35, c); g.addColorStop(1, c);
+        ctx.beginPath(); ctx.arc(gx, gy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      }
+    }
+
+    function redraw() {
+      draw();
+      if (document.fonts && document.fonts.load) {
+        const f = FONTS[nameEl.dataset.style || 'script'][nameEl.dataset.script === 'ar' ? 'ar' : 'en'];
+        document.fonts.load(fontStr(f, 64), nameEl.textContent).then(draw, () => {});
+      }
     }
     const api = {
-      set({ name, style, stone }) {
+      set({ name, style, stone, chain }) {
         if (name !== undefined) {
           const v = name.trim() || nameEl.dataset.sample;
           nameEl.textContent = v;
           nameEl.dataset.script = /[؀-ۿ]/.test(v) ? 'ar' : 'en';
-          nameEl.dir = nameEl.dataset.script === 'ar' ? 'rtl' : 'ltr';
         }
         if (style) nameEl.dataset.style = style;
-        if (gem && stone !== undefined) {
-          gem.hidden = stone === null;
-          if (stone !== null) gem.style.background = BL.stones[stone].c;
-        }
-        requestAnimationFrame(draw);
+        if (stone !== undefined) stoneIdx = stone;
+        if (chain) chainLen = chain;
+        redraw();
       },
-      draw,
+      draw: redraw,
     };
     nameEl.dataset.sample = nameEl.textContent;
-    window.addEventListener('resize', () => requestAnimationFrame(draw));
+    if (window.ResizeObserver) new ResizeObserver(() => draw()).observe(el);
+    else window.addEventListener('resize', draw);
     document.addEventListener('bl:metal', draw);
-    document.addEventListener('bl:lang', () => requestAnimationFrame(draw));
     if (document.fonts) document.fonts.ready.then(draw);
-    requestAnimationFrame(draw);
+    redraw();
     return api;
   }
 
@@ -366,5 +553,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     applyLang(startLang);
     setMetal(document.body.dataset.metal);
+  });
+  // content above an anchor is rendered by script and fonts load late, so re-align once everything is in
+  window.addEventListener('load', () => {
+    const target = location.hash && document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ block: 'start' });
   });
 })();

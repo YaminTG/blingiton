@@ -43,8 +43,36 @@
   .sum-lines .total { padding-top: 12px; border-top: 1px solid var(--blush-deep); font-size: 20px; font-weight: 800; }
   .sample { margin-top: 12px; }
   .place { margin-top: 24px; }
-  .thanks { display: grid; justify-items: center; gap: 18px; max-width: 640px; margin-inline: auto; padding-block: 64px 96px; text-align: center; }
-  .thanks img.sticker { width: 140px; height: 140px; animation: pop .6s var(--spring); }
+  .thanks { display: grid; justify-items: center; gap: 18px; max-width: 640px; margin-inline: auto; padding-block: 40px 96px; text-align: center; overflow-x: clip; }
+
+  /* ---- unboxing: pink box, ribbon, lid off, glitter, the customer's piece rises, sticker lands ---- */
+  .unbox { position: relative; width: 320px; height: 300px; direction: ltr; }
+  .ub-box { position: absolute; inset: 0; animation: ubIn .55s var(--spring) both; }
+  .ub-base { position: absolute; z-index: 3; left: 40px; right: 40px; bottom: 20px; height: 140px; border-radius: 6px 6px 14px 14px; background: linear-gradient(180deg, #F7C4CF 0%, #F0A9BA 100%); box-shadow: 0 20px 34px rgba(78,15,42,.2), inset 0 -10px 18px rgba(165,30,80,.12); }
+  .ub-base::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 10px; border-radius: 6px 6px 0 0; background: rgba(165,30,80,.16); }
+  .ub-base span { position: absolute; left: 0; right: 0; bottom: 18px; color: var(--glitter); font-weight: 800; font-size: 13px; letter-spacing: .12em; text-align: center; }
+  .ub-lid { position: absolute; z-index: 5; left: 30px; right: 30px; bottom: 150px; height: 56px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(180deg, #FAD3DB, #F3B6C4); box-shadow: 0 6px 14px rgba(78,15,42,.16); transform-origin: 70% 100%; animation: ubLid .9s var(--ease) 1s both; }
+  .ub-lid b { color: var(--glitter); font-weight: 800; font-size: 16px; line-height: 1.05; letter-spacing: .06em; text-align: center; }
+  .ub-ribbon-v { position: absolute; z-index: 6; left: 50%; bottom: 20px; width: 22px; height: 186px; margin-left: -11px; background: linear-gradient(90deg, #D93574, #F47AA7 50%, #D93574); animation: ubFade .3s ease .75s both; }
+  .ub-ribbon-h { position: absolute; z-index: 4; left: 40px; right: 40px; bottom: 76px; height: 20px; background: linear-gradient(180deg, #D93574, #F47AA7 50%, #D93574); animation: ubFade .3s ease .75s both; }
+  .ub-bow { position: absolute; z-index: 7; left: 50%; bottom: 196px; width: 84px; height: 36px; margin-left: -42px; animation: ubBow .4s ease .6s both; }
+  .ub-bow::before, .ub-bow::after { content: ""; position: absolute; bottom: 0; width: 38px; height: 28px; border: 7px solid #E04880; border-radius: 55% 45% 45% 55% / 60% 60% 40% 40%; }
+  .ub-bow::before { left: 2px; transform: rotate(-16deg); }
+  .ub-bow::after { right: 2px; transform: rotate(16deg); }
+  .ub-rise { position: absolute; z-index: 2; left: 50%; bottom: 60px; width: 260px; height: 160px; margin-left: -130px; animation: ubRise .85s var(--ease) 1.35s both; }
+  .ub-rise .plate { width: 100%; height: 100%; min-height: 0; background: transparent; overflow: visible; }
+  .ub-rise img { width: 120px; height: 120px; margin: 20px auto 0; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-2); }
+  .ub-sticker { position: absolute; z-index: 8; left: 186px; top: -8px; width: 88px; height: 88px; animation: ubSticker .5s var(--spring) 2.05s both; }
+  .ub-spark { position: absolute; z-index: 1; left: 160px; top: 150px; width: 7px; height: 7px; border-radius: 1px; animation: ubSpark 1.2s cubic-bezier(.15,.7,.3,1) both; }
+  @keyframes ubIn { from { opacity: 0; transform: translateY(30px) scale(.85); } to { opacity: 1; transform: none; } }
+  @keyframes ubFade { to { opacity: 0; } }
+  @keyframes ubBow { to { opacity: 0; transform: translateY(-24px) scale(.5); } }
+  @keyframes ubLid { 0% { transform: none; } 55% { transform: translate(30px, -120px) rotate(10deg); } 100% { transform: translate(70px, -86px) rotate(18deg); } }
+  @keyframes ubRise { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(-58px); } }
+  @keyframes ubSticker { from { opacity: 0; transform: scale(2.4) rotate(-40deg); } to { opacity: 1; transform: scale(1) rotate(-8deg); } }
+  @keyframes ubSpark { 0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(.5); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .unbox * { animation-delay: 0s !important; } .ub-spark { display: none; } }
+  .replay { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; background: none; color: var(--ink-soft); font-weight: 700; font-size: 14px; text-decoration: underline; }
   .thanks h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; }
   .thanks p { color: var(--ink-soft); font-size: 18px; }
   .thanks .rope { width: 180px; }
@@ -70,7 +98,7 @@
       payCash: 'Cash on delivery', payCashNote: 'Pay in cash when your order arrives.', intlOnly: 'Paying on delivery is available in Jordan only.',
       summary: 'Order summary', place: 'Place order', errSum: 'Please fix these before placing your order:',
       thanks: 'Thank you, {name}!', thanksP: 'Your order {no} is confirmed. We’ll message you on WhatsApp at {phone} when it’s wrapped and on its way.',
-      keep: 'Keep shopping', previewNote: 'This is a preview, so no real order was placed.', sample: 'We added a sample piece so you can try checkout.',
+      keep: 'Keep shopping', replay: 'Watch the unboxing again', previewNote: 'This is a preview, so no real order was placed.', sample: 'We added a sample piece so you can try checkout.',
       countries: ['Jordan', 'Saudi Arabia', 'United Arab Emirates', 'Kuwait', 'Qatar', 'Palestine', 'Lebanon', 'United States', 'United Kingdom', 'Other country'],
     },
     ar: {
@@ -81,7 +109,7 @@
       payCash: 'نقداً عند الاستلام', payCashNote: 'ادفع نقداً عند وصول طلبك.', intlOnly: 'الدفع عند الاستلام متاح داخل الأردن فقط.',
       summary: 'ملخص الطلب', place: 'تأكيد الطلب', errSum: 'يرجى تصحيح ما يلي قبل تأكيد الطلب:',
       thanks: 'شكراً لك يا {name}!', thanksP: 'تم تأكيد طلبك {no}. سنراسلك عبر واتساب على {phone} عندما يُغلّف ويصبح في طريقه إليك.',
-      keep: 'متابعة التسوّق', previewNote: 'هذا تصميم تجريبي، لذلك لم يتم إرسال طلب حقيقي.', sample: 'أضفنا قطعة للتجربة لتتمكن من تجربة إتمام الطلب.',
+      keep: 'متابعة التسوّق', replay: 'شاهد فتح العلبة مرة أخرى', previewNote: 'هذا تصميم تجريبي، لذلك لم يتم إرسال طلب حقيقي.', sample: 'أضفنا قطعة للتجربة لتتمكن من تجربة إتمام الطلب.',
       countries: ['الأردن', 'السعودية', 'الإمارات', 'الكويت', 'قطر', 'فلسطين', 'لبنان', 'الولايات المتحدة', 'المملكة المتحدة', 'دولة أخرى'],
     },
   };
@@ -90,7 +118,7 @@
 <script src="assets/site.js"></script>
 <script>
 (() => {
-  const { $, $$, t, esc, icon, money, pName, product, cart, saveCart, optionLines, lang } = window.BLX;
+  const { $, $$, t, esc, icon, money, pName, product, cart, saveCart, optionLines, lang, plate } = window.BLX;
   const C = () => window.COPY[lang()];
   const FEES = { amman: 3, jordan: 5, intl: 15 }; // sample fees for the preview
   let seeded = false;
@@ -133,14 +161,33 @@
   function render() {
     const c = C();
     if (f.done) {
+      const it = f.done.item;
+      const p0 = it && product(it.id);
+      const colors = ['#D23E78', '#F070A0', '#FFFFFF', '#A01040', '#C9C8CF', '#F8D3DA'];
+      const sparks = Array.from({ length: 26 }, (_, i) => {
+        const a = (-Math.PI / 2) + (Math.random() - 0.5) * Math.PI * 1.3, d = 90 + Math.random() * 110;
+        return `<i class="ub-spark" style="background:${colors[i % colors.length]};--dx:${Math.round(Math.cos(a) * d)}px;--dy:${Math.round(Math.sin(a) * d)}px;--r:${Math.round(Math.random() * 540)}deg;animation-delay:${(1.25 + i * 0.012).toFixed(3)}s"></i>`;
+      }).join('');
       $('#co-root').innerHTML = `<section class="thanks" aria-labelledby="thanks-h">
-        <img class="sticker" src="img/logo.png" alt="" width="140" height="140">
+        <div class="unbox" aria-hidden="true"><div class="ub-box">
+          ${sparks}
+          <div class="ub-rise">${it && it.name ? `<div class="plate"><span class="name" data-style="${it.style || 'script'}">${esc(it.name)}</span></div>` : p0 ? `<img src="${p0.img}" alt="">` : ''}</div>
+          <div class="ub-base"><span>BLINGITON</span></div>
+          <div class="ub-ribbon-h"></div>
+          <div class="ub-lid"><b>BLING<br>IT ON!</b></div>
+          <div class="ub-ribbon-v"></div>
+          <div class="ub-bow"></div>
+          <img class="ub-sticker sticker" src="img/logo.png" alt="" width="88" height="88">
+        </div></div>
         <h1 id="thanks-h">${c.thanks.replace('{name}', esc(f.done.first))}</h1>
         <div class="rope" aria-hidden="true"></div>
         <p>${c.thanksP.replace('{no}', `<b>${f.done.no}</b>`).replace('{phone}', `<bdi dir="ltr">${esc(f.done.phone)}</bdi>`)}</p>
         <p class="help">${c.previewNote}</p>
         <a class="btn btn-primary" href="shop">${c.keep}</a>
+        <button class="replay" type="button" id="replay">${c.replay}</button>
       </section>`;
+      const pl = $('.ub-rise .plate');
+      if (pl) plate(pl, { metal: it.finish }).set({ name: it.name, style: it.style, stone: it.stone === undefined ? null : it.stone });
       return;
     }
     const jordan = f.country === 0;
@@ -208,12 +255,13 @@
     e.preventDefault();
     errors = validate();
     if (Object.keys(errors).length) { render(); $('#err-sum').focus(); return; }
-    f.done = { first: f.name.trim().split(/\s+/)[0], phone: f.phone.trim(), no: 'BL-' + (10400 + Math.floor(Math.random() * 500)) };
+    f.done = { first: f.name.trim().split(/\s+/)[0], phone: f.phone.trim(), no: 'BL-' + (10400 + Math.floor(Math.random() * 500)), item: cart()[0] };
     saveCart([]);
     render();
     window.scrollTo({ top: 0 });
     $('#thanks-h').setAttribute('tabindex', '-1'); $('#thanks-h').focus();
   });
+  document.addEventListener('click', (e) => { if (e.target.closest('#replay')) render(); });
   document.addEventListener('bl:lang', () => { if (Object.keys(errors).length) errors = validate(); render(); });
 })();
 </script>
