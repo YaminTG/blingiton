@@ -9,7 +9,7 @@
 <link rel="icon" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&amp;family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Playfair+Display:ital,wght@1,600&amp;family=Reem+Kufi:wght@700&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   .co { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 32px 80px; }
@@ -41,7 +41,6 @@
   .sum-lines { display: grid; gap: 10px; padding-top: 16px; }
   .sum-lines div { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
   .sum-lines .total { padding-top: 12px; border-top: 1px solid var(--blush-deep); font-size: 20px; font-weight: 800; }
-  .sample { margin-top: 12px; }
   .place { margin-top: 24px; }
   .thanks { display: grid; justify-items: center; gap: 18px; max-width: 640px; margin-inline: auto; padding-block: 40px 96px; text-align: center; overflow-x: clip; }
 
@@ -98,7 +97,7 @@
       payCash: 'Cash on delivery', payCashNote: 'Pay in cash when your order arrives.', intlOnly: 'Paying on delivery is available in Jordan only.',
       summary: 'Order summary', place: 'Place order', errSum: 'Please fix these before placing your order:',
       thanks: 'Thank you, {name}!', thanksP: 'Your order {no} is confirmed. We’ll message you on WhatsApp at {phone} when it’s wrapped and on its way.',
-      keep: 'Keep shopping', replay: 'Watch the unboxing again', previewNote: 'This is a preview, so no real order was placed.', sample: 'We added a sample piece so you can try checkout.',
+      keep: 'Keep shopping', replay: 'Watch the unboxing again',
       countries: ['Jordan', 'Saudi Arabia', 'United Arab Emirates', 'Kuwait', 'Qatar', 'Palestine', 'Lebanon', 'United States', 'United Kingdom', 'Other country'],
     },
     ar: {
@@ -109,7 +108,7 @@
       payCash: 'نقداً عند الاستلام', payCashNote: 'ادفع نقداً عند وصول طلبك.', intlOnly: 'الدفع عند الاستلام متاح داخل الأردن فقط.',
       summary: 'ملخص الطلب', place: 'تأكيد الطلب', errSum: 'يرجى تصحيح ما يلي قبل تأكيد الطلب:',
       thanks: 'شكراً لك يا {name}!', thanksP: 'تم تأكيد طلبك {no}. سنراسلك عبر واتساب على {phone} عندما يُغلّف ويصبح في طريقه إليك.',
-      keep: 'متابعة التسوّق', replay: 'شاهد فتح العلبة مرة أخرى', previewNote: 'هذا تصميم تجريبي، لذلك لم يتم إرسال طلب حقيقي.', sample: 'أضفنا قطعة للتجربة لتتمكن من تجربة إتمام الطلب.',
+      keep: 'متابعة التسوّق', replay: 'شاهد فتح العلبة مرة أخرى',
       countries: ['الأردن', 'السعودية', 'الإمارات', 'الكويت', 'قطر', 'فلسطين', 'لبنان', 'الولايات المتحدة', 'المملكة المتحدة', 'دولة أخرى'],
     },
   };
@@ -121,10 +120,8 @@
   const { $, $$, t, esc, icon, money, pName, product, cart, saveCart, optionLines, lang, plate } = window.BLX;
   const C = () => window.COPY[lang()];
   const FEES = { amman: 3, jordan: 5, intl: 15 }; // sample fees for the preview
-  let seeded = false;
   if (!cart().length) {
     saveCart([{ id: 10830, name: 'Sara', style: 'script', finish: 'silver', chain: 45, stone: 9, gift: true, note: 'Happy birthday!', qty: 1 }]);
-    seeded = true;
   }
   const f = { name: '', phone: '', email: '', country: 0, city: '', address: '', method: 'amman', pay: 'card', done: null };
   let errors = {};
@@ -136,7 +133,6 @@
     const sub = items.reduce((s, it) => s + product(it.id).price * it.qty, 0);
     return `<aside class="summary" aria-labelledby="sum-h">
       <h2 id="sum-h">${c.summary}</h2>
-      ${seeded ? `<p class="pill sample">${icon('sparkle')}${c.sample}</p>` : ''}
       ${items.map((it) => { const p = product(it.id); return `<div class="line-item"><img src="${p.img}" alt="" width="76" height="76"><div>
         <div class="li-name">${esc(pName(p))}${it.qty > 1 ? ` × ${it.qty}` : ''}</div><div class="li-meta">${optionLines(it)}</div>
         <div class="li-row"><span></span><span class="price">${money(p.price * it.qty)}</span></div></div></div>`; }).join('')}
@@ -182,7 +178,6 @@
         <h1 id="thanks-h">${c.thanks.replace('{name}', esc(f.done.first))}</h1>
         <div class="rope" aria-hidden="true"></div>
         <p>${c.thanksP.replace('{no}', `<b>${f.done.no}</b>`).replace('{phone}', `<bdi dir="ltr">${esc(f.done.phone)}</bdi>`)}</p>
-        <p class="help">${c.previewNote}</p>
         <a class="btn btn-primary" href="shop">${c.keep}</a>
         <button class="replay" type="button" id="replay">${c.replay}</button>
       </section>`;

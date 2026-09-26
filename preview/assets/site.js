@@ -285,18 +285,16 @@
     classic: { en: ['italic', 600, '"Playfair Display", serif'], ar: ['', 700, 'Amiri, serif'] },
     modern: { en: ['', 800, '"Nunito Sans", sans-serif'], ar: ['', 700, '"Reem Kufi", sans-serif'] },
   };
-  const DROP = { 40: 0.6, 45: 0.67, 50: 0.74, 16: 0.67, 18: 0.67, 20: 0.67 }; // where the pendant sits on the bust, by chain length
   const fontStr = (f, px) => `${f[0]} ${f[1]} ${px}px ${f[2]}`.trim();
 
-  // opts.mode: 'plate' (name on a pink card) or 'neck' (hanging on a velvet bust); opts.metal forces a finish
+  // opts.metal forces a finish (used by the order unboxing); otherwise the site-wide silver/gold choice is used
   function plate(el, opts = {}) {
-    const mode = opts.mode || 'plate';
     const canvas = document.createElement('canvas');
     canvas.setAttribute('aria-hidden', 'true');
     el.prepend(canvas);
     const ctx = canvas.getContext('2d');
     const nameEl = el.querySelector('.name');
-    let stoneIdx = null, chainLen = 45;
+    let stoneIdx = null;
 
     // points along a quadratic curve, evenly spaced by arc length, with their direction
     function curvePoints(p0, p1, p2, gap) {
@@ -319,32 +317,32 @@
     }
 
     // cable chain: alternating flat and edge-on oval links
-    function drawChain(p0, p1, p2, m, scale = 1) {
-      const pts = curvePoints(p0, p1, p2, 5.2 * scale);
+    function drawChain(p0, p1, p2, m) {
+      const pts = curvePoints(p0, p1, p2, 5.2);
       ctx.save();
       ctx.shadowColor = 'rgba(78,15,42,.25)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
       pts.forEach(([x, y, a], i) => {
         ctx.save(); ctx.translate(x, y); ctx.rotate(a);
         ctx.beginPath();
-        ctx.ellipse(0, 0, 3.4 * scale, (i % 2 ? 1.05 : 2.2) * scale, 0, 0, Math.PI * 2);
-        ctx.lineWidth = 1.35 * scale; ctx.strokeStyle = m.link; ctx.stroke();
+        ctx.ellipse(0, 0, 3.4, i % 2 ? 1.05 : 2.2, 0, 0, Math.PI * 2);
+        ctx.lineWidth = 1.35; ctx.strokeStyle = m.link; ctx.stroke();
         ctx.restore();
       });
       ctx.restore();
       pts.forEach(([x, y, a], i) => {
         if (i % 2) return;
         ctx.save(); ctx.translate(x, y); ctx.rotate(a);
-        ctx.beginPath(); ctx.ellipse(0, 0, 3.4 * scale, 2.2 * scale, 0, Math.PI * 1.1, Math.PI * 1.6);
-        ctx.lineWidth = 0.8 * scale; ctx.strokeStyle = m.shine; ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, 3.4, 2.2, 0, Math.PI * 1.1, Math.PI * 1.6);
+        ctx.lineWidth = 0.8; ctx.strokeStyle = m.shine; ctx.stroke();
         ctx.restore();
       });
     }
 
-    function ring(x, y, m, scale = 1) {
-      ctx.beginPath(); ctx.arc(x, y, 4.2 * scale, 0, Math.PI * 2);
-      ctx.lineWidth = 2 * scale; ctx.strokeStyle = m.ring; ctx.stroke();
-      ctx.beginPath(); ctx.arc(x, y, 4.2 * scale, Math.PI * 1.05, Math.PI * 1.55);
-      ctx.lineWidth = 0.9 * scale; ctx.strokeStyle = m.shine; ctx.stroke();
+    function ring(x, y, m) {
+      ctx.beginPath(); ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+      ctx.lineWidth = 2; ctx.strokeStyle = m.ring; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 4.2, Math.PI * 1.05, Math.PI * 1.55);
+      ctx.lineWidth = 0.9; ctx.strokeStyle = m.shine; ctx.stroke();
     }
 
     // draw the name invisibly and scan it to find where the first and last letters really are,
@@ -369,43 +367,6 @@
       return { l: l || [left, fy], r: r || [right, fy] };
     }
 
-    // a blush velvet jewellery bust, like the ones in Blingiton's own product photos
-    function seeded(s) { return () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-    function drawBust(W, H) {
-      const cx = W / 2, nw = W * 0.24, nb = H * 0.4;
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#FFF6F7'); bg.addColorStop(1, '#FBE4E9');
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-      ctx.save();
-      ctx.shadowColor = 'rgba(120,30,60,.18)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
-      ctx.beginPath();
-      ctx.moveTo(cx - nw / 2, -4);
-      ctx.lineTo(cx - nw / 2, nb);
-      ctx.bezierCurveTo(cx - nw / 2, nb + H * 0.1, cx - W * 0.3, H * 0.5, cx - W * 0.52, H * 0.6);
-      ctx.lineTo(cx - W * 0.62, H + 4); ctx.lineTo(cx + W * 0.62, H + 4); ctx.lineTo(cx + W * 0.52, H * 0.6);
-      ctx.bezierCurveTo(cx + W * 0.3, H * 0.5, cx + nw / 2, nb + H * 0.1, cx + nw / 2, nb);
-      ctx.lineTo(cx + nw / 2, -4); ctx.closePath();
-      const g = ctx.createLinearGradient(cx - W * 0.5, 0, cx + W * 0.5, 0);
-      g.addColorStop(0, '#D68A9E'); g.addColorStop(0.3, '#ECB1BF'); g.addColorStop(0.5, '#F4C5D0'); g.addColorStop(0.7, '#ECB1BF'); g.addColorStop(1, '#D68A9E');
-      ctx.fillStyle = g; ctx.fill();
-      ctx.restore();
-      ctx.save();
-      ctx.clip();
-      const r = ctx.createRadialGradient(cx, H * 0.72, 10, cx, H * 0.72, W * 0.5);
-      r.addColorStop(0, 'rgba(255,255,255,.32)'); r.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = r; ctx.fillRect(0, 0, W, H);
-      const ns = ctx.createLinearGradient(0, 0, 0, nb + H * 0.06);
-      ns.addColorStop(0, 'rgba(120,30,60,.2)'); ns.addColorStop(1, 'rgba(120,30,60,0)');
-      ctx.fillStyle = ns; ctx.fillRect(cx - nw / 2, 0, nw, nb + H * 0.06);
-      const rnd = seeded(7);
-      for (let i = 0; i < W * H / 55; i++) {
-        ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.10)' : 'rgba(90,20,50,.07)';
-        ctx.fillRect(rnd() * W, rnd() * H, 1, 1);
-      }
-      ctx.restore();
-      return { cx, nw, nb };
-    }
-
     function draw() {
       const W = el.clientWidth, H = el.clientHeight;
       if (!W || !H) return;
@@ -414,8 +375,6 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
 
-      const neck = mode === 'neck';
-      const bust = neck ? drawBust(W, H) : null;
       const text = nameEl.textContent;
       const ar = nameEl.dataset.script === 'ar';
       const f = FONTS[nameEl.dataset.style || 'script'][ar ? 'ar' : 'en'];
@@ -425,60 +384,50 @@
       ctx.textBaseline = 'alphabetic';
 
       // largest size that fits the available width
-      const maxW = W * (neck ? 0.5 : 0.76);
-      let px = neck ? Math.min(Math.max(H * 0.16, W * 0.13), 88) : Math.min(H * 0.34, 120);
+      const maxW = W * 0.76;
+      let px = Math.min(H * 0.34, 120);
       ctx.font = fontStr(f, px);
       let mt = ctx.measureText(text);
       const inkW = mt.actualBoundingBoxLeft + mt.actualBoundingBoxRight;
       if (inkW > maxW) { px *= maxW / inkW; ctx.font = fontStr(f, px); mt = ctx.measureText(text); }
-      const scale = neck ? 0.9 : 1;
 
       // centre the actual ink of the letters where the pendant should hang
       const asc = mt.actualBoundingBoxAscent, desc = mt.actualBoundingBoxDescent;
       const cx = W / 2 + (mt.actualBoundingBoxLeft - mt.actualBoundingBoxRight) / 2;
-      const targetY = neck ? H * (DROP[chainLen] || 0.67) : H * 0.56;
-      const base = targetY + (asc - desc) / 2;
+      const base = H * 0.56 + (asc - desc) / 2;
       const left = cx - mt.actualBoundingBoxLeft, right = cx + mt.actualBoundingBoxRight;
       const top = base - asc;
 
       // jump rings sit on the real first and last strokes of the name, then the chain runs up from them
       const ends = findEnds(text, ctx.font, ctx.direction, cx, base, top, asc + desc, left, right, W, H);
-      const off = 3 * scale;
+      const off = 3;
       const lx = ends.l[0] - off, ly = ends.l[1], rx = ends.r[0] + off, ry = ends.r[1];
-      if (neck) {
-        // the chain comes out from around the neck and falls to the pendant
-        const sy = bust.nb - H * 0.03;
-        const slx = bust.cx - bust.nw / 2 + 2, srx = bust.cx + bust.nw / 2 - 2;
-        drawChain([slx, sy], [Math.min(slx, lx) - W * 0.02, sy + (ly - sy) * 0.8], [lx - off, ly], m, scale);
-        drawChain([srx, sy], [Math.max(srx, rx) + W * 0.02, sy + (ry - sy) * 0.8], [rx + off, ry], m, scale);
-      } else {
-        const spread = Math.max(W * 0.18, 40);
-        const sl = Math.max(8, lx - spread), sr = Math.min(W - 8, rx + spread);
-        drawChain([sl, -6], [sl + spread * 0.25, ly * 0.78], [lx - off, ly], m);
-        drawChain([sr, -6], [sr - spread * 0.25, ry * 0.78], [rx + off, ry], m);
-      }
+      const spread = Math.max(W * 0.18, 40);
+      const sl = Math.max(8, lx - spread), sr = Math.min(W - 8, rx + spread);
+      drawChain([sl, -6], [sl + spread * 0.25, ly * 0.78], [lx - off, ly], m);
+      drawChain([sr, -6], [sr - spread * 0.25, ry * 0.78], [rx + off, ry], m);
 
       // the name: soft drop shadow, a darker edge for thickness, then the polished face
       const edge = Math.max(1, px * 0.018);
       const grad = ctx.createLinearGradient(0, top, 0, top + asc + desc);
       [0, 0.32, 0.5, 0.66, 1].forEach((o, i) => grad.addColorStop(o, m.stops[i]));
       ctx.save();
-      ctx.shadowColor = neck ? 'rgba(90,20,50,.35)' : 'rgba(78,15,42,.25)'; ctx.shadowBlur = neck ? 8 : 16; ctx.shadowOffsetY = neck ? 4 : 8;
+      ctx.shadowColor = 'rgba(78,15,42,.25)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 8;
       ctx.fillStyle = m.edge; ctx.fillText(text, cx, base + edge);
       ctx.restore();
       ctx.fillStyle = m.edge; ctx.fillText(text, cx, base + edge);
       ctx.fillStyle = grad; ctx.fillText(text, cx, base);
 
-      ring(lx, ly, m, scale);
-      ring(rx, ry, m, scale);
+      ring(lx, ly, m);
+      ring(rx, ry, m);
 
       // birthstone set beside the end of the name
       if (stoneIdx !== null) {
         const c = BL.stones[stoneIdx].c;
-        const r = 6.5 * scale;
-        const gx = ar ? lx : rx, gy = (ar ? ly : ry) + 17 * scale;
-        ctx.beginPath(); ctx.arc(gx, gy, r + 2 * scale, 0, Math.PI * 2); ctx.fillStyle = m.ring; ctx.fill();
-        const g = ctx.createRadialGradient(gx - 2 * scale, gy - 2 * scale, 1, gx, gy, r);
+        const r = 6.5;
+        const gx = ar ? lx : rx, gy = (ar ? ly : ry) + 17;
+        ctx.beginPath(); ctx.arc(gx, gy, r + 2, 0, Math.PI * 2); ctx.fillStyle = m.ring; ctx.fill();
+        const g = ctx.createRadialGradient(gx - 2, gy - 2, 1, gx, gy, r);
         g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.35, c); g.addColorStop(1, c);
         ctx.beginPath(); ctx.arc(gx, gy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
       }
@@ -492,7 +441,7 @@
       }
     }
     const api = {
-      set({ name, style, stone, chain }) {
+      set({ name, style, stone }) {
         if (name !== undefined) {
           const v = name.trim() || nameEl.dataset.sample;
           nameEl.textContent = v;
@@ -500,7 +449,6 @@
         }
         if (style) nameEl.dataset.style = style;
         if (stone !== undefined) stoneIdx = stone;
-        if (chain) chainLen = chain;
         redraw();
       },
       draw: redraw,
