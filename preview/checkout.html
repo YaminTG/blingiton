@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Checkout · Blingiton</title>
+<meta name="theme-color" content="#F8D3DA">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .co { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 32px 80px; }
+  .co > * { min-width: 0; }
+  @media (min-width: 1024px) { .co { grid-template-columns: minmax(0, 1.25fr) minmax(0, .85fr); gap: 48px; align-items: start; } .summary { position: sticky; top: 96px; } }
+  .co h1 { font-size: clamp(32px, 4.5vw, 48px); font-weight: 800; letter-spacing: -.02em; }
+  .block { margin-top: 24px; padding: clamp(18px, 3vw, 28px); border-radius: var(--r); background: var(--paper); box-shadow: var(--shadow-1); display: grid; gap: 16px; }
+  .block h2 { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; }
+  .block h2 .n { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--blush); font-size: 15px; }
+  .two { display: grid; gap: 16px; }
+  @media (min-width: 640px) { .two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .req { color: var(--pink); }
+  .rc-list { display: grid; gap: 10px; }
+  .rc { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; min-height: 64px; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: var(--r-sm); cursor: pointer; transition: border-color .15s, background-color .15s; }
+  .rc:hover { border-color: var(--blush-deep); }
+  .rc:has(input:checked) { border-color: var(--pink); background: var(--blush-soft); }
+  .rc input { width: 20px; height: 20px; margin: 0; accent-color: var(--pink); }
+  .rc b { display: block; font-weight: 800; }
+  .rc small { display: block; color: var(--ink-soft); font-size: 13px; font-weight: 600; }
+  .rc .fee { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rc .icon { color: var(--pink); }
+  .note-line { color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+  .err-sum { margin-top: 20px; padding: 16px 18px; border-radius: var(--r-sm); border: 2px solid var(--error); background: #FFF1F0; color: var(--error); font-weight: 700; }
+  .err-sum ul { margin: 8px 0 0; padding-inline-start: 20px; }
+  .err-sum a { color: var(--error); text-decoration: underline; }
+  .summary { padding: clamp(18px, 3vw, 28px); border-radius: var(--r); background: var(--blush-soft); }
+  .summary h2 { font-size: 20px; font-weight: 800; }
+  .summary .line-item { border-color: var(--blush-deep); }
+  .sum-lines { display: grid; gap: 10px; padding-top: 16px; }
+  .sum-lines div { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
+  .sum-lines .total { padding-top: 12px; border-top: 1px solid var(--blush-deep); font-size: 20px; font-weight: 800; }
+  .sample { margin-top: 12px; }
+  .place { margin-top: 24px; }
+  .thanks { display: grid; justify-items: center; gap: 18px; max-width: 640px; margin-inline: auto; padding-block: 64px 96px; text-align: center; }
+  .thanks img.sticker { width: 140px; height: 140px; animation: pop .6s var(--spring); }
+  .thanks h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; }
+  .thanks p { color: var(--ink-soft); font-size: 18px; }
+  .thanks .rope { width: 180px; }
+</style>
+</head>
+<body data-page="checkout">
+<div id="chrome-top"></div>
+
+<main id="main">
+  <div class="wrap" id="co-root"></div>
+</main>
+
+<div id="chrome-bottom"></div>
+
+<script>
+  window.PAGE_TITLE = { en: 'Checkout · Blingiton', ar: 'إتمام الطلب · Blingiton' };
+  window.COPY = {
+    en: {
+      h1: 'Checkout', s1: 'Contact', fullName: 'Full name', phone: 'Phone (WhatsApp)', phoneHelp: 'We’ll send order updates on WhatsApp.', email: 'Email (optional)',
+      s2: 'Delivery', country: 'Country', city: 'City', address: 'Address', addressHelp: 'Area, street, building and a nearby landmark.', method: 'Delivery method',
+      amman: '1–2 days', jordan: '2–3 days', intl: '3–5 business days',
+      s3: 'Payment', payCard: 'Card online', payCardNote: 'Visa or Mastercard, paid securely on the next step.', payCardDel: 'Card on delivery', payCardDelNote: 'Pay by card when your order arrives.',
+      payCash: 'Cash on delivery', payCashNote: 'Pay in cash when your order arrives.', intlOnly: 'Paying on delivery is available in Jordan only.',
+      summary: 'Order summary', place: 'Place order', errSum: 'Please fix these before placing your order:',
+      thanks: 'Thank you, {name}!', thanksP: 'Your order {no} is confirmed. We’ll message you on WhatsApp at {phone} when it’s wrapped and on its way.',
+      keep: 'Keep shopping', previewNote: 'This is a preview, so no real order was placed.', sample: 'We added a sample piece so you can try checkout.',
+      countries: ['Jordan', 'Saudi Arabia', 'United Arab Emirates', 'Kuwait', 'Qatar', 'Palestine', 'Lebanon', 'United States', 'United Kingdom', 'Other country'],
+    },
+    ar: {
+      h1: 'إتمام الطلب', s1: 'بيانات التواصل', fullName: 'الاسم الكامل', phone: 'رقم الهاتف (واتساب)', phoneHelp: 'سنرسل تحديثات الطلب عبر واتساب.', email: 'البريد الإلكتروني (اختياري)',
+      s2: 'التوصيل', country: 'الدولة', city: 'المدينة', address: 'العنوان', addressHelp: 'المنطقة، الشارع، البناية وأقرب معلم.', method: 'طريقة التوصيل',
+      amman: 'خلال 1–2 يوم', jordan: 'خلال 2–3 أيام', intl: 'خلال 3–5 أيام عمل',
+      s3: 'الدفع', payCard: 'بطاقة أونلاين', payCardNote: 'فيزا أو ماستركارد، تدفع بأمان في الخطوة التالية.', payCardDel: 'بطاقة عند الاستلام', payCardDelNote: 'ادفع بالبطاقة عند وصول طلبك.',
+      payCash: 'نقداً عند الاستلام', payCashNote: 'ادفع نقداً عند وصول طلبك.', intlOnly: 'الدفع عند الاستلام متاح داخل الأردن فقط.',
+      summary: 'ملخص الطلب', place: 'تأكيد الطلب', errSum: 'يرجى تصحيح ما يلي قبل تأكيد الطلب:',
+      thanks: 'شكراً لك يا {name}!', thanksP: 'تم تأكيد طلبك {no}. سنراسلك عبر واتساب على {phone} عندما يُغلّف ويصبح في طريقه إليك.',
+      keep: 'متابعة التسوّق', previewNote: 'هذا تصميم تجريبي، لذلك لم يتم إرسال طلب حقيقي.', sample: 'أضفنا قطعة للتجربة لتتمكن من تجربة إتمام الطلب.',
+      countries: ['الأردن', 'السعودية', 'الإمارات', 'الكويت', 'قطر', 'فلسطين', 'لبنان', 'الولايات المتحدة', 'المملكة المتحدة', 'دولة أخرى'],
+    },
+  };
+</script>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+  const { $, $$, t, esc, icon, money, pName, product, cart, saveCart, optionLines, lang } = window.BLX;
+  const C = () => window.COPY[lang()];
+  const FEES = { amman: 3, jordan: 5, intl: 15 }; // sample fees for the preview
+  let seeded = false;
+  if (!cart().length) {
+    saveCart([{ id: 10830, name: 'Sara', style: 'script', finish: 'silver', chain: 45, stone: 9, gift: true, note: 'Happy birthday!', qty: 1 }]);
+    seeded = true;
+  }
+  const f = { name: '', phone: '', email: '', country: 0, city: '', address: '', method: 'amman', pay: 'card', done: null };
+  let errors = {};
+
+  function fees() { return f.country === 0 ? FEES[f.method] : FEES.intl; }
+
+  function summaryHTML(c) {
+    const items = cart();
+    const sub = items.reduce((s, it) => s + product(it.id).price * it.qty, 0);
+    return `<aside class="summary" aria-labelledby="sum-h">
+      <h2 id="sum-h">${c.summary}</h2>
+      ${seeded ? `<p class="pill sample">${icon('sparkle')}${c.sample}</p>` : ''}
+      ${items.map((it) => { const p = product(it.id); return `<div class="line-item"><img src="${p.img}" alt="" width="76" height="76"><div>
+        <div class="li-name">${esc(pName(p))}${it.qty > 1 ? ` × ${it.qty}` : ''}</div><div class="li-meta">${optionLines(it)}</div>
+        <div class="li-row"><span></span><span class="price">${money(p.price * it.qty)}</span></div></div></div>`; }).join('')}
+      <div class="sum-lines">
+        <div><span>${t('subtotal')}</span><span class="price">${money(sub)}</span></div>
+        <div><span>${t('delivery')}</span><span class="price">${money(fees())}</span></div>
+        <div class="total"><span>${t('total')}</span><span class="price">${money(sub + fees())}</span></div>
+      </div>
+    </aside>`;
+  }
+
+  function field(id, label, { type = 'text', req = true, help = '', auto = '', area = false, ph = '' } = {}) {
+    const e = errors[id];
+    const attrs = `id="${id}" name="${id}" ${auto ? `autocomplete="${auto}"` : ''} ${req ? 'required aria-required="true"' : ''} aria-describedby="${id}-help ${id}-err" ${e ? 'aria-invalid="true"' : ''}`;
+    const input = area
+      ? `<textarea class="textarea" ${attrs}>${esc(f[id])}</textarea>`
+      : `<input class="input" type="${type}" ${attrs} value="${esc(f[id])}" ${ph ? `placeholder="${ph}"` : ''} ${type === 'tel' ? 'inputmode="tel" dir="ltr"' : ''}>`;
+    return `<div class="field"><label for="${id}">${label}${req ? ' <span class="req" aria-hidden="true">*</span>' : ''}</label>${input}
+      <span class="help" id="${id}-help">${help}</span><span class="err" id="${id}-err">${e || ''}</span></div>`;
+  }
+
+  function render() {
+    const c = C();
+    if (f.done) {
+      $('#co-root').innerHTML = `<section class="thanks" aria-labelledby="thanks-h">
+        <img class="sticker" src="img/logo.png" alt="" width="140" height="140">
+        <h1 id="thanks-h">${c.thanks.replace('{name}', esc(f.done.first))}</h1>
+        <div class="rope" aria-hidden="true"></div>
+        <p>${c.thanksP.replace('{no}', `<b>${f.done.no}</b>`).replace('{phone}', `<bdi dir="ltr">${esc(f.done.phone)}</bdi>`)}</p>
+        <p class="help">${c.previewNote}</p>
+        <a class="btn btn-primary" href="shop">${c.keep}</a>
+      </section>`;
+      return;
+    }
+    const jordan = f.country === 0;
+    const errList = Object.entries(errors);
+    $('#co-root').innerHTML = `
+      <div class="co">
+        <form id="co-form" novalidate>
+          <h1>${c.h1}</h1>
+          ${errList.length ? `<div class="err-sum" id="err-sum" tabindex="-1" role="alert"><p>${c.errSum}</p><ul>${errList.map(([k, v]) => `<li><a href="#${k}">${v}</a></li>`).join('')}</ul></div>` : ''}
+          <fieldset class="block"><h2><span class="n">1</span>${c.s1}</h2>
+            <div class="two">${field('name', c.fullName, { auto: 'name' })}${field('phone', c.phone, { type: 'tel', auto: 'tel', help: c.phoneHelp, ph: '+962 7X XXX XXXX' })}</div>
+            ${field('email', c.email, { type: 'email', auto: 'email', req: false })}
+          </fieldset>
+          <fieldset class="block"><h2><span class="n">2</span>${c.s2}</h2>
+            <div class="two">
+              <div class="field"><label for="country">${c.country}</label><select class="select" id="country" autocomplete="country-name">${c.countries.map((n, i) => `<option value="${i}" ${f.country === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+              ${field('city', c.city, { auto: 'address-level2' })}
+            </div>
+            ${field('address', c.address, { area: true, help: c.addressHelp, auto: 'street-address' })}
+            <div role="radiogroup" aria-label="${c.method}" class="rc-list">
+              ${jordan ? `
+              <label class="rc"><input type="radio" name="method" value="amman" ${f.method === 'amman' ? 'checked' : ''}><span><b>${t('deliveryAmman')}</b><small>${c.amman}</small></span><span class="fee">${money(FEES.amman)}</span></label>
+              <label class="rc"><input type="radio" name="method" value="jordan" ${f.method === 'jordan' ? 'checked' : ''}><span><b>${t('deliveryJordan')}</b><small>${c.jordan}</small></span><span class="fee">${money(FEES.jordan)}</span></label>` : `
+              <label class="rc"><input type="radio" name="method" value="intl" checked><span><b>${t('deliveryIntl')}</b><small>${c.intl}</small></span><span class="fee">${money(FEES.intl)}</span></label>`}
+            </div>
+          </fieldset>
+          <fieldset class="block"><h2><span class="n">3</span>${c.s3}</h2>
+            <div role="radiogroup" aria-label="${c.s3}" class="rc-list">
+              <label class="rc"><input type="radio" name="pay" value="card" ${f.pay === 'card' ? 'checked' : ''}><span><b>${c.payCard}</b><small>${c.payCardNote}</small></span>${icon('card')}</label>
+              ${jordan ? `
+              <label class="rc"><input type="radio" name="pay" value="carddel" ${f.pay === 'carddel' ? 'checked' : ''}><span><b>${c.payCardDel}</b><small>${c.payCardDelNote}</small></span>${icon('truck')}</label>
+              <label class="rc"><input type="radio" name="pay" value="cash" ${f.pay === 'cash' ? 'checked' : ''}><span><b>${c.payCash}</b><small>${c.payCashNote}</small></span>${icon('truck')}</label>` : `<p class="note-line">${c.intlOnly}</p>`}
+            </div>
+          </fieldset>
+          <button class="btn btn-primary btn-block place" type="submit">${c.place} · <span class="price">${money(cart().reduce((s, it) => s + product(it.id).price * it.qty, 0) + fees())}</span></button>
+        </form>
+        ${summaryHTML(c)}
+      </div>`;
+  }
+
+  function validate() {
+    const c = C(), e = {};
+    const req = lang() === 'ar' ? 'يرجى إدخال' : 'Enter your';
+    if (!f.name.trim()) e.name = `${req} ${c.fullName.toLowerCase()}`;
+    if (f.phone.replace(/\D/g, '').length < 8) e.phone = t('phoneErr');
+    if (!f.city.trim()) e.city = `${req} ${c.city.toLowerCase()}`;
+    if (!f.address.trim()) e.address = `${req} ${c.address.toLowerCase()}`;
+    return e;
+  }
+
+  document.addEventListener('input', (e) => { if (e.target.closest('#co-form') && e.target.name in f) f[e.target.name] = e.target.value; });
+  document.addEventListener('change', (e) => {
+    if (!e.target.closest('#co-form')) return;
+    if (e.target.id === 'country') {
+      f.country = Number(e.target.value);
+      f.method = f.country === 0 ? 'amman' : 'intl';
+      if (f.country !== 0) f.pay = 'card';
+      render(); $('#country').focus(); return;
+    }
+    if (e.target.name === 'method') { f.method = e.target.value; render(); $(`input[name="method"][value="${f.method}"]`).focus(); return; }
+    if (e.target.name === 'pay') { f.pay = e.target.value; render(); $(`input[name="pay"][value="${f.pay}"]`).focus(); }
+  });
+  document.addEventListener('submit', (e) => {
+    if (e.target.id !== 'co-form') return;
+    e.preventDefault();
+    errors = validate();
+    if (Object.keys(errors).length) { render(); $('#err-sum').focus(); return; }
+    f.done = { first: f.name.trim().split(/\s+/)[0], phone: f.phone.trim(), no: 'BL-' + (10400 + Math.floor(Math.random() * 500)) };
+    saveCart([]);
+    render();
+    window.scrollTo({ top: 0 });
+    $('#thanks-h').setAttribute('tabindex', '-1'); $('#thanks-h').focus();
+  });
+  document.addEventListener('bl:lang', () => { if (Object.keys(errors).length) errors = validate(); render(); });
+})();
+</script>
+</body>
+</html>

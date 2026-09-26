@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Shop · Blingiton</title>
+<meta name="theme-color" content="#F8D3DA">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .shop-head { background: var(--blush); }
+  .shop-head .wrap { padding-block: 36px 32px; }
+  .shop-head h1 { font-size: clamp(36px, 5.5vw, 60px); font-weight: 800; letter-spacing: -.02em; }
+  .shop-head .lead { margin-top: 10px; }
+  .filters { position: sticky; top: 72px; z-index: 20; background: rgba(255,248,245,.96); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .filters .wrap { display: grid; gap: 12px; padding-block: 14px; }
+  .scroller { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); padding-block: 2px; }
+  .scroller::-webkit-scrollbar { display: none; }
+  .row2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+  .row2 .opts { gap: 6px; }
+  .row2 .chip { min-height: 40px; padding: 0 14px; font-size: 13px; }
+  .sort { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .sort .select { min-height: 44px; width: auto; padding-block: 8px; border-radius: 999px; }
+  .results { padding-block: 28px 80px; }
+  .count-line { margin-bottom: 20px; color: var(--ink-soft); font-weight: 700; }
+  .no-results { display: grid; justify-items: center; gap: 14px; padding: 56px 16px; text-align: center; color: var(--ink-soft); }
+</style>
+</head>
+<body data-page="shop">
+<div id="chrome-top"></div>
+
+<main id="main">
+  <section class="shop-head">
+    <div class="wrap">
+      <h1 id="shop-title">Shop</h1>
+      <p class="lead" data-i18n="shopLead">Every piece is 925 sterling silver. Personalised pieces are made to order in 4 days.</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="scroller" id="cat-chips" role="group" aria-label="Category" data-i18n-label="catLabel"></div>
+      <div class="row2">
+        <div class="opts" role="group" aria-label="Price" data-i18n-label="priceLabel">
+          <button class="chip" type="button" data-price="lt40" aria-pressed="false" data-i18n="pLt40">Under 40 JOD</button>
+          <button class="chip" type="button" data-price="40to60" aria-pressed="false" data-i18n="p4060">40–60 JOD</button>
+          <button class="chip" type="button" data-price="gt60" aria-pressed="false" data-i18n="pGt60">Over 60 JOD</button>
+          <button class="chip" type="button" id="personal-chip" aria-pressed="false" data-i18n="personalOnly">Personalised only</button>
+        </div>
+        <label class="sort"><span data-i18n="sortLabel">Sort</span>
+          <select class="select" id="sort">
+            <option value="loved" data-i18n="sLoved">Most loved</option>
+            <option value="low" data-i18n="sLow">Price: low to high</option>
+            <option value="high" data-i18n="sHigh">Price: high to low</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <section class="wrap results" aria-labelledby="shop-title">
+    <p class="count-line" id="count-line" aria-live="polite"></p>
+    <div class="grid four" id="grid"></div>
+    <div class="no-results" id="no-results" hidden>
+      <p id="no-results-text"></p>
+      <button class="btn btn-outline" type="button" id="clear"></button>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-bottom"></div>
+
+<script>
+  window.PAGE_TITLE = { en: 'Shop · Blingiton', ar: 'المتجر · Blingiton' };
+  window.PAGE_AR = {
+    shopLead: 'كل القطع من الفضة 925. القطع المخصّصة تُصنع حسب الطلب خلال 4 أيام.',
+    catLabel: 'الفئة', priceLabel: 'السعر', pLt40: 'أقل من 40 د.أ', p4060: '<bdi dir="ltr">40–60</bdi> د.أ', pGt60: 'أكثر من 60 د.أ',
+    personalOnly: 'القطع المخصّصة فقط', sortLabel: 'الترتيب',
+    sLoved: 'الأكثر حبّاً', sLow: 'السعر: من الأقل للأعلى', sHigh: 'السعر: من الأعلى للأقل',
+  };
+</script>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+  const { $, $$, t, cardHTML, lang } = window.BLX;
+  const BL = window.BL;
+  const q = new URLSearchParams(location.search);
+  const state = {
+    cat: q.get('cat') || 'all',
+    price: q.get('price') || '',
+    personal: q.get('personal') === '1',
+    sort: q.get('sort') || 'loved',
+  };
+  $('#sort').value = state.sort;
+
+  const loveRank = (id) => { const i = BL.mostLoved.indexOf(id); return i === -1 ? 99 + BL.products.findIndex((p) => p.id === id) : i; };
+  const inPrice = (p) => !state.price || (state.price === 'lt40' && p.price < 40) || (state.price === '40to60' && p.price >= 40 && p.price <= 60) || (state.price === 'gt60' && p.price > 60);
+
+  function sync() {
+    const u = new URLSearchParams();
+    if (state.cat !== 'all') u.set('cat', state.cat);
+    if (state.price) u.set('price', state.price);
+    if (state.personal) u.set('personal', '1');
+    if (state.sort !== 'loved') u.set('sort', state.sort);
+    history.replaceState(null, '', location.pathname + (u.toString() ? '?' + u : ''));
+  }
+
+  function render() {
+    const ar = lang() === 'ar';
+    const cats = [{ id: 'all', en: t('all'), ar: t('all') }, ...BL.categories];
+    $('#cat-chips').innerHTML = cats.map((c) => `<button class="chip" type="button" data-cat="${c.id}" aria-pressed="${state.cat === c.id}">${ar ? c.ar : c.en}</button>`).join('');
+    const cur = BL.categories.find((c) => c.id === state.cat);
+    $('#shop-title').textContent = cur ? (ar ? cur.ar : cur.en) : (ar ? 'المتجر' : 'Shop');
+    $$('[data-price]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.price === state.price)));
+    $('#personal-chip').setAttribute('aria-pressed', String(state.personal));
+
+    let list = BL.products.filter((p) => (state.cat === 'all' || p.cats.includes(state.cat)) && inPrice(p) && (!state.personal || p.personal));
+    if (state.sort === 'low') list.sort((a, b) => a.price - b.price);
+    else if (state.sort === 'high') list.sort((a, b) => b.price - a.price);
+    else list.sort((a, b) => loveRank(a.id) - loveRank(b.id));
+
+    $('#grid').innerHTML = list.map(cardHTML).join('');
+    $('#count-line').textContent = t('results', { n: list.length });
+    $('#no-results').hidden = list.length > 0;
+    $('#no-results-text').textContent = t('noResults');
+    $('#clear').textContent = t('clear');
+    sync();
+  }
+
+  document.addEventListener('click', (e) => {
+    const c = e.target.closest('[data-cat]');
+    if (c) { state.cat = c.dataset.cat; render(); return; }
+    const p = e.target.closest('[data-price]');
+    if (p) { state.price = state.price === p.dataset.price ? '' : p.dataset.price; render(); return; }
+    if (e.target.closest('#personal-chip')) { state.personal = !state.personal; render(); return; }
+    if (e.target.closest('#clear')) { Object.assign(state, { cat: 'all', price: '', personal: false }); render(); }
+  });
+  $('#sort').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+  document.addEventListener('bl:lang', render);
+})();
+</script>
+</body>
+</html>

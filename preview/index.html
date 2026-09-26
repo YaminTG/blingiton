@@ -1,96 +1,252 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Blingiton Looks</title>
-<meta name="description" content="Three early looks for the new Blingiton website.">
-<meta name="theme-color" content="#111110">
+<title>Blingiton · 925 silver name necklaces &amp; gifts</title>
+<meta name="theme-color" content="#F8D3DA">
+<link rel="icon" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;1,6..96,400..500&amp;family=IBM+Plex+Mono:wght@400&amp;family=Marhey:wght@600&amp;family=Unbounded:wght@700..900&amp;display=swap">
-<link rel="stylesheet" href="assets/shell.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
 <style>
-  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: clamp(20px, 5vw, 56px) clamp(20px, 5vw, 56px) clamp(48px, 7vw, 80px); }
-  @media (min-width: 900px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
-  .card { display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; background: #1C1B19; border: 1px solid rgba(237,235,230,0.08); transition: transform 0.2s ease, border-color 0.2s ease; }
-  .card:hover { transform: translateY(-3px); border-color: rgba(237,235,230,0.24); }
-  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
-  .vis { position: relative; height: 260px; overflow: hidden; }
-  .card-body { flex: 1; display: flex; flex-direction: column; padding: 18px 20px 22px; }
-  .card-top { display: flex; align-items: baseline; gap: 12px; }
-  .card-letter { font-family: "Bodoni Moda", Didot, serif; font-size: 34px; line-height: 1; }
-  .card h2 { margin: 0; font-size: 20px; font-weight: 500; }
-  .card p { flex: 1; margin: 8px 0 0; color: #A7A49D; font-size: 15px; line-height: 1.55; }
-  .card-cta { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
+  .hero { background: var(--blush); overflow: hidden; }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 32px 56px; align-items: center; }
+  .hero-grid > * { min-width: 0; }
+  @media (min-width: 1024px) { .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 48px; padding-block: 72px 104px; } }
+  .hero h1 { margin-top: 18px; font-size: clamp(46px, 7.2vw, 84px); font-weight: 800; line-height: 1.02; letter-spacing: -.025em; }
+  html[lang="ar"] .hero h1 { letter-spacing: 0; line-height: 1.2; }
+  .glitter-text { color: transparent; background: url(img/logo.png) 50% 86% / 900px auto; -webkit-background-clip: text; background-clip: text; }
+  .hero .lead { color: var(--ink-soft); font-size: clamp(17px, 1.5vw, 19px); }
+  .try { margin-top: 30px; max-width: 580px; }
+  .try label { display: block; margin-bottom: 8px; }
+  .try-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .try-row .input { flex: 1 1 220px; min-height: 56px; border-radius: 999px; padding-inline: 22px; font-size: 17px; border-color: var(--blush-deep); }
+  .try-row .btn { flex: 0 0 auto; min-height: 56px; }
+  .try-meta { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+  .try-meta .help { font-weight: 600; }
+  .hero-art { position: relative; padding: 28px 14px 44px; }
+  .hero-art .plate { min-height: clamp(260px, 34vw, 380px); border: 6px solid #fff; box-shadow: var(--shadow-2); }
+  .hero-sticker { position: absolute; z-index: 2; top: -6px; inset-inline-end: -4px; width: clamp(96px, 13vw, 144px); height: auto; transform: rotate(12deg); }
+  .hero-photo { position: absolute; z-index: 2; bottom: 0; inset-inline-start: -2px; width: clamp(88px, 14vw, 160px); margin: 0; padding: 7px 7px 10px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-2); transform: rotate(-6deg); }
+  .hero-photo img { aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+  .hero-photo figcaption { margin-top: 6px; font-size: 12px; font-weight: 700; line-height: 1.3; }
+  @media (max-width: 767px) { .hero-photo figcaption { display: none; } .hero-art .plate { min-height: 300px; } }
 
-  .vis-a { color: #ECEAE4; background: radial-gradient(420px circle at var(--lx) var(--ly), rgba(240,232,214,var(--ambient-a)), rgba(240,232,214,0) 70%), #0D0C0B;
-    --metal: linear-gradient(100deg, #8C8983 0%, #E9E6DF 30%, #9D9A93 52%, #F5F3EE 70%, #85827C 100%); }
-  .vis-a .txt { position: absolute; z-index: 1; left: 22px; top: 26px; margin: 0; font-family: "Bodoni Moda", Didot, serif; font-size: 38px; line-height: 0.98; letter-spacing: -0.01em; }
-  .vis-a .txt em { --sr: 160px; }
-  .vis-a .arch { position: absolute; right: 22px; bottom: -1px; width: 40%; max-width: 170px; aspect-ratio: 520 / 680; overflow: hidden; border: 1px solid rgba(236,234,228,0.14); border-bottom: 0; border-radius: 50% 50% 0 0 / 38% 38% 0 0; }
-  .vis-a .arch img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85); }
+  .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 12px; }
+  @media (min-width: 768px) { .cats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  .cat { display: grid; justify-items: center; gap: 12px; color: var(--ink); font-weight: 800; text-align: center; }
+  .cat:hover { color: var(--pink); }
+  .cat img { width: 100%; max-width: 156px; aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 0 2px var(--blush-deep), var(--shadow-1); transition: box-shadow .2s var(--ease), transform .2s var(--ease); }
+  .cat:hover img { box-shadow: 0 0 0 3px var(--pink), var(--shadow-1); transform: translateY(-3px); }
 
-  .vis-b { color: #151515; background: #F2F1ED;
-    --metal: linear-gradient(100deg, #5E5E5C 0%, #CFCFCB 22%, #7A7A78 40%, #E4E4E0 55%, #6C6C6A 72%, #B9B9B5 100%); }
-  .vis-b .num { position: absolute; left: 14px; top: 10px; font-family: Archivo, "Helvetica Neue", Arial, sans-serif; font-weight: 900; font-stretch: 125%; font-size: clamp(96px, 10vw, 132px); line-height: 0.8; letter-spacing: -0.045em; --sr: 160px; }
-  .vis-b .frame { position: absolute; right: 22px; bottom: 22px; width: 46%; max-width: 190px; aspect-ratio: 1; overflow: hidden; border: 1px solid #151515; background: #FFFFFF; }
-  .vis-b .frame img { width: 100%; height: 100%; object-fit: cover; }
-  .vis-b .cap { position: absolute; left: 22px; bottom: 24px; max-width: 42%; font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 11px; line-height: 1.5; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A57; }
+  .gift { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding: clamp(24px, 4vw, 56px); border-radius: var(--r-lg); background: var(--blush-soft); align-items: center; }
+  @media (min-width: 1024px) { .gift { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; } }
+  .gift-photo { position: relative; }
+  .gift-photo img.main { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 18%; border-radius: 24px; box-shadow: var(--shadow-2); }
+  .gift-photo .rope { position: absolute; left: 12%; right: 12%; bottom: -4px; }
+  .gift-list { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 14px; }
+  .gift-list li { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 17px; }
+  .ico { display: inline-grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 50%; background: var(--paper); color: var(--pink); box-shadow: var(--shadow-1); }
+  .gift .btn { margin-top: 30px; }
 
-  .vis-c { color: #1E1A2B; background: #EDEBF2;
-    --metal: linear-gradient(180deg, #DADBE4 0%, #9FA0B2 34%, #3D3E52 50%, #C9CAD6 60%, #7A7B8F 100%); }
-  .vis-c .word { position: absolute; z-index: 1; left: 18px; top: 22px; margin: 0; font-family: Unbounded, "Arial Black", sans-serif; font-weight: 900; font-size: 64px; line-height: 0.9; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(30,26,43,0.3); --sr: 140px; }
-  .vis-c .pill { position: absolute; right: 26px; top: 26px; width: 36%; max-width: 150px; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 999px; border: 4px solid #FFFFFF; transform: rotate(-6deg); box-shadow: 0 18px 36px rgba(30,26,43,0.18); }
-  .vis-c .pill img { width: 100%; height: 100%; object-fit: cover; }
-  .vis-c .sticker { position: absolute; z-index: 2; left: 22px; bottom: 28px; transform: rotate(-6deg); padding: 4px 14px 7px; border-radius: 999px; background: #F3B4CD; font-family: Marhey, sans-serif; font-size: 20px; font-weight: 600; }
-  .vis-c .tag { position: absolute; z-index: 2; right: 40px; bottom: 26px; transform: rotate(8deg); padding: 5px 11px; border-radius: 999px; background: #BFDC9E; font-family: Unbounded, "Arial Black", sans-serif; font-size: 12px; font-weight: 700; }
+  .steps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 8px; counter-reset: step; }
+  @media (min-width: 768px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
+  .step { padding: 26px; border-radius: var(--r); background: var(--paper); box-shadow: var(--shadow-1); }
+  .step::before { counter-increment: step; content: counter(step); display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--pink); color: #fff; font-weight: 800; font-size: 18px; }
+  .step h3 { margin-top: 18px; font-size: 20px; font-weight: 800; }
+  .step p { margin-top: 8px; color: var(--ink-soft); }
+  .custom-cta { margin-top: 28px; }
+
+  .trust { background: var(--blush); }
+  .trust ul { list-style: none; margin: 0; padding-block: 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  @media (min-width: 1024px) { .trust ul { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .trust li { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 15px; line-height: 1.3; }
+
+  .ig { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (min-width: 768px) { .ig { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+  .ig a { display: block; overflow: hidden; border-radius: 18px; }
+  .ig img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .4s var(--ease); }
+  .ig a:hover img { transform: scale(1.05); }
 </style>
 </head>
-<body data-metal="silver">
+<body data-page="home">
+<div id="chrome-top"></div>
 
-<div class="cards">
-  <a class="card" href="night-vault">
-    <div class="vis vis-a lit" aria-hidden="true">
-      <p class="txt">Silver that<br>catches<br><em class="shine lit">the light.</em></p>
-      <div class="arch"><img src="img/10830.jpg" alt="" width="594" height="916"></div>
+<main id="main">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill"><span data-icon="sparkle" style="display:inline-flex;color:var(--pink)"></span><span data-i18n="heroPill">925 sterling silver · handmade in Jordan</span></span>
+        <h1 data-i18n="heroH1">Your <span class="glitter-text">name</span>,<br>in sterling silver.</h1>
+        <p class="lead" data-i18n="heroLead">Name necklaces, letters and custom pieces in 925 sterling silver, made to order in 4 days and wrapped in our pink box.</p>
+        <form class="try" action="product" method="get">
+          <input type="hidden" name="id" value="10830">
+          <label class="caps" for="try-name" data-i18n="tryLabel">Try your name</label>
+          <div class="try-row">
+            <input class="input" id="try-name" name="name" type="text" maxlength="12" autocomplete="off" placeholder="Type a name…" data-i18n-ph="tryPh">
+            <button class="btn btn-primary" type="submit"><span data-i18n="tryBtn">Design yours</span><span id="try-arrow"></span></button>
+          </div>
+          <div class="try-meta"><div id="hero-metal"></div><span class="help" data-i18n="tryNote">Name necklaces from 45 JOD</span></div>
+        </form>
+      </div>
+      <div class="hero-art">
+        <div class="plate" id="hero-plate"><span class="name" data-style="script">Sara</span></div>
+        <img class="sticker hero-sticker" src="img/logo.png" alt="Bling it on!" width="144" height="144">
+        <figure class="hero-photo">
+          <img src="img/10830.jpg" alt="Birthstone Name Necklace held in a hand" width="146" height="146">
+          <figcaption data-i18n="heroCap">Birthstone Name Necklace · 60 JOD</figcaption>
+        </figure>
+      </div>
     </div>
-    <div class="card-body">
-      <div class="card-top"><span class="card-letter">A</span><h2>Night Vault</h2></div>
-      <p>Dark and premium, like a jeweller's display case at night. Silver shines hardest against black.</p>
-      <span class="card-cta">View look A <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
-    </div>
-  </a>
+  </section>
 
-  <a class="card" href="hallmark-gallery">
-    <div class="vis vis-b" aria-hidden="true">
-      <div class="num shine lit">925</div>
-      <div class="cap">No. 14712<br>Embroidery Ring<br>70 JOD</div>
-      <div class="frame"><img src="img/14712.jpeg" alt="" width="594" height="542"></div>
+  <section class="section" aria-labelledby="cats-h">
+    <div class="wrap">
+      <div class="section-head"><div>
+        <span class="caps eyebrow" data-i18n="catsEyebrow">Shop by</span>
+        <h2 class="h2" id="cats-h" data-i18n="catsH2">Find your sparkle</h2>
+      </div></div>
+      <div class="cats" id="cats"></div>
     </div>
-    <div class="card-body">
-      <div class="card-top"><span class="card-letter">B</span><h2>Hallmark Gallery</h2></div>
-      <p>Bright and clean like a fashion gallery, built around the 925 stamp on every piece. Calm, confident, editorial.</p>
-      <span class="card-cta">View look B <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
-    </div>
-  </a>
+  </section>
 
-  <a class="card" href="chrome-candy">
-    <div class="vis vis-c" aria-hidden="true">
-      <p class="word shine lit">bling<br>it on</p>
-      <div class="pill"><img src="img/10722.jpg" alt="" width="594" height="755"></div>
-      <span class="sticker" lang="ar" dir="rtl">اسمك بالفضة</span>
-      <span class="tag">45 JOD</span>
+  <section class="section" style="padding-top:0" aria-labelledby="loved-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <span class="caps eyebrow" data-i18n="lovedEyebrow">Most loved</span>
+          <h2 class="h2" id="loved-h" data-i18n="lovedH2">Pieces everyone’s asking for</h2>
+        </div>
+        <a class="more" href="shop"><span data-i18n="seeAll">Shop everything</span><span class="arrow-slot"></span></a>
+      </div>
+      <div class="grid four" id="loved"></div>
     </div>
-    <div class="card-body">
-      <div class="card-top"><span class="card-letter">C</span><h2>Chrome Candy</h2></div>
-      <p>Playful and loud, leaning into the name "Bling it on": chrome lettering, sticker price tags, sparkle. Closest to the Instagram vibe.</p>
-      <span class="card-cta">View look C <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
-    </div>
-  </a>
-</div>
+  </section>
 
-<script src="assets/light.js"></script>
+  <section class="section" style="padding-top:0" aria-labelledby="gift-h">
+    <div class="wrap">
+      <div class="gift">
+        <div class="gift-photo">
+          <img class="main" src="img/10728.jpg" alt="A Blingiton gift bag with the glitter logo sticker and silver rope handles, above an open pink box" width="594" height="871" loading="lazy">
+          <div class="rope" aria-hidden="true"></div>
+        </div>
+        <div>
+          <span class="caps eyebrow" data-i18n="giftEyebrow">Ready to gift</span>
+          <h2 class="h2" id="gift-h" data-i18n="giftH2">Every order arrives wrapped in pink.</h2>
+          <p class="lead" data-i18n="giftLead">Our signature pink box and gift bag, tied off with a silver rope, make every piece feel like a present.</p>
+          <ul class="gift-list">
+            <li><span class="ico" data-icon="gift"></span><span data-i18n="g1">Signature pink box and gift bag</span></li>
+            <li><span class="ico" data-icon="pen"></span><span data-i18n="g2">Add a personal gift note</span></li>
+            <li><span class="ico" data-icon="sparkle"></span><span data-i18n="g3">Hide the price on gift orders</span></li>
+          </ul>
+          <a class="btn btn-primary" href="shop" data-i18n="giftCta">Shop gifts</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="custom" style="padding-top:0" aria-labelledby="custom-h">
+    <div class="wrap">
+      <div class="section-head"><div>
+        <span class="caps eyebrow" data-i18n="customEyebrow">Custom orders</span>
+        <h2 class="h2" id="custom-h" data-i18n="customH2">Have an idea? We’ll make it in silver.</h2>
+      </div></div>
+      <ol class="steps" style="list-style:none;padding:0;margin:0">
+        <li class="step"><h3 data-i18n="s1t">Send your idea</h3><p data-i18n="s1d">A photo, a sketch or just a name, on WhatsApp.</p></li>
+        <li class="step"><h3 data-i18n="s2t">We design it with you</h3><p data-i18n="s2d">You see a preview and the price before we start.</p></li>
+        <li class="step"><h3 data-i18n="s3t">Ready in 4 days</h3><p data-i18n="s3d">Delivered across Jordan, or worldwide with DHL Express.</p></li>
+      </ol>
+      <a class="btn btn-outline custom-cta" id="custom-wa" href="#" target="_blank" rel="noopener"><span class="wa-ico"></span><span data-i18n="customCta">Start on WhatsApp</span></a>
+    </div>
+  </section>
+
+  <section class="trust" aria-label="Why Blingiton">
+    <div class="wrap"><ul>
+      <li><span class="ico" data-icon="sparkle"></span><span data-i18n="trust1">Genuine 925 sterling silver</span></li>
+      <li><span class="ico" data-icon="card"></span><span data-i18n="trust2">Card or cash on delivery</span></li>
+      <li><span class="ico" data-icon="truck"></span><span data-i18n="trust3">DHL Express worldwide</span></li>
+      <li><span class="ico" data-icon="clock"></span><span data-i18n="trust4">Custom pieces in 4 days</span></li>
+    </ul></div>
+  </section>
+
+  <section class="section" aria-labelledby="ig-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <span class="caps eyebrow">@blingitonnnn</span>
+          <h2 class="h2" id="ig-h" data-i18n="igH2">Join 69K followers on Instagram</h2>
+        </div>
+        <a class="more" href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><span data-i18n="igCta">Follow on Instagram</span><span class="arrow-slot"></span></a>
+      </div>
+      <div class="ig">
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/17231.jpg" alt="Charmie Pink Necklace" loading="lazy" width="594" height="792"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/10852.jpg" alt="Enamel name necklaces in a pink Blingiton box" loading="lazy" width="594" height="1057"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/15214.jpeg" alt="Love Hugs earrings" loading="lazy" width="594" height="792"></a>
+        <a href="https://www.instagram.com/blingitonnnn/" target="_blank" rel="noopener"><img src="img/14705.jpeg" alt="Watermelon Map rings" loading="lazy" width="594" height="517"></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-bottom"></div>
+
+<script>
+  window.PAGE_TITLE = { en: 'Blingiton · 925 silver name necklaces & gifts', ar: 'Blingiton · قلادات أسماء وهدايا من الفضة 925' };
+  window.PAGE_AR = {
+    heroPill: 'فضة 925 · صُنعت يدوياً في الأردن',
+    heroH1: '<span class="glitter-text">اسمك</span>،<br>من الفضة 925.',
+    heroLead: 'قلادات بالأسماء والحروف وقطع مخصّصة من الفضة 925، تُصنع حسب الطلب خلال 4 أيام وتصلك في علبتنا الوردية.',
+    tryLabel: 'جرّب اسمك', tryPh: 'اكتب اسماً…', tryBtn: 'صمّم قطعتك', tryNote: 'قلادات الأسماء تبدأ من 45 د.أ',
+    heroCap: 'قلادة اسم بحجر الميلاد · 60 د.أ',
+    catsEyebrow: 'تسوّق حسب', catsH2: 'اعثر على قطعتك المفضّلة',
+    lovedEyebrow: 'الأكثر حبّاً', lovedH2: 'القطع الأكثر طلباً', seeAll: 'تسوّق كل القطع',
+    giftEyebrow: 'جاهزة للإهداء', giftH2: 'كل طلب يصلك مغلّفاً بالوردي.',
+    giftLead: 'علبتنا الوردية وحقيبة الهدايا بحبلها الفضي تجعل كل قطعة هدية بحد ذاتها.',
+    g1: 'علبة وحقيبة هدايا وردية مميّزة', g2: 'أضف بطاقة إهداء شخصية', g3: 'إخفاء السعر في طلبات الهدايا', giftCta: 'تسوّق الهدايا',
+    customEyebrow: 'طلبات خاصة', customH2: 'لديك فكرة؟ نصنعها لك من الفضة.',
+    s1t: 'أرسل فكرتك', s1d: 'صورة أو رسمة أو مجرد اسم، عبر واتساب.',
+    s2t: 'نصمّمها معك', s2d: 'ترى التصميم والسعر قبل أن نبدأ.',
+    s3t: 'جاهزة خلال 4 أيام', s3d: 'نوصلها لكل مناطق الأردن، أو لكل العالم عبر DHL Express.',
+    customCta: 'ابدأ عبر واتساب',
+    trust1: 'فضة 925 أصلية', trust2: 'الدفع بالبطاقة أو نقداً عند الاستلام', trust3: 'شحن DHL Express لكل العالم', trust4: 'القطع المخصّصة خلال 4 أيام',
+    igH2: 'انضم إلى 69 ألف متابع على إنستغرام', igCta: 'تابعنا على إنستغرام',
+  };
+</script>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+  const { $, $$, icon, cardHTML, plate, metalSwitch, lang, product } = window.BLX;
+  const BL = window.BL;
+
+  // static icon slots
+  $$('[data-icon]').forEach((el) => { el.innerHTML = icon(el.dataset.icon); });
+  $$('.arrow-slot').forEach((el) => { el.innerHTML = icon('arrow', 'flip'); });
+  $('#try-arrow').innerHTML = icon('arrow', 'flip');
+  $('.wa-ico').innerHTML = icon('whatsapp');
+
+  // live name preview
+  const hero = plate($('#hero-plate'));
+  const input = $('#try-name');
+  const nameEl = $('#hero-plate .name');
+  input.addEventListener('input', () => hero.set({ name: input.value }));
+
+  function render() {
+    const ar = lang() === 'ar';
+    nameEl.dataset.sample = ar ? 'سارة' : 'Sara';
+    hero.set({ name: input.value });
+    $('#hero-metal').innerHTML = metalSwitch();
+    window.BLX.setMetal(document.body.dataset.metal);
+    $('#cats').innerHTML = BL.categories.map((c) => `<a class="cat" href="shop?cat=${c.id}"><img src="${c.img}" alt="" width="156" height="156" loading="lazy"><span>${ar ? c.ar : c.en}</span></a>`).join('');
+    $('#loved').innerHTML = BL.mostLoved.map((id) => cardHTML(product(id))).join('');
+    const msg = ar ? 'مرحباً Blingiton! لدي فكرة لقطعة خاصة:' : 'Hi Blingiton! I have an idea for a custom piece:';
+    $('#custom-wa').href = `https://wa.me/${BL.whatsapp}?text=${encodeURIComponent(msg)}`;
+  }
+  document.addEventListener('bl:lang', render);
+})();
+</script>
 </body>
 </html>

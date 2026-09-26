@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Blingiton</title>
+<meta name="theme-color" content="#F8D3DA">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&amp;family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Playfair+Display:ital,wght@1,600&amp;family=Reem+Kufi:wght@700&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .crumbs { padding-block: 18px 6px; font-size: 14px; color: var(--ink-soft); }
+  .crumbs ol { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+  .crumbs li:not(:last-child)::after { content: "/"; margin-inline-start: 6px; color: var(--blush-deep); }
+  .crumbs a { color: var(--ink-soft); }
+  .pdp { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 12px 72px; }
+  .pdp > * { min-width: 0; }
+  @media (min-width: 1024px) { .pdp { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: start; } .gallery { position: sticky; top: 96px; } }
+  .stage { position: relative; }
+  .stage .plate, .stage .photo { border-radius: var(--r-lg); }
+  .stage .plate { min-height: clamp(300px, 46vw, 520px); border: 6px solid #fff; box-shadow: var(--shadow-2); }
+  .stage .photo { width: 100%; aspect-ratio: 1; object-fit: cover; box-shadow: var(--shadow-2); }
+  .stage-label { position: absolute; z-index: 2; top: 18px; inset-inline-start: 18px; }
+  .stage .sticker { position: absolute; z-index: 2; bottom: -14px; inset-inline-end: 12px; width: 88px; height: 88px; transform: rotate(-10deg); }
+  .thumbs { margin-top: 18px; display: flex; gap: 12px; }
+  .thumb { display: grid; gap: 6px; justify-items: center; padding: 0; border: 0; background: none; font-weight: 700; font-size: 13px; color: var(--ink-soft); }
+  .thumb .tb { width: 76px; height: 76px; border-radius: 16px; overflow: hidden; border: 3px solid transparent; box-shadow: var(--shadow-1); background: var(--blush-soft); display: grid; place-items: center; }
+  .thumb .tb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .tb .mini { font-family: "Great Vibes", cursive; font-size: 26px; color: var(--ink-soft); }
+  .thumb[aria-pressed="true"] { color: var(--ink); }
+  .thumb[aria-pressed="true"] .tb { border-color: var(--pink); }
+
+  .info h1 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 800; letter-spacing: -.015em; }
+  .info .price-lg { margin-top: 10px; font-size: 26px; font-weight: 800; color: var(--pink); font-variant-numeric: tabular-nums; }
+  .info .desc { margin-top: 12px; color: var(--ink-soft); font-size: 17px; max-width: 52ch; }
+  .opts-form { margin-top: 28px; display: grid; gap: 24px; }
+  .opt-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .opt-head .legend { font-size: 15px; font-weight: 800; }
+  .opt-head .val { color: var(--ink-soft); font-size: 14px; font-weight: 700; }
+  .name-input { font-size: 18px; min-height: 54px; }
+  .stones { display: grid; grid-template-columns: repeat(7, minmax(0, 44px)); gap: 8px; }
+  .swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px var(--line); padding: 0; position: relative; }
+  .swatch::after { content: ""; position: absolute; top: 7px; inset-inline-start: 9px; width: 9px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.75); transform: rotate(-30deg); }
+  .swatch[aria-checked="true"] { box-shadow: 0 0 0 2.5px var(--pink); }
+  .swatch.none { background: var(--paper); display: grid; place-items: center; color: var(--ink-soft); }
+  .swatch.none::after { display: none; }
+  .gift-box { padding: 18px; border-radius: var(--r); background: var(--blush-soft); }
+  .check { display: flex; align-items: flex-start; gap: 12px; font-weight: 800; cursor: pointer; }
+  .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--pink); flex-shrink: 0; }
+  .check small { display: block; margin-top: 2px; color: var(--ink-soft); font-weight: 600; font-size: 14px; }
+  .gift-note { margin-top: 14px; }
+  .buy { margin-top: 28px; display: grid; gap: 14px; }
+  .assure { display: grid; gap: 8px; color: var(--ink-soft); font-size: 14px; font-weight: 700; }
+  .assure span { display: flex; align-items: center; gap: 10px; }
+  .assure .icon { color: var(--pink); width: 20px; height: 20px; }
+  .acc { margin-top: 28px; border-top: 1px solid var(--line); }
+  .acc details { border-bottom: 1px solid var(--line); }
+  .acc summary { display: flex; align-items: center; justify-content: space-between; min-height: 56px; cursor: pointer; font-weight: 800; list-style: none; }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary .icon { transition: transform .2s var(--ease); }
+  .acc details[open] summary .icon { transform: rotate(180deg); }
+  .acc details p { padding-bottom: 18px; color: var(--ink-soft); }
+</style>
+</head>
+<body data-page="product">
+<div id="chrome-top"></div>
+
+<main id="main">
+  <nav class="wrap crumbs" aria-label="Breadcrumb"><ol id="crumbs"></ol></nav>
+  <div class="wrap pdp">
+    <section class="gallery" aria-label="Product images">
+      <div class="stage">
+        <span class="pill stage-label" id="stage-label"></span>
+        <div class="plate" id="plate"><span class="name" data-style="script">Sara</span><span class="gem" hidden></span></div>
+        <img class="photo" id="photo" alt="" hidden>
+        <img class="sticker" src="img/logo.png" alt="" width="88" height="88">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+    <section class="info" id="info" aria-labelledby="p-title"></section>
+  </div>
+
+  <section class="section" style="padding-top:0" aria-labelledby="also-h">
+    <div class="wrap">
+      <div class="section-head"><h2 class="h2" id="also-h" data-i18n="alsoH2">You may also like</h2></div>
+      <div class="grid four" id="also"></div>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-bottom"></div>
+
+<script>
+  window.PAGE_AR = { alsoH2: 'قد يعجبك أيضاً' };
+  window.COPY = {
+    en: {
+      home: 'Home', yourDesign: 'Your design', photo: 'Photo', preview: 'Live preview',
+      fName: 'Your name', fLetters: 'Your letters', nameHelp: 'English or Arabic, up to 12 letters.', lettersHelp: 'Up to 6 letters.',
+      nameErr: 'Type the name you want on your piece.', fStyle: 'Style', fFinish: 'Finish', fChain: 'Chain length', fStone: 'Birthstone colour', none: 'None',
+      gift: 'This is a gift', giftHelp: 'We’ll hide the price and tuck your note into the pink box.', note: 'Gift note (optional)', notePh: 'Happy birthday, Lina!',
+      payLine: 'Pay by card online, or card or cash on delivery', madeLine: 'Made to order in 4 days · DHL Express worldwide', readyLine: 'In stock, ready to ship · DHL Express worldwide',
+      a1: 'Details & materials', a1b: 'Made from 925 sterling silver, also available 18K gold plated. Every name is cut to order in our workshop.',
+      a1bStd: 'Made from 925 sterling silver. Arrives in our signature pink box.',
+      a2: 'Delivery', a2b: 'We deliver across Jordan, and worldwide with DHL Express. Pay online by card, or by card or cash when your order arrives.',
+      a3: 'Silver care', a3b: 'Keep it dry, take it off before swimming or showering, and store it in its pink box to keep the shine.',
+    },
+    ar: {
+      home: 'الرئيسية', yourDesign: 'تصميمك', photo: 'الصورة', preview: 'معاينة مباشرة',
+      fName: 'الاسم', fLetters: 'الحروف', nameHelp: 'بالعربية أو الإنجليزية، حتى 12 حرفاً.', lettersHelp: 'حتى 6 أحرف.',
+      nameErr: 'اكتب الاسم الذي تريده على القطعة.', fStyle: 'الخط', fFinish: 'اللون', fChain: 'طول السلسلة', fStone: 'لون حجر الميلاد', none: 'بدون',
+      gift: 'هذه هدية', giftHelp: 'سنخفي السعر ونضع بطاقتك داخل العلبة الوردية.', note: 'بطاقة الإهداء (اختياري)', notePh: 'كل عام وأنتِ بخير يا لينا!',
+      payLine: 'ادفع بالبطاقة أونلاين، أو بالبطاقة أو نقداً عند الاستلام', madeLine: 'تُصنع حسب الطلب خلال 4 أيام · DHL Express لكل العالم', readyLine: 'متوفرة وجاهزة للشحن · DHL Express لكل العالم',
+      a1: 'التفاصيل والخامات', a1b: 'مصنوعة من الفضة 925، ومتوفرة أيضاً بطلاء ذهب عيار 18. كل اسم يُقصّ حسب الطلب في مشغلنا.',
+      a1bStd: 'مصنوعة من الفضة 925، وتصلك في علبتنا الوردية المميّزة.',
+      a2: 'التوصيل', a2b: 'نوصل لكل مناطق الأردن، ولكل العالم عبر DHL Express. ادفع أونلاين بالبطاقة، أو بالبطاقة أو نقداً عند استلام طلبك.',
+      a3: 'العناية بالفضة', a3b: 'حافظ عليها جافة، وانزعها قبل السباحة أو الاستحمام، واحفظها في علبتها الوردية لتبقى لامعة.',
+    },
+  };
+</script>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+  const { $, $$, t, esc, icon, money, pName, product, cardHTML, addToBag, plate, metalSwitch, lang, setMetal } = window.BLX;
+  const BL = window.BL;
+  const q = new URLSearchParams(location.search);
+  const p = product(q.get('id')) || product(10830);
+  const C = () => window.COPY[lang()];
+  const personal = !!p.personal;
+  const letters = p.personal === 'letters';
+  const chains = p.kind === 'bracelet' ? [16, 18, 20] : [40, 45, 50];
+  const state = {
+    name: (q.get('name') || '').slice(0, letters ? 6 : 12),
+    style: letters ? 'modern' : 'script',
+    chain: chains[1],
+    stone: null,
+    gift: false,
+    note: '',
+    view: personal ? 'design' : 'photo',
+    tried: false,
+  };
+
+  const plateEl = $('#plate'), photo = $('#photo');
+  photo.src = p.img;
+  const pv = personal ? plate(plateEl) : null;
+
+  function setView(v) {
+    state.view = v;
+    plateEl.hidden = v !== 'design';
+    photo.hidden = v !== 'photo';
+    $('#stage-label').hidden = v !== 'design';
+    $$('.thumb').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+    if (v === 'design' && pv) pv.draw();
+  }
+
+  function updatePreview() {
+    if (!pv) return;
+    pv.set({ name: state.name, style: state.style, stone: p.stone ? state.stone : null });
+  }
+
+  function render() {
+    const c = C(), ar = lang() === 'ar';
+    document.title = `${pName(p)} · Blingiton`;
+    const cat = BL.categories.find((x) => p.cats.includes(x.id));
+    $('#crumbs').innerHTML = `<li><a href="./">${c.home}</a></li><li><a href="shop?cat=${cat.id}">${ar ? cat.ar : cat.en}</a></li><li aria-current="page">${esc(pName(p))}</li>`;
+    $('#stage-label').innerHTML = `${icon('sparkle')}<span>${c.preview}</span>`;
+    photo.alt = pName(p);
+    $('#thumbs').innerHTML = personal
+      ? `<button class="thumb" type="button" data-view="design" aria-pressed="true"><span class="tb"><span class="mini">${ar ? 'اسم' : 'Aa'}</span></span>${c.yourDesign}</button>
+         <button class="thumb" type="button" data-view="photo" aria-pressed="false"><span class="tb"><img src="${p.img}" alt=""></span>${c.photo}</button>`
+      : '';
+    plateEl.querySelector('.name').dataset.sample = letters ? (ar ? 'س ل' : 'SB') : (ar ? 'سارة' : 'Sara');
+
+    const styleChips = ['script', 'classic', 'modern'].map((s) => `<button class="chip" type="button" role="radio" data-style="${s}" aria-checked="${state.style === s}">${t(s)}</button>`).join('');
+    const chainChips = chains.map((n) => `<button class="chip" type="button" role="radio" data-chain="${n}" aria-checked="${state.chain === n}">${n} ${t('cm')}</button>`).join('');
+    const stoneBtns = `<button class="swatch none" type="button" role="radio" data-stone="none" aria-checked="${state.stone === null}" aria-label="${c.none}">${icon('x')}</button>` +
+      BL.stones.map((s, i) => `<button class="swatch" type="button" role="radio" data-stone="${i}" aria-checked="${state.stone === i}" style="background:${s.c}" aria-label="${ar ? s.ar : s.en} · ${ar ? s.sar : s.sen}" title="${ar ? s.ar : s.en}"></button>`).join('');
+    const stoneVal = state.stone === null ? c.none : `${ar ? BL.stones[state.stone].ar : BL.stones[state.stone].en} · ${ar ? BL.stones[state.stone].sar : BL.stones[state.stone].sen}`;
+
+    $('#info').innerHTML = `
+      <h1 id="p-title">${esc(pName(p))}</h1>
+      <p class="price-lg">${money(p.price)}</p>
+      <p class="desc">${esc(ar ? p.dar : p.den)}</p>
+      <form class="opts-form" id="opts" novalidate>
+        ${personal ? `
+        <div class="field">
+          <div class="opt-head"><label class="legend" for="name-in">${letters ? c.fLetters : c.fName}</label><span class="val" id="name-count">${state.name.length}/${letters ? 6 : 12}</span></div>
+          <input class="input name-input" id="name-in" type="text" maxlength="${letters ? 6 : 12}" autocomplete="off" value="${esc(state.name)}" aria-describedby="name-help name-err" ${state.tried && !state.name.trim() ? 'aria-invalid="true"' : ''}>
+          <span class="help" id="name-help">${letters ? c.lettersHelp : c.nameHelp}</span>
+          <span class="err" id="name-err" role="alert">${state.tried && !state.name.trim() ? c.nameErr : ''}</span>
+        </div>
+        <fieldset><div class="opt-head"><span class="legend" id="style-l">${c.fStyle}</span><span class="val">${t(state.style)}</span></div>
+          <div class="opts" role="radiogroup" aria-labelledby="style-l">${styleChips}</div></fieldset>
+        <fieldset><div class="opt-head"><span class="legend">${c.fFinish}</span></div>${metalSwitch()}</fieldset>
+        <fieldset><div class="opt-head"><span class="legend" id="chain-l">${c.fChain}</span></div>
+          <div class="opts" role="radiogroup" aria-labelledby="chain-l">${chainChips}</div></fieldset>
+        ${p.stone ? `<fieldset><div class="opt-head"><span class="legend" id="stone-l">${c.fStone}</span><span class="val">${stoneVal}</span></div>
+          <div class="stones" role="radiogroup" aria-labelledby="stone-l">${stoneBtns}</div></fieldset>` : ''}
+        ` : ''}
+        <div class="gift-box">
+          <label class="check"><input type="checkbox" id="gift-in" ${state.gift ? 'checked' : ''}><span>${c.gift}<small>${c.giftHelp}</small></span></label>
+          <div class="field gift-note" ${state.gift ? '' : 'hidden'}>
+            <label for="note-in">${c.note}</label>
+            <textarea class="textarea" id="note-in" maxlength="140" placeholder="${esc(c.notePh)}">${esc(state.note)}</textarea>
+          </div>
+        </div>
+        <div class="buy">
+          <button class="btn btn-primary btn-block" type="submit">${icon('bag')}<span>${t('add')} · ${money(p.price)}</span></button>
+          <div class="assure"><span>${icon('card')}${c.payLine}</span><span>${icon(personal ? 'clock' : 'truck')}${personal ? c.madeLine : c.readyLine}</span></div>
+        </div>
+      </form>
+      <div class="acc">
+        <details open><summary>${c.a1}${icon('chevron')}</summary><p>${personal ? c.a1b : c.a1bStd}</p></details>
+        <details><summary>${c.a2}${icon('chevron')}</summary><p>${c.a2b}</p></details>
+        <details><summary>${c.a3}${icon('chevron')}</summary><p>${c.a3b}</p></details>
+      </div>`;
+
+    setMetal(document.body.dataset.metal);
+    const also = BL.products.filter((x) => x.id !== p.id && x.cats.some((k) => p.cats.includes(k))).slice(0, 4);
+    $('#also').innerHTML = (also.length >= 4 ? also : [...also, ...BL.products.filter((x) => x.id !== p.id && !also.includes(x))].slice(0, 4)).map(cardHTML).join('');
+    setView(state.view);
+    updatePreview();
+  }
+
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'name-in') {
+      state.name = e.target.value;
+      $('#name-count').textContent = `${state.name.length}/${letters ? 6 : 12}`;
+      if (state.name.trim()) { e.target.removeAttribute('aria-invalid'); $('#name-err').textContent = ''; }
+      if (state.view !== 'design') setView('design');
+      updatePreview();
+    }
+    if (e.target.id === 'note-in') state.note = e.target.value;
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'gift-in') { state.gift = e.target.checked; $('.gift-note').hidden = !state.gift; if (state.gift) $('#note-in').focus(); }
+  });
+  document.addEventListener('click', (e) => {
+    const v = e.target.closest('[data-view]'); if (v) { setView(v.dataset.view); return; }
+    const s = e.target.closest('[data-style]:not(.name)'); if (s && s.closest('#info')) { state.style = s.dataset.style; render(); return; }
+    const ch = e.target.closest('[data-chain]'); if (ch) { state.chain = Number(ch.dataset.chain); render(); return; }
+    const st = e.target.closest('[data-stone]'); if (st) { state.stone = st.dataset.stone === 'none' ? null : Number(st.dataset.stone); render(); if (state.view !== 'design') setView('design'); return; }
+  });
+  document.addEventListener('submit', (e) => {
+    if (e.target.id !== 'opts') return;
+    e.preventDefault();
+    if (personal && !state.name.trim()) {
+      state.tried = true; render();
+      const inp = $('#name-in'); inp.focus();
+      return;
+    }
+    const item = { id: p.id };
+    if (personal) Object.assign(item, { name: state.name.trim(), style: state.style, finish: document.body.dataset.metal, chain: state.chain });
+    if (personal && p.stone) item.stone = state.stone;
+    if (state.gift) { item.gift = true; if (state.note.trim()) item.note = state.note.trim(); }
+    addToBag(item, { open: true });
+  });
+  document.addEventListener('bl:lang', render);
+})();
+</script>
+</body>
+</html>
