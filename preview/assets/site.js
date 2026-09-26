@@ -284,6 +284,7 @@
     script: { en: ['', 400, '"Great Vibes", cursive'], ar: ['', 700, '"Aref Ruqaa", serif'] },
     classic: { en: ['italic', 600, '"Playfair Display", serif'], ar: ['', 700, 'Amiri, serif'] },
     modern: { en: ['', 800, '"Nunito Sans", sans-serif'], ar: ['', 700, '"Reem Kufi", sans-serif'] },
+    kufi: { en: ['', 700, '"Reem Kufi", sans-serif'], ar: ['', 700, '"Reem Kufi", sans-serif'] },
   };
   const fontStr = (f, px) => `${f[0]} ${f[1]} ${px}px ${f[2]}`.trim();
 

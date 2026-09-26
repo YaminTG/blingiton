@@ -9,7 +9,7 @@
 <link rel="icon" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Reem+Kufi:wght@700&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   .hero { background: var(--blush); overflow: hidden; }
@@ -27,6 +27,9 @@
   .try-row .btn { flex: 0 0 auto; min-height: 56px; }
   .try-meta { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
   .try-meta .help { font-weight: 600; }
+  .style-sw button span.sw-script { font-family: "Great Vibes", cursive; font-size: 22px; font-weight: 400; line-height: 1; }
+  .style-sw button span.sw-kufi { font-family: "Reem Kufi", sans-serif; font-size: 15px; font-weight: 700; }
+  html[lang="ar"] .style-sw button span.sw-script { font-family: "Aref Ruqaa", serif; font-size: 18px; font-weight: 700; }
   .hero-art { position: relative; padding: 28px 14px 44px; }
   .hero-art .plate { min-height: clamp(260px, 34vw, 380px); border: 6px solid #fff; box-shadow: var(--shadow-2); }
   .hero-sticker { position: absolute; z-index: 2; top: -6px; inset-inline-end: -4px; width: clamp(96px, 13vw, 144px); height: auto; transform: rotate(12deg); }
@@ -85,12 +88,13 @@
         <p class="lead" data-i18n="heroLead">Name necklaces, letters and custom pieces in 925 sterling silver, made to order in 4 days and wrapped in our pink box.</p>
         <form class="try" action="product" method="get">
           <input type="hidden" name="id" value="10830">
+          <input type="hidden" name="style" id="try-style" value="script">
           <label class="caps" for="try-name" data-i18n="tryLabel">Try your name</label>
           <div class="try-row">
             <input class="input" id="try-name" name="name" type="text" maxlength="12" autocomplete="off" placeholder="Type a name…" data-i18n-ph="tryPh">
             <button class="btn btn-primary" type="submit"><span data-i18n="tryBtn">Design yours</span><span id="try-arrow"></span></button>
           </div>
-          <div class="try-meta"><div id="hero-metal"></div><span class="help" data-i18n="tryNote">Name necklaces from 45 JOD</span></div>
+          <div class="try-meta"><div id="hero-style"></div><div id="hero-metal"></div><span class="help" data-i18n="tryNote">Name necklaces from 45 JOD</span></div>
         </form>
       </div>
       <div class="hero-art">
@@ -220,7 +224,7 @@
 <script src="assets/site.js"></script>
 <script>
 (() => {
-  const { $, $$, icon, cardHTML, plate, metalSwitch, lang, product } = window.BLX;
+  const { $, $$, t, icon, cardHTML, plate, metalSwitch, lang, product } = window.BLX;
   const BL = window.BL;
 
   // static icon slots
@@ -235,10 +239,27 @@
   const nameEl = $('#hero-plate .name');
   input.addEventListener('input', () => hero.set({ name: input.value }));
 
+  // Script / Kufi switch; the choice also goes to the product page with "Design yours"
+  let heroStyle = 'script';
+  function styleSwitch() {
+    return `<div class="metal style-sw" role="radiogroup" aria-label="${lang() === 'ar' ? 'الخط' : 'Style'}">
+      ${['script', 'kufi'].map((s) => `<button type="button" role="radio" data-hero-style="${s}" aria-checked="${heroStyle === s}"><span class="sw-${s}">${t(s)}</span></button>`).join('')}
+    </div>`;
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-hero-style]');
+    if (!b) return;
+    heroStyle = b.dataset.heroStyle;
+    $('#try-style').value = heroStyle;
+    $$('[data-hero-style]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.heroStyle === heroStyle)));
+    hero.set({ style: heroStyle });
+  });
+
   function render() {
     const ar = lang() === 'ar';
     nameEl.dataset.sample = ar ? 'سارة' : 'Sara';
-    hero.set({ name: input.value });
+    hero.set({ name: input.value, style: heroStyle });
+    $('#hero-style').innerHTML = styleSwitch();
     $('#hero-metal').innerHTML = metalSwitch();
     window.BLX.setMetal(document.body.dataset.metal);
     $('#cats').innerHTML = BL.categories.map((c) => `<a class="cat" href="shop?cat=${c.id}"><img src="${c.img}" alt="" width="156" height="156" loading="lazy"><span>${ar ? c.ar : c.en}</span></a>`).join('');

@@ -121,7 +121,7 @@
   const chains = p.kind === 'bracelet' ? [16, 18, 20] : [40, 45, 50];
   const state = {
     name: (q.get('name') || '').slice(0, letters ? 6 : 12),
-    style: letters ? 'modern' : 'script',
+    style: ['script', 'classic', 'modern', 'kufi'].includes(q.get('style')) ? q.get('style') : (letters ? 'modern' : 'script'),
     chain: chains[1],
     stone: null,
     gift: false,
@@ -139,7 +139,7 @@
     $('#crumbs').innerHTML = `<li><a href="./">${c.home}</a></li><li><a href="shop?cat=${cat.id}">${ar ? cat.ar : cat.en}</a></li><li aria-current="page">${esc(pName(p))}</li>`;
     photo.alt = pName(p);
 
-    const styleChips = ['script', 'classic', 'modern'].map((s) => `<button class="chip" type="button" role="radio" data-style="${s}" aria-checked="${state.style === s}">${t(s)}</button>`).join('');
+    const styleChips = ['script', 'classic', 'modern', 'kufi'].map((s) => `<button class="chip" type="button" role="radio" data-style="${s}" aria-checked="${state.style === s}">${t(s)}</button>`).join('');
     const chainChips = chains.map((n) => `<button class="chip" type="button" role="radio" data-chain="${n}" aria-checked="${state.chain === n}">${n} ${t('cm')}</button>`).join('');
     const stoneBtns = `<button class="swatch none" type="button" role="radio" data-stone="none" aria-checked="${state.stone === null}" aria-label="${c.none}">${icon('x')}</button>` +
       BL.stones.map((s, i) => `<button class="swatch" type="button" role="radio" data-stone="${i}" aria-checked="${state.stone === i}" style="background:${s.c}" aria-label="${ar ? s.ar : s.en} · ${ar ? s.sar : s.sen}" title="${ar ? s.ar : s.en}"></button>`).join('');
