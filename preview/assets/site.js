@@ -196,7 +196,8 @@
 
   function optionLines(it) {
     const L = [];
-    if (it.name) L.push(`<b>${t('nameLine')}:</b> <bdi>${esc(it.name)}</bdi>`);
+    const engraved = (BL.products.find((p) => p.id === it.id) || {}).personal === 'engrave';
+    if (it.name) L.push(`<b>${t(engraved ? 'engraveLine' : 'nameLine')}:</b> <bdi>${esc(it.name)}</bdi>`);
     if (it.style) L.push(`<b>${t('styleLine')}:</b> ${t(it.style)}`);
     if (it.finish) L.push(`<b>${t('finishLine')}:</b> ${t(it.finish)}`);
     if (it.chain) L.push(`<b>${t('chainLine')}:</b> ${it.chain} ${t('cm')}`);
@@ -284,7 +285,7 @@
     script: { en: ['', 400, '"Great Vibes", cursive'], ar: ['', 700, '"Aref Ruqaa", serif'] },
     classic: { en: ['italic', 600, '"Playfair Display", serif'], ar: ['', 700, 'Amiri, serif'] },
     modern: { en: ['', 800, '"Nunito Sans", sans-serif'], ar: ['', 700, '"Reem Kufi", sans-serif'] },
-    kufi: { en: ['', 800, '"Noto Kufi Arabic", sans-serif'], ar: ['', 800, '"Noto Kufi Arabic", sans-serif'] },
+    kufi: { en: ['', 300, '"Noto Kufi Arabic", sans-serif'], ar: ['', 300, '"Noto Kufi Arabic", sans-serif'] },
   };
   const fontStr = (f, px) => `${f[0]} ${f[1]} ${px}px ${f[2]}`.trim();
 
@@ -463,6 +464,179 @@
     return api;
   }
 
+  /* ---------- engraving preview for rings and cufflinks ---------- */
+  // shapes: 'band' (engraved thin ring), 'bandcut' (name cut into a wide ring), 'square' (square ring face),
+  // 'disc' (engraved round cufflinks), 'enamel' (raised name on black enamel cufflinks), 'cut' (cut-out name cufflinks)
+  function engrave(el, opts = {}) {
+    const shape = opts.shape || 'disc';
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    el.prepend(canvas);
+    const ctx = canvas.getContext('2d');
+    const nameEl = el.querySelector('.name');
+    const strip = document.createElement('canvas');
+    const sctx = strip.getContext('2d');
+
+    const metal = () => METALS[document.body.dataset.metal === 'gold' ? 'gold' : 'silver'];
+    const grad = (c, x0, y0, x1, y1, m) => { const g = c.createLinearGradient(x0, y0, x1, y1); [0, 0.32, 0.5, 0.66, 1].forEach((o, i) => g.addColorStop(o, m.stops[i])); return g; };
+
+    // set the font so the text's ink fits a box, and return where to draw it so the ink is centred on (x, y)
+    function fitText(c, text, f, maxW, maxH, x, y) {
+      let px = Math.max(8, maxH * 1.4);
+      c.font = fontStr(f, px);
+      let mt = c.measureText(text);
+      const w = mt.actualBoundingBoxLeft + mt.actualBoundingBoxRight || 1, h = mt.actualBoundingBoxAscent + mt.actualBoundingBoxDescent || 1;
+      const k = Math.min(maxW / w, maxH / h);
+      px *= k; c.font = fontStr(f, px); mt = c.measureText(text);
+      return { x: x + (mt.actualBoundingBoxLeft - mt.actualBoundingBoxRight) / 2, y: y + (mt.actualBoundingBoxAscent - mt.actualBoundingBoxDescent) / 2, px, mt };
+    }
+    // engraved: a dark cut with a light lip under it
+    function cutText(c, text, p, m) {
+      c.fillStyle = 'rgba(255,255,255,.75)'; c.fillText(text, p.x + 0.5, p.y + Math.max(1, p.px * 0.025));
+      c.fillStyle = m.edge; c.fillText(text, p.x, p.y);
+    }
+    // raised polished metal, like the name necklaces
+    function raisedText(c, text, p, m, shadow = true) {
+      const top = p.y - p.mt.actualBoundingBoxAscent, h = p.mt.actualBoundingBoxAscent + p.mt.actualBoundingBoxDescent;
+      if (shadow) { c.save(); c.shadowColor = 'rgba(78,15,42,.28)'; c.shadowBlur = 10; c.shadowOffsetY = 5; c.fillStyle = m.edge; c.fillText(text, p.x, p.y + 1.5); c.restore(); }
+      c.fillStyle = m.edge; c.fillText(text, p.x, p.y + Math.max(1, p.px * 0.02));
+      c.fillStyle = grad(c, 0, top, 0, top + h, m); c.fillText(text, p.x, p.y);
+    }
+    function disc(cx, cy, r, m, inner) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(78,15,42,.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = grad(ctx, cx - r, cy - r, cx + r, cy + r, m); ctx.fill();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(cx, cy, r * inner, 0, Math.PI * 2);
+      const face = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+      face.addColorStop(0, m.stops[0]); face.addColorStop(0.55, m.stops[1]); face.addColorStop(1, m.stops[2]);
+      ctx.fillStyle = face; ctx.fill();
+      ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.stroke();
+    }
+    // wrap a flat strip around a ring seen from the front and slightly above
+    function wrapRing(W, H, bandH, m, paint) {
+      const R = Math.min(W * 0.38, H * 0.95), tilt = 0.2, cx = W / 2, cy = H * 0.36;
+      const Wf = Math.round(Math.PI * R), Hf = Math.round(bandH);
+      strip.width = Wf; strip.height = Hf;
+      paint(sctx, Wf, Hf);
+      // one soft shadow on the surface under the ring
+      const sh = ctx.createRadialGradient(cx, cy + tilt * R + Hf, 4, cx, cy + tilt * R + Hf, R);
+      sh.addColorStop(0, 'rgba(78,15,42,.22)'); sh.addColorStop(1, 'rgba(78,15,42,0)');
+      ctx.save(); ctx.translate(0, cy + tilt * R + Hf); ctx.scale(1, 0.18); ctx.fillStyle = sh;
+      ctx.fillRect(cx - R * 1.1, -R, R * 2.2, R * 2); ctx.restore();
+      // back of the band (its inside surface), seen above the front through the ring's opening
+      for (let u = 0; u < Wf; u++) {
+        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf + 0.8;
+        const y = cy - tilt * R * Math.cos(th);
+        ctx.fillStyle = m.ring; ctx.globalAlpha = 0.35 + 0.35 * Math.cos(th); ctx.fillRect(x, y, w, Hf * 0.9);
+      }
+      ctx.globalAlpha = 1;
+      // front of the band carrying the engraving
+      for (let u = 0; u < Wf; u++) {
+        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf + 0.8;
+        const y = cy + tilt * R * Math.cos(th);
+        ctx.drawImage(strip, u, 0, 1, Hf, x, y, w, Hf);
+      }
+      for (let u = 0; u < Wf; u += 2) {  // darken the sides as the band turns away
+        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf * 2 + 0.8;
+        const y = cy + tilt * R * Math.cos(th);
+        ctx.fillStyle = `rgba(60,20,40,${(0.45 * (1 - Math.cos(th))).toFixed(3)})`; ctx.fillRect(x, y, w, Hf);
+      }
+    }
+
+    function draw() {
+      const W = el.clientWidth, H = el.clientHeight;
+      if (!W || !H) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const text = nameEl.textContent;
+      const ar = nameEl.dataset.script === 'ar';
+      const f = FONTS[nameEl.dataset.style || 'script'][ar ? 'ar' : 'en'];
+      const m = metal();
+      [ctx, sctx].forEach((c) => { c.direction = ar ? 'rtl' : 'ltr'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; });
+
+      if (shape === 'disc' || shape === 'enamel') {
+        const r = Math.min(W * 0.2, H * 0.36);
+        [W / 2 - r * 1.25, W / 2 + r * 1.25].forEach((cx) => {
+          const cy = H * 0.5;
+          if (shape === 'disc') {
+            disc(cx, cy, r, m, 0.9);
+            cutText(ctx, text, fitText(ctx, text, f, r * 1.25, r * 0.8, cx, cy), m);
+          } else {
+            disc(cx, cy, r, m, 0.86);
+            ctx.beginPath(); ctx.arc(cx, cy, r * 0.8, 0, Math.PI * 2);
+            const en = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.3, r * 0.05, cx, cy, r * 0.8);
+            en.addColorStop(0, '#2D2733'); en.addColorStop(1, '#0C0A0F'); ctx.fillStyle = en; ctx.fill();
+            raisedText(ctx, text, fitText(ctx, text, f, r * 1.3, r * 0.7, cx, cy), m, false);
+            ctx.beginPath(); ctx.ellipse(cx - r * 0.12, cy - r * 0.42, r * 0.5, r * 0.16, -0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
+          }
+        });
+      } else if (shape === 'cut') {
+        [W * 0.29, W * 0.71].forEach((cx) => raisedText(ctx, text, fitText(ctx, text, f, W * 0.36, H * 0.42, cx, H * 0.5), m));
+      } else if (shape === 'square') {
+        const s = Math.min(W * 0.4, H * 0.64), x0 = W / 2 - s / 2, y0 = H * 0.5 - s / 2;
+        const bh = s * 0.2;
+        ctx.save(); ctx.shadowColor = 'rgba(78,15,42,.22)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6;
+        [[W * 0.1, x0 + 4], [x0 + s - 4, W * 0.9]].forEach(([a, b]) => { ctx.fillStyle = grad(ctx, 0, H / 2 - bh / 2, 0, H / 2 + bh / 2, m); ctx.fillRect(a, H / 2 - bh / 2, b - a, bh); });
+        ctx.restore();
+        ctx.save(); ctx.shadowColor = 'rgba(78,15,42,.28)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
+        ctx.beginPath(); ctx.roundRect(x0, y0, s, s, s * 0.08); ctx.fillStyle = grad(ctx, x0, y0, x0 + s, y0 + s, m); ctx.fill();
+        ctx.restore();
+        ctx.beginPath(); ctx.roundRect(x0 + s * 0.06, y0 + s * 0.06, s * 0.88, s * 0.88, s * 0.05);
+        const face = ctx.createLinearGradient(x0, y0, x0 + s, y0 + s);
+        face.addColorStop(0, m.stops[0]); face.addColorStop(0.6, m.stops[1]); face.addColorStop(1, m.stops[4]);
+        ctx.fillStyle = face; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.stroke();
+        cutText(ctx, text, fitText(ctx, text, f, s * 0.74, s * 0.5, W / 2, H / 2), m);
+      } else if (shape === 'band' || shape === 'bandcut') {
+        const cutout = shape === 'bandcut';
+        const bandH = cutout ? H * 0.3 : H * 0.14;
+        wrapRing(W, H, bandH, m, (c, Wf, Hf) => {
+          c.clearRect(0, 0, Wf, Hf);
+          c.direction = ar ? 'rtl' : 'ltr'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+          if (!cutout) {
+            c.fillStyle = grad(c, 0, 0, 0, Hf, m); c.fillRect(0, 0, Wf, Hf);
+            cutText(c, text, fitText(c, text, f, Wf * 0.55, Hf * 0.62, Wf / 2, Hf / 2), m);
+          } else {
+            const rim = Math.max(3, Hf * 0.1);
+            c.fillStyle = 'rgba(120,50,80,.1)'; c.fillRect(0, rim, Wf, Hf - rim * 2);
+            c.fillStyle = grad(c, 0, 0, 0, rim, m); c.fillRect(0, 0, Wf, rim);
+            c.fillStyle = grad(c, 0, Hf - rim, 0, Hf, m); c.fillRect(0, Hf - rim, Wf, rim);
+            raisedText(c, text, fitText(c, text, f, Wf * 0.5, Hf - rim * 2.4, Wf / 2, Hf / 2), m, false);
+          }
+        });
+      }
+    }
+
+    function redraw() {
+      draw();
+      if (document.fonts && document.fonts.load) {
+        const f = FONTS[nameEl.dataset.style || 'script'][nameEl.dataset.script === 'ar' ? 'ar' : 'en'];
+        document.fonts.load(fontStr(f, 48), nameEl.textContent).then(draw, () => {});
+      }
+    }
+    nameEl.dataset.sample = nameEl.textContent;
+    if (window.ResizeObserver) new ResizeObserver(() => draw()).observe(el);
+    else window.addEventListener('resize', draw);
+    document.addEventListener('bl:metal', draw);
+    if (document.fonts) document.fonts.ready.then(draw);
+    return {
+      set({ text, style, sample }) {
+        if (sample !== undefined) nameEl.dataset.sample = sample;
+        if (text !== undefined || sample !== undefined) {
+          const v = (text !== undefined ? text : nameEl.textContent).trim() || nameEl.dataset.sample;
+          nameEl.textContent = v;
+          nameEl.dataset.script = /[؀-ۿ]/.test(v) ? 'ar' : 'en';
+        }
+        if (style) nameEl.dataset.style = style;
+        redraw();
+      },
+      draw: redraw,
+    };
+  }
+
   /* ---------- product card ---------- */
   function cardHTML(p) {
     const tag = p.personal ? `<span class="card-tag">${t('personalise')}</span>` : '';
@@ -498,7 +672,7 @@
   document.addEventListener('keydown', trapFocus);
   $$('.drawer-nav a').forEach((a) => a.addEventListener('click', () => closeDrawers()));
 
-  window.BLX = { $, $$, t, esc, icon, money, pName, product, cardHTML, addToBag, cart, saveCart, plate, metalSwitch, setMetal, lang, store, optionLines, openDrawer };
+  window.BLX = { $, $$, t, esc, icon, money, pName, product, cardHTML, addToBag, cart, saveCart, plate, engrave, metalSwitch, setMetal, lang, store, optionLines, openDrawer };
   document.addEventListener('DOMContentLoaded', () => {
     applyLang(startLang);
     setMetal(document.body.dataset.metal);

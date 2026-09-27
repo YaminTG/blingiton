@@ -9,7 +9,7 @@
 <link rel="icon" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Noto+Kufi+Arabic:wght@800&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&amp;family=Great+Vibes&amp;family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Noto+Kufi+Arabic:wght@300&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   .hero { background: var(--blush); overflow: hidden; }
@@ -28,7 +28,7 @@
   .try-meta { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
   .try-meta .help { font-weight: 600; }
   .style-sw button span.sw-script { font-family: "Great Vibes", cursive; font-size: 22px; font-weight: 400; line-height: 1; }
-  .style-sw button span.sw-kufi { font-family: "Noto Kufi Arabic", sans-serif; font-size: 14px; font-weight: 800; }
+  .style-sw button span.sw-kufi { font-family: "Noto Kufi Arabic", sans-serif; font-size: 16px; font-weight: 300; }
   html[lang="ar"] .style-sw button span.sw-script { font-family: "Aref Ruqaa", serif; font-size: 18px; font-weight: 700; }
   .hero-art { position: relative; padding: 28px 14px 44px; }
   .hero-art .plate { min-height: clamp(260px, 34vw, 380px); border: 6px solid #fff; box-shadow: var(--shadow-2); }
@@ -262,7 +262,7 @@
     $('#hero-style').innerHTML = styleSwitch();
     $('#hero-metal').innerHTML = metalSwitch();
     window.BLX.setMetal(document.body.dataset.metal);
-    $('#cats').innerHTML = BL.categories.map((c) => `<a class="cat" href="shop?cat=${c.id}"><img src="${c.img}" alt="" width="156" height="156" loading="lazy"><span>${ar ? c.ar : c.en}</span></a>`).join('');
+    $('#cats').innerHTML = BL.categories.filter((c) => c.home !== false).map((c) => `<a class="cat" href="shop?cat=${c.id}"><img src="${c.img}" alt="" width="156" height="156" loading="lazy"><span>${ar ? c.ar : c.en}</span></a>`).join('');
     $('#loved').innerHTML = BL.mostLoved.map((id) => cardHTML(product(id))).join('');
     const msg = ar ? 'مرحباً Blingiton! لدي فكرة لقطعة خاصة:' : 'Hi Blingiton! I have an idea for a custom piece:';
     $('#custom-wa').href = `https://wa.me/${BL.whatsapp}?text=${encodeURIComponent(msg)}`;
