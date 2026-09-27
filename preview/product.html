@@ -85,9 +85,9 @@
   window.PAGE_AR = { alsoH2: 'قد يعجبك أيضاً' };
   window.COPY = {
     en: {
-      home: 'Home', fEngrave: 'Engraving', engraveHelp: 'English or Arabic, up to {n} characters. The preview updates as you type.',
+      home: 'Home', fEngrave: 'Engraving', engraveHelp: 'English or Arabic. The preview updates as you type.',
       a1bEng: 'Made from 925 sterling silver, also available 18K gold plated. Every piece is engraved or cut to order in our workshop.',
-      fName: 'Your name', fLetters: 'Your letters', nameHelp: 'English or Arabic, up to 12 letters.', lettersHelp: 'Up to 6 letters.',
+      fName: 'Your name', fLetters: 'Your letters', nameHelp: 'English or Arabic.', lettersHelp: 'The letters you want, in English or Arabic.',
       nameErr: 'Type the name you want on your piece.', fStyle: 'Style', fFinish: 'Finish', fChain: 'Chain length', fStone: 'Birthstone colour', none: 'None',
       gift: 'This is a gift', giftHelp: 'We’ll hide the price and tuck your note into the pink box.', note: 'Gift note (optional)', notePh: 'Happy birthday, Lina!',
       payLine: 'Pay by card online, or card or cash on delivery', madeLine: 'Made to order in 4 days · DHL Express worldwide', readyLine: 'In stock, ready to ship · DHL Express worldwide',
@@ -97,9 +97,9 @@
       a3: 'Silver care', a3b: 'Keep it dry, take it off before swimming or showering, and store it in its pink box to keep the shine.',
     },
     ar: {
-      home: 'الرئيسية', fEngrave: 'النقش', engraveHelp: 'بالعربية أو الإنجليزية، حتى {n} حرفاً. تتغيّر المعاينة أثناء الكتابة.',
+      home: 'الرئيسية', fEngrave: 'النقش', engraveHelp: 'بالعربية أو الإنجليزية. تتغيّر المعاينة أثناء الكتابة.',
       a1bEng: 'مصنوعة من الفضة 925، ومتوفرة أيضاً بطلاء ذهب عيار 18. كل قطعة تُحفر أو تُقصّ حسب الطلب في مشغلنا.',
-      fName: 'الاسم', fLetters: 'الحروف', nameHelp: 'بالعربية أو الإنجليزية، حتى 12 حرفاً.', lettersHelp: 'حتى 6 أحرف.',
+      fName: 'الاسم', fLetters: 'الحروف', nameHelp: 'بالعربية أو الإنجليزية.', lettersHelp: 'الأحرف التي تريدها، بالعربية أو الإنجليزية.',
       nameErr: 'اكتب الاسم الذي تريده على القطعة.', fStyle: 'الخط', fFinish: 'اللون', fChain: 'طول السلسلة', fStone: 'لون حجر الميلاد', none: 'بدون',
       gift: 'هذه هدية', giftHelp: 'سنخفي السعر ونضع بطاقتك داخل العلبة الوردية.', note: 'بطاقة الإهداء (اختياري)', notePh: 'كل عام وأنتِ بخير يا لينا!',
       payLine: 'ادفع بالبطاقة أونلاين، أو بالبطاقة أو نقداً عند الاستلام', madeLine: 'تُصنع حسب الطلب خلال 4 أيام · DHL Express لكل العالم', readyLine: 'متوفرة وجاهزة للشحن · DHL Express لكل العالم',
@@ -122,11 +122,10 @@
   const personal = !!p.personal;
   const letters = p.personal === 'letters';
   const engr = p.personal === 'engrave';          // rings and cufflinks with a live engraving preview
-  const maxLen = engr ? p.max : letters ? 6 : 12;
   const hasChain = personal && !engr;
   const chains = p.kind === 'bracelet' ? [16, 18, 20] : [40, 45, 50];
   const state = {
-    name: (q.get('name') || '').slice(0, maxLen),
+    name: q.get('name') || '',
     style: ['script', 'classic', 'modern', 'kufi'].includes(q.get('style')) ? q.get('style') : (engr ? p.estyle : letters ? 'modern' : 'script'),
     chain: chains[1],
     stone: null,
@@ -168,9 +167,9 @@
         ${personal ? `
         ${engr ? '<div id="engr-slot"></div>' : ''}
         <div class="field">
-          <div class="opt-head"><label class="legend" for="name-in">${engr ? c.fEngrave : letters ? c.fLetters : c.fName}</label><span class="val" id="name-count">${state.name.length}/${maxLen}</span></div>
-          <input class="input name-input" id="name-in" type="text" maxlength="${maxLen}" autocomplete="off" value="${esc(state.name)}" aria-describedby="name-help name-err" ${state.tried && !state.name.trim() ? 'aria-invalid="true"' : ''}>
-          <span class="help" id="name-help">${engr ? c.engraveHelp.replace('{n}', maxLen) : letters ? c.lettersHelp : c.nameHelp}</span>
+          <div class="opt-head"><label class="legend" for="name-in">${engr ? c.fEngrave : letters ? c.fLetters : c.fName}</label></div>
+          <input class="input name-input" id="name-in" type="text" autocomplete="off" value="${esc(state.name)}" aria-describedby="name-help name-err" ${state.tried && !state.name.trim() ? 'aria-invalid="true"' : ''}>
+          <span class="help" id="name-help">${engr ? c.engraveHelp : letters ? c.lettersHelp : c.nameHelp}</span>
           <span class="err" id="name-err" role="alert">${state.tried && !state.name.trim() ? c.nameErr : ''}</span>
         </div>
         <fieldset><div class="opt-head"><span class="legend" id="style-l">${c.fStyle}</span><span class="val">${t(state.style)}</span></div>
@@ -211,7 +210,6 @@
   document.addEventListener('input', (e) => {
     if (e.target.id === 'name-in') {
       state.name = e.target.value;
-      $('#name-count').textContent = `${state.name.length}/${maxLen}`;
       if (ev) ev.set({ text: state.name });
       if (state.name.trim()) { e.target.removeAttribute('aria-invalid'); $('#name-err').textContent = ''; }
     }

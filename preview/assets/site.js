@@ -465,7 +465,7 @@
   }
 
   /* ---------- engraving preview for rings and cufflinks ---------- */
-  // shapes: 'band' (engraved thin ring), 'bandcut' (name cut into a wide ring), 'square' (square ring face),
+  // shapes: 'band' (engraved thin ring), 'bandcut' (a ring made of the name's letters), 'square' (square ring face),
   // 'disc' (engraved round cufflinks), 'enamel' (raised name on black enamel cufflinks), 'cut' (cut-out name cufflinks)
   function engrave(el, opts = {}) {
     const shape = opts.shape || 'disc';
@@ -513,35 +513,41 @@
       ctx.fillStyle = face; ctx.fill();
       ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.stroke();
     }
-    // wrap a flat strip around a ring seen from the front and slightly above
-    function wrapRing(W, H, bandH, m, paint) {
-      const R = Math.min(W * 0.38, H * 0.95), tilt = 0.2, cx = W / 2, cy = H * 0.36;
+    // wrap a flat strip around a ring seen from the front and slightly above.
+    // open = true for name rings, where the letters themselves are the ring and there is no solid band
+    function wrapRing(W, H, bandH, m, paint, open, radius) {
+      const R = radius || Math.min(W * 0.38, H * 0.95), tilt = open ? 0.3 : 0.2, cx = W / 2, cy = open ? H * 0.5 - bandH / 2 - tilt * R * 0.35 : H * 0.36;
       const Wf = Math.round(Math.PI * R), Hf = Math.round(bandH);
       strip.width = Wf; strip.height = Hf;
       paint(sctx, Wf, Hf);
+      // darken the sides as the ring turns away, only where there is metal
+      sctx.save(); sctx.globalCompositeOperation = 'source-atop';
+      for (let u = 0; u < Wf; u += 2) {
+        const th = (u / Wf - 0.5) * Math.PI;
+        sctx.fillStyle = `rgba(60,20,40,${(0.5 * (1 - Math.cos(th))).toFixed(3)})`; sctx.fillRect(u, 0, 2, Hf);
+      }
+      sctx.restore();
+      const col = (u, back) => {
+        const th = (u / Wf - 0.5) * Math.PI;
+        return { th, x: cx + R * Math.sin(th), w: R * Math.cos(th) * Math.PI / Wf + 0.8, y: cy + (back ? -1 : 1) * tilt * R * Math.cos(th) };
+      };
+      // the ring's round footprint on the surface (for name rings it's the only hint of the far side)
+      if (open) {
+        ctx.save(); ctx.filter = 'blur(5px)'; ctx.beginPath(); ctx.ellipse(cx, cy + Hf * 0.95, R * 0.98, tilt * R * 0.98, 0, 0, Math.PI * 2);
+        ctx.lineWidth = Math.max(4, Hf * 0.12); ctx.strokeStyle = 'rgba(78,15,42,.16)'; ctx.stroke(); ctx.restore();
+      }
       // one soft shadow on the surface under the ring
       const sh = ctx.createRadialGradient(cx, cy + tilt * R + Hf, 4, cx, cy + tilt * R + Hf, R);
       sh.addColorStop(0, 'rgba(78,15,42,.22)'); sh.addColorStop(1, 'rgba(78,15,42,0)');
       ctx.save(); ctx.translate(0, cy + tilt * R + Hf); ctx.scale(1, 0.18); ctx.fillStyle = sh;
       ctx.fillRect(cx - R * 1.1, -R, R * 2.2, R * 2); ctx.restore();
-      // back of the band (its inside surface), seen above the front through the ring's opening
-      for (let u = 0; u < Wf; u++) {
-        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf + 0.8;
-        const y = cy - tilt * R * Math.cos(th);
-        ctx.fillStyle = m.ring; ctx.globalAlpha = 0.35 + 0.35 * Math.cos(th); ctx.fillRect(x, y, w, Hf * 0.9);
+      if (!open) {
+        // inside surface of a solid band
+        for (let u = 0; u < Wf; u++) { const c = col(u, true); ctx.fillStyle = m.ring; ctx.globalAlpha = 0.35 + 0.35 * Math.cos(c.th); ctx.fillRect(c.x, c.y, c.w, Hf * 0.9); }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
-      // front of the band carrying the engraving
-      for (let u = 0; u < Wf; u++) {
-        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf + 0.8;
-        const y = cy + tilt * R * Math.cos(th);
-        ctx.drawImage(strip, u, 0, 1, Hf, x, y, w, Hf);
-      }
-      for (let u = 0; u < Wf; u += 2) {  // darken the sides as the band turns away
-        const th = (u / Wf - 0.5) * Math.PI, x = cx + R * Math.sin(th), w = R * Math.cos(th) * Math.PI / Wf * 2 + 0.8;
-        const y = cy + tilt * R * Math.cos(th);
-        ctx.fillStyle = `rgba(60,20,40,${(0.45 * (1 - Math.cos(th))).toFixed(3)})`; ctx.fillRect(x, y, w, Hf);
-      }
+      // the front of the ring
+      for (let u = 0; u < Wf; u++) { const c = col(u, false); ctx.drawImage(strip, u, 0, 1, Hf, c.x, c.y, c.w, Hf); }
     }
 
     function draw() {
@@ -591,22 +597,26 @@
         ctx.fillStyle = face; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.stroke();
         cutText(ctx, text, fitText(ctx, text, f, s * 0.74, s * 0.5, W / 2, H / 2), m);
       } else if (shape === 'band' || shape === 'bandcut') {
-        const cutout = shape === 'bandcut';
-        const bandH = cutout ? H * 0.3 : H * 0.14;
-        wrapRing(W, H, bandH, m, (c, Wf, Hf) => {
-          c.clearRect(0, 0, Wf, Hf);
-          c.direction = ar ? 'rtl' : 'ltr'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-          if (!cutout) {
+        const letters = shape === 'bandcut';
+        if (letters) {
+          // the name is the ring: size the ring so the letters wrap around its front
+          const hT = H * 0.3;
+          const probe = fitText(ctx, text, f, 1e6, hT, 0, 0);
+          const w0 = probe.mt.actualBoundingBoxLeft + probe.mt.actualBoundingBoxRight;
+          const R = Math.max(W * 0.2, Math.min(W * 0.4, w0 / (0.72 * Math.PI)));
+          wrapRing(W, H, hT * 1.3, m, (c, Wf, Hf) => {
+            c.clearRect(0, 0, Wf, Hf);
+            c.direction = ar ? 'rtl' : 'ltr'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+            raisedText(c, text, fitText(c, text, f, Wf * 0.86, hT, Wf / 2, Hf / 2), m, false);
+          }, true, R);
+        } else {
+          wrapRing(W, H, H * 0.14, m, (c, Wf, Hf) => {
+            c.clearRect(0, 0, Wf, Hf);
+            c.direction = ar ? 'rtl' : 'ltr'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
             c.fillStyle = grad(c, 0, 0, 0, Hf, m); c.fillRect(0, 0, Wf, Hf);
             cutText(c, text, fitText(c, text, f, Wf * 0.55, Hf * 0.62, Wf / 2, Hf / 2), m);
-          } else {
-            const rim = Math.max(3, Hf * 0.1);
-            c.fillStyle = 'rgba(120,50,80,.1)'; c.fillRect(0, rim, Wf, Hf - rim * 2);
-            c.fillStyle = grad(c, 0, 0, 0, rim, m); c.fillRect(0, 0, Wf, rim);
-            c.fillStyle = grad(c, 0, Hf - rim, 0, Hf, m); c.fillRect(0, Hf - rim, Wf, rim);
-            raisedText(c, text, fitText(c, text, f, Wf * 0.5, Hf - rim * 2.4, Wf / 2, Hf / 2), m, false);
-          }
-        });
+          }, false);
+        }
       }
     }
 
