@@ -502,6 +502,35 @@
       c.fillStyle = m.edge; c.fillText(text, p.x, p.y + Math.max(1, p.px * 0.02));
       c.fillStyle = grad(c, 0, top, 0, top + h, m); c.fillText(text, p.x, p.y);
     }
+    // cufflinks: long names stack onto two or three lines (by word) instead of shrinking into one tiny line
+    function splitWords(words, n) {
+      const target = words.join(' ').length / n, lines = [];
+      let cur = [];
+      words.forEach((w, i) => {
+        cur.push(w);
+        const wordsLeft = words.length - i - 1, linesLeft = n - lines.length - 1;
+        if (lines.length < n - 1 && (cur.join(' ').length >= target || wordsLeft === linesLeft)) { lines.push(cur.join(' ')); cur = []; }
+      });
+      if (cur.length) lines.push(cur.join(' '));
+      return lines;
+    }
+    function stackText(c, text, f, boxW, boxH, cx, cy, paint) {
+      const words = text.split(/\s+/).filter(Boolean);
+      const layouts = [[text]];
+      for (let n = 2; n <= Math.min(3, words.length); n++) layouts.push(splitWords(words, n));
+      let best = null;
+      layouts.forEach((lines) => {
+        const lh = boxH / lines.length;
+        const px = Math.min(...lines.map((ln) => fitText(c, ln, f, boxW, lh * 0.8, 0, 0).px));
+        if (!best || px > best.px * 1.12) best = { lines, px, lh };   // only stack when it makes the name clearly bigger
+      });
+      c.font = fontStr(f, best.px);
+      best.lines.forEach((ln, i) => {
+        const mt = c.measureText(ln);
+        const y = cy + (i - (best.lines.length - 1) / 2) * best.lh;
+        paint(ln, { x: cx + (mt.actualBoundingBoxLeft - mt.actualBoundingBoxRight) / 2, y: y + (mt.actualBoundingBoxAscent - mt.actualBoundingBoxDescent) / 2, px: best.px, mt });
+      });
+    }
     function disc(cx, cy, r, m, inner) {
       ctx.save();
       ctx.shadowColor = 'rgba(78,15,42,.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
@@ -569,19 +598,19 @@
           const cy = H * 0.5;
           if (shape === 'disc') {
             disc(cx, cy, r, m, 0.9);
-            cutText(ctx, text, fitText(ctx, text, f, r * 1.25, r * 0.8, cx, cy), m);
+            stackText(ctx, text, f, r * 1.25, r * 1.0, cx, cy, (ln, p) => cutText(ctx, ln, p, m));
           } else {
             disc(cx, cy, r, m, 0.86);
             ctx.beginPath(); ctx.arc(cx, cy, r * 0.8, 0, Math.PI * 2);
             const en = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.3, r * 0.05, cx, cy, r * 0.8);
             en.addColorStop(0, '#2D2733'); en.addColorStop(1, '#0C0A0F'); ctx.fillStyle = en; ctx.fill();
-            raisedText(ctx, text, fitText(ctx, text, f, r * 1.3, r * 0.7, cx, cy), m, false);
+            stackText(ctx, text, f, r * 1.3, r * 0.95, cx, cy, (ln, p) => raisedText(ctx, ln, p, m, false));
             ctx.beginPath(); ctx.ellipse(cx - r * 0.12, cy - r * 0.42, r * 0.5, r * 0.16, -0.35, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
           }
         });
       } else if (shape === 'cut') {
-        [W * 0.29, W * 0.71].forEach((cx) => raisedText(ctx, text, fitText(ctx, text, f, W * 0.36, H * 0.42, cx, H * 0.5), m));
+        [W * 0.29, W * 0.71].forEach((cx) => stackText(ctx, text, f, W * 0.36, H * 0.6, cx, H * 0.5, (ln, p) => raisedText(ctx, ln, p, m)));
       } else if (shape === 'square') {
         const s = Math.min(W * 0.4, H * 0.64), x0 = W / 2 - s / 2, y0 = H * 0.5 - s / 2;
         const bh = s * 0.2;
