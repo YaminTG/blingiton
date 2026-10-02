@@ -22,6 +22,12 @@
   .stage { position: relative; }
   .stage .photo { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--r-lg); box-shadow: var(--shadow-2); }
   .plate.engr { min-height: 240px; box-shadow: var(--shadow-1); }
+  .size-ctl { display: grid; gap: 8px; margin-top: 14px; }
+  .size-row { display: flex; align-items: center; gap: 10px; }
+  .size-btn { display: inline-grid; place-items: center; flex: 0 0 44px; height: 44px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--paper); font-size: 22px; font-weight: 700; line-height: 1; }
+  .size-btn:hover { border-color: var(--pink); }
+  .size-row input[type="range"] { flex: 1; min-width: 0; height: 44px; accent-color: var(--pink); cursor: pointer; }
+  .size-row output { min-width: 52px; font-weight: 800; text-align: end; font-variant-numeric: tabular-nums; }
   .stage .sticker { position: absolute; z-index: 2; bottom: -14px; inset-inline-end: 12px; width: 88px; height: 88px; transform: rotate(-10deg); }
 
   .info h1 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 800; letter-spacing: -.015em; }
@@ -85,10 +91,10 @@
   window.PAGE_AR = { alsoH2: 'قد يعجبك أيضاً' };
   window.COPY = {
     en: {
-      home: 'Home', fEngrave: 'Engraving', engraveHelp: 'English or Arabic. The preview updates as you type.',
+      home: 'Home', fSize: 'Text size', smaller: 'Smaller text', bigger: 'Bigger text', fEngrave: 'Engraving', engraveHelp: 'English or Arabic. The preview updates as you type.',
       a1bEng: 'Made from 925 sterling silver, also available 18K gold plated. Every piece is engraved or cut to order in our workshop.',
       fName: 'Your name', fLetters: 'Your letters', nameHelp: 'English or Arabic.', lettersHelp: 'The letters you want, in English or Arabic.',
-      nameErr: 'Type the name you want on your piece.', fStyle: 'Style', fFinish: 'Finish', fChain: 'Chain length', fStone: 'Birthstone colour', none: 'None',
+      nameErr: 'Type the name you want on your piece.', fStyle: 'Style', fFinish: 'Finish', fChain: 'Chain length', fStone: 'Birthstone colour', fGem: 'Gem', none: 'None',
       gift: 'This is a gift', giftHelp: 'We’ll hide the price and tuck your note into the pink box.', note: 'Gift note (optional)', notePh: 'Happy birthday, Lina!',
       payLine: 'Pay by card online, or card or cash on delivery', madeLine: 'Made to order in 4 days · DHL Express worldwide', readyLine: 'In stock, ready to ship · DHL Express worldwide',
       a1: 'Details & materials', a1b: 'Made from 925 sterling silver, also available 18K gold plated. Every name is cut to order in our workshop.',
@@ -97,10 +103,10 @@
       a3: 'Silver care', a3b: 'Keep it dry, take it off before swimming or showering, and store it in its pink box to keep the shine.',
     },
     ar: {
-      home: 'الرئيسية', fEngrave: 'النقش', engraveHelp: 'بالعربية أو الإنجليزية. تتغيّر المعاينة أثناء الكتابة.',
+      home: 'الرئيسية', fSize: 'حجم الخط', smaller: 'تصغير الخط', bigger: 'تكبير الخط', fEngrave: 'النقش', engraveHelp: 'بالعربية أو الإنجليزية. تتغيّر المعاينة أثناء الكتابة.',
       a1bEng: 'مصنوعة من الفضة 925، ومتوفرة أيضاً بطلاء ذهب عيار 18. كل قطعة تُحفر أو تُقصّ حسب الطلب في مشغلنا.',
       fName: 'الاسم', fLetters: 'الحروف', nameHelp: 'بالعربية أو الإنجليزية.', lettersHelp: 'الأحرف التي تريدها، بالعربية أو الإنجليزية.',
-      nameErr: 'اكتب الاسم الذي تريده على القطعة.', fStyle: 'الخط', fFinish: 'اللون', fChain: 'طول السلسلة', fStone: 'لون حجر الميلاد', none: 'بدون',
+      nameErr: 'اكتب الاسم الذي تريده على القطعة.', fStyle: 'الخط', fFinish: 'اللون', fChain: 'طول السلسلة', fStone: 'لون حجر الميلاد', fGem: 'الحجر', none: 'بدون',
       gift: 'هذه هدية', giftHelp: 'سنخفي السعر ونضع بطاقتك داخل العلبة الوردية.', note: 'بطاقة الإهداء (اختياري)', notePh: 'كل عام وأنتِ بخير يا لينا!',
       payLine: 'ادفع بالبطاقة أونلاين، أو بالبطاقة أو نقداً عند الاستلام', madeLine: 'تُصنع حسب الطلب خلال 4 أيام · DHL Express لكل العالم', readyLine: 'متوفرة وجاهزة للشحن · DHL Express لكل العالم',
       a1: 'التفاصيل والخامات', a1b: 'مصنوعة من الفضة 925، ومتوفرة أيضاً بطلاء ذهب عيار 18. كل اسم يُقصّ حسب الطلب في مشغلنا.',
@@ -114,7 +120,7 @@
 <script src="assets/site.js"></script>
 <script>
 (() => {
-  const { $, t, esc, icon, money, pName, product, cardHTML, addToBag, metalSwitch, lang, setMetal, engrave } = window.BLX;
+  const { $, t, esc, icon, money, pName, product, cardHTML, addToBag, metalSwitch, lang, setMetal, engrave, plate } = window.BLX;
   const BL = window.BL;
   const q = new URLSearchParams(location.search);
   const p = product(q.get('id')) || product(10830);
@@ -122,6 +128,7 @@
   const personal = !!p.personal;
   const letters = p.personal === 'letters';
   const engr = p.personal === 'engrave';          // rings and cufflinks with a live engraving preview
+  const neck = p.shape === 'plate';               // cut-out name necklaces, drawn like the home page preview
   const hasChain = personal && !engr;
   const chains = p.kind === 'bracelet' ? [16, 18, 20] : [40, 45, 50];
   const state = {
@@ -131,20 +138,26 @@
     stone: null,
     gift: false,
     note: '',
+    tsize: 100,   // text size on the engraving preview, in %
     tried: false,
   };
 
   const photo = $('#photo');
   photo.src = p.img;
 
-  // the engraving preview is built once and moved into the form on every render, so it keeps its canvas
-  let prevEl = null, ev = null;
-  if (engr) {
+  // the live preview is built once and moved into the form on every render, so it keeps its canvas
+  let prevEl = null, ev = null, nv = null;
+  if (engr || neck) {
     prevEl = document.createElement('div');
     prevEl.className = 'plate engr';
     prevEl.innerHTML = '<span class="name"></span>';
-    ev = engrave(prevEl, { shape: p.shape });
+    if (engr) ev = engrave(prevEl, { shape: p.shape });
+    else nv = plate(prevEl);
   }
+  const neckSet = (o) => {
+    prevEl.querySelector('.name').dataset.sample = lang() === 'ar' ? 'سارة' : 'Sara';
+    nv.set(o);
+  };
 
   function render() {
     const c = C(), ar = lang() === 'ar';
@@ -155,9 +168,12 @@
 
     const styleChips = ['script', 'classic', 'modern', 'kufi'].map((s) => `<button class="chip" type="button" role="radio" data-style="${s}" aria-checked="${state.style === s}">${t(s)}</button>`).join('');
     const chainChips = chains.map((n) => `<button class="chip" type="button" role="radio" data-chain="${n}" aria-checked="${state.chain === n}">${n} ${t('cm')}</button>`).join('');
+    // birthstone pieces pick by month; other pieces pick any gem (including black onyx, which has no month)
+    const gemName = (s) => (ar ? s.sar : s.sen);
+    const gemLabel = (s) => (p.stone ? `${ar ? s.ar : s.en} · ${gemName(s)}` : gemName(s));
     const stoneBtns = `<button class="swatch none" type="button" role="radio" data-stone="none" aria-checked="${state.stone === null}" aria-label="${c.none}">${icon('x')}</button>` +
-      BL.stones.map((s, i) => `<button class="swatch" type="button" role="radio" data-stone="${i}" aria-checked="${state.stone === i}" style="background:${s.c}" aria-label="${ar ? s.ar : s.en} · ${ar ? s.sar : s.sen}" title="${ar ? s.ar : s.en}"></button>`).join('');
-    const stoneVal = state.stone === null ? c.none : `${ar ? BL.stones[state.stone].ar : BL.stones[state.stone].en} · ${ar ? BL.stones[state.stone].sar : BL.stones[state.stone].sen}`;
+      BL.stones.map((s, i) => (p.stone && !s.en) ? '' : `<button class="swatch" type="button" role="radio" data-stone="${i}" aria-checked="${state.stone === i}" style="background:${s.c}" aria-label="${gemLabel(s)}" title="${gemLabel(s)}"></button>`).join('');
+    const stoneVal = state.stone === null ? c.none : gemLabel(BL.stones[state.stone]);
 
     $('#info').innerHTML = `
       <h1 id="p-title">${esc(pName(p))}</h1>
@@ -165,11 +181,18 @@
       <p class="desc">${esc(ar ? p.dar : p.den)}</p>
       <form class="opts-form" id="opts" novalidate>
         ${personal ? `
-        ${engr ? '<div id="engr-slot"></div>' : ''}
+        ${engr ? `<div><div id="engr-slot"></div>
+          <div class="size-ctl"><label class="legend" for="size-in">${c.fSize}</label>
+            <div class="size-row">
+              <button class="size-btn" type="button" data-size="-10" aria-label="${c.smaller}">−</button>
+              <input type="range" id="size-in" min="50" max="130" step="5" value="${state.tsize}" aria-valuetext="${state.tsize}%">
+              <button class="size-btn" type="button" data-size="10" aria-label="${c.bigger}">+</button>
+              <output id="size-out" for="size-in">${state.tsize}%</output>
+            </div></div></div>` : neck ? '<div id="engr-slot"></div>' : ''}
         <div class="field">
           <div class="opt-head"><label class="legend" for="name-in">${engr ? c.fEngrave : letters ? c.fLetters : c.fName}</label></div>
           <input class="input name-input" id="name-in" type="text" autocomplete="off" value="${esc(state.name)}" aria-describedby="name-help name-err" ${state.tried && !state.name.trim() ? 'aria-invalid="true"' : ''}>
-          <span class="help" id="name-help">${engr ? c.engraveHelp : letters ? c.lettersHelp : c.nameHelp}</span>
+          <span class="help" id="name-help">${engr || neck ? c.engraveHelp : letters ? c.lettersHelp : c.nameHelp}</span>
           <span class="err" id="name-err" role="alert">${state.tried && !state.name.trim() ? c.nameErr : ''}</span>
         </div>
         <fieldset><div class="opt-head"><span class="legend" id="style-l">${c.fStyle}</span><span class="val">${t(state.style)}</span></div>
@@ -177,7 +200,7 @@
         <fieldset><div class="opt-head"><span class="legend">${c.fFinish}</span></div>${metalSwitch()}</fieldset>
         ${hasChain ? `<fieldset><div class="opt-head"><span class="legend" id="chain-l">${c.fChain}</span></div>
           <div class="opts" role="radiogroup" aria-labelledby="chain-l">${chainChips}</div></fieldset>` : ''}
-        ${p.stone ? `<fieldset><div class="opt-head"><span class="legend" id="stone-l">${c.fStone}</span><span class="val">${stoneVal}</span></div>
+        ${p.stone || p.gem ? `<fieldset><div class="opt-head"><span class="legend" id="stone-l">${p.stone ? c.fStone : c.fGem}</span><span class="val">${stoneVal}</span></div>
           <div class="stones" role="radiogroup" aria-labelledby="stone-l">${stoneBtns}</div></fieldset>` : ''}
         ` : ''}
         <div class="gift-box">
@@ -201,7 +224,11 @@
     setMetal(document.body.dataset.metal);
     if (engr) {
       $('#engr-slot').appendChild(prevEl);
-      ev.set({ text: state.name, style: state.style, sample: p.sample[ar ? 'ar' : 'en'] });
+      ev.set({ text: state.name, style: state.style, sample: p.sample[ar ? 'ar' : 'en'], scale: state.tsize / 100, stone: p.gem ? state.stone : null });
+    }
+    if (neck) {
+      $('#engr-slot').appendChild(prevEl);
+      neckSet({ name: state.name, style: state.style, stone: state.stone });
     }
     const also = BL.products.filter((x) => x.id !== p.id && x.cats.some((k) => p.cats.includes(k))).slice(0, 4);
     $('#also').innerHTML = (also.length >= 4 ? also : [...also, ...BL.products.filter((x) => x.id !== p.id && !also.includes(x))].slice(0, 4)).map(cardHTML).join('');
@@ -211,14 +238,24 @@
     if (e.target.id === 'name-in') {
       state.name = e.target.value;
       if (ev) ev.set({ text: state.name });
+      if (nv) neckSet({ name: state.name });
       if (state.name.trim()) { e.target.removeAttribute('aria-invalid'); $('#name-err').textContent = ''; }
     }
     if (e.target.id === 'note-in') state.note = e.target.value;
+    if (e.target.id === 'size-in') setSize(Number(e.target.value));
   });
   document.addEventListener('change', (e) => {
     if (e.target.id === 'gift-in') { state.gift = e.target.checked; $('.gift-note').hidden = !state.gift; if (state.gift) $('#note-in').focus(); }
   });
+  function setSize(v) {
+    state.tsize = Math.max(50, Math.min(130, v));
+    const r = $('#size-in');
+    r.value = state.tsize; r.setAttribute('aria-valuetext', `${state.tsize}%`);
+    $('#size-out').textContent = `${state.tsize}%`;
+    if (ev) ev.set({ scale: state.tsize / 100 });
+  }
   document.addEventListener('click', (e) => {
+    const sz = e.target.closest('[data-size]'); if (sz) { setSize(state.tsize + Number(sz.dataset.size)); return; }
     const s = e.target.closest('#info [data-style]'); if (s) { state.style = s.dataset.style; render(); return; }
     const ch = e.target.closest('[data-chain]'); if (ch) { state.chain = Number(ch.dataset.chain); render(); return; }
     const st = e.target.closest('[data-stone]'); if (st) { state.stone = st.dataset.stone === 'none' ? null : Number(st.dataset.stone); render(); return; }
@@ -234,7 +271,8 @@
     const item = { id: p.id };
     if (personal) Object.assign(item, { name: state.name.trim(), style: state.style, finish: document.body.dataset.metal });
     if (hasChain) item.chain = state.chain;
-    if (personal && p.stone) item.stone = state.stone;
+    if (engr && state.tsize !== 100) item.tsize = state.tsize;
+    if (personal && (p.stone || p.gem)) item.stone = state.stone;
     if (state.gift) { item.gift = true; if (state.note.trim()) item.note = state.note.trim(); }
     addToBag(item, { open: true });
   });
