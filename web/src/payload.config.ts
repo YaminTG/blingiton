@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -13,6 +14,7 @@ import sharp from 'sharp'
 import { admins } from './access'
 import { Categories } from './collections/Categories'
 import { Media } from './collections/Media'
+import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
 import { Products } from './collections/Products'
 import { Reviews } from './collections/Reviews'
@@ -46,8 +48,22 @@ export default buildConfig({
       beforeDashboard: ['/components/admin/Dashboard#Dashboard'],
     },
   },
-  collections: [Products, Categories, Reviews, Pages, Media, Users],
+  collections: [Orders, Products, Categories, Reviews, Pages, Media, Users],
   globals: [SiteSettings],
+  // Order emails go through any SMTP service (Resend, Brevo, Zoho, Google Workspace…). Without
+  // SMTP_HOST, Payload writes the emails to the server log instead, which is fine for development.
+  email: process.env.SMTP_HOST
+    ? nodemailerAdapter({
+        defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'orders@blingitonjewels.com',
+        defaultFromName: process.env.EMAIL_FROM_NAME || 'Blingiton',
+        transportOptions: {
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT || 587),
+          secure: Number(process.env.SMTP_PORT) === 465,
+          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        },
+      })
+    : undefined,
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

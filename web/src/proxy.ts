@@ -30,5 +30,5 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Skip Payload (admin + API), Next internals, metadata/feeds and any file with an extension.
-  matcher: ['/((?!admin|api|_next|redirect-lookup|bag-items|feeds|.*\\..*).*)'],
+  matcher: ['/((?!admin|api|_next|redirect-lookup|bag-items|place-order|feeds|.*\\..*).*)'],
 }

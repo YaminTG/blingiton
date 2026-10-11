@@ -2,7 +2,7 @@ import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 
-import type { Category, Media, Page, Product, SiteSetting } from '@/payload-types'
+import type { Category, Media, Page, Product, Review, SiteSetting } from '@/payload-types'
 
 import type { BagProduct } from './cart'
 import type { Locale } from './locales'
@@ -31,6 +31,15 @@ export const getProduct = (locale: Locale, slug: string) =>
     },
     ['product', locale, slug],
     { tags: [tags.products] },
+  )()
+
+/** Approved reviews only (the collection's access rule hides the rest), newest first. */
+export const getProductReviews = (productId: number) =>
+  unstable_cache(
+    async (): Promise<Review[]> =>
+      (await (await payload()).find({ collection: 'reviews', where: { product: { equals: productId } }, sort: '-date', limit: 50, overrideAccess: false, depth: 0 })).docs,
+    ['product-reviews', String(productId)],
+    { tags: [tags.products, tags.product(productId)] },
   )()
 
 type ProductList = { docs: Product[]; totalDocs: number; totalPages: number; page: number }
@@ -117,11 +126,11 @@ export const getIndexables = unstable_cache(
     const [products, categories, pages] = await Promise.all([
       p.find({ collection: 'products', locale: 'en', limit: 0, overrideAccess: false, depth: 1, select: { slug: true, name: true, updatedAt: true, images: true, price: true, availability: true, description: true, shortDescription: true, categories: true } }),
       p.find({ collection: 'categories', locale: 'en', limit: 0, overrideAccess: false, depth: 0, select: { slug: true, updatedAt: true } }),
-      p.find({ collection: 'pages', locale: 'en', limit: 0, overrideAccess: false, depth: 0, select: { slug: true, updatedAt: true } }),
+      p.find({ collection: 'pages', locale: 'en', limit: 0, overrideAccess: false, depth: 0, select: { slug: true, title: true, updatedAt: true } }),
     ])
     return { products: products.docs as Product[], categories: categories.docs as Category[], pages: pages.docs as Page[] }
   },
-  ['indexables'],
+  ['indexables', 'v2'],
   { tags: [tags.products, tags.categories, tags.pages] },
 )
 

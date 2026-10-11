@@ -160,6 +160,13 @@ html[dir="rtl"] .sort-btn { padding: 0 18px 0 14px; }
 .acc details[open] summary .icon { transform: rotate(180deg); }
 .acc details p { padding-bottom: 18px; color: var(--ink-soft); }
 .acc .acc-body { white-space: pre-line; }
+.reviews-sum { color: var(--ink-soft); font-weight: 800; }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+@media (min-width: 768px) { .review-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.review { padding: 20px; border-radius: var(--r); background: var(--paper); box-shadow: var(--shadow-1); display: grid; gap: 8px; align-content: start; }
+.review .stars { color: var(--pink); letter-spacing: 2px; }
+.review .stars span { color: var(--line); }
+.review-by { color: var(--ink-soft); font-size: 14px; font-weight: 700; }
 
 /* ---------- checkout ---------- */
 .co { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 32px 80px; }

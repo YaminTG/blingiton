@@ -8,7 +8,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { Gallery } from '@/components/product/Gallery'
 import { ProductForm, type FormProduct } from '@/components/product/ProductForm'
 import type { Category } from '@/payload-types'
-import { getProduct, getSettings, imageUrl, listCategories, listProducts, lookupRedirect, mediaOf, retiredProductTarget, toBagProduct } from '@/lib/data'
+import { getProduct, getProductReviews, getSettings, imageUrl, listCategories, listProducts, lookupRedirect, mediaOf, retiredProductTarget, toBagProduct } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
 import { isLocale, type Locale } from '@/lib/locales'
 import { absolute, alternates, money, paths } from '@/lib/urls'
@@ -49,7 +49,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
   if (!isLocale(locale)) notFound()
   const t = dictionary(locale)
   const product = await load(locale, slug)
-  const [settings, allCategories] = await Promise.all([getSettings(locale), listCategories(locale)])
+  const [settings, allCategories, reviews] = await Promise.all([getSettings(locale), listCategories(locale), getProductReviews(product.id)])
+  const average = reviews.length ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : ''
+  const reviewDate = new Intl.DateTimeFormat(locale === 'ar' ? 'ar-JO-u-nu-latn' : 'en-GB', { dateStyle: 'medium' })
 
   const categories = (product.categories ?? []).filter((c): c is Category => typeof c === 'object')
   // Most specific category (a subcategory if there is one) for the breadcrumb trail.
@@ -85,7 +87,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <JsonLd data={[productJsonLd(product, locale), breadcrumbJsonLd(crumbs)]} />
+      <JsonLd data={[productJsonLd(product, locale, settings, reviews), breadcrumbJsonLd(crumbs)]} />
       <nav className="wrap crumbs" aria-label="Breadcrumb">
         <ol>
           {crumbs.map((c, i) =>
@@ -136,6 +138,38 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </div>
         </section>
       </div>
+
+      {reviews.length ? (
+        <section className="section" style={{ paddingTop: 0 }} aria-labelledby="reviews-h">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 className="h2" id="reviews-h">
+                {t.reviewsH2}
+              </h2>
+              <p className="reviews-sum">{t.ratingSummary(average, reviews.length)}</p>
+            </div>
+            <ul className="review-list">
+              {reviews.map((r) => (
+                <li key={r.id} className="review">
+                  <p className="stars" role="img" aria-label={t.starsLabel(r.rating)}>
+                    {'★'.repeat(r.rating)}
+                    <span>{'★'.repeat(5 - r.rating)}</span>
+                  </p>
+                  {r.body ? (
+                    <p lang={r.language ?? undefined} dir="auto">
+                      {r.body}
+                    </p>
+                  ) : null}
+                  <p className="review-by">
+                    {r.author}
+                    {r.verifiedPurchase ? ` · ${t.verified}` : ''} · <time dateTime={r.date}>{reviewDate.format(new Date(r.date))}</time>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
 
       {related.length ? (
         <section className="section" style={{ paddingTop: 0 }} aria-labelledby="also-h">

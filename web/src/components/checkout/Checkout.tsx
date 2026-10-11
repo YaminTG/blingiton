@@ -10,7 +10,7 @@ import { useStore } from '@/components/store/StoreProvider'
 import { optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
-import { serverUrl } from '@/lib/site'
+import { ORIGIN_KEY } from '@/lib/origin'
 import { money, paths } from '@/lib/urls'
 
 type Fees = { amman: number; jordan: number; international: number }
@@ -18,14 +18,24 @@ type Method = 'amman' | 'jordan' | 'intl'
 type Pay = 'carddel' | 'cash' | 'intl'
 type Form = { name: string; phone: string; email: string; country: number; city: string; address: string; method: Method; pay: Pay }
 type Field = 'name' | 'phone' | 'email' | 'city' | 'address'
-type Done = { first: string; phone: string; no: string; item: CartItem | null; product: BagProduct | null; wa: string }
+type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string }
 
-// Short reference the customer and the shop can quote on WhatsApp.
-const orderNumber = () => `BL-${Date.now().toString().slice(-6)}`
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const SPARK_COLORS = ['#D23E78', '#F070A0', '#FFFFFF', '#A01040', '#C9C8CF', '#F8D3DA']
 
-/** The preview's checkout. Until online payment is set up, the order is sent to the shop on WhatsApp. */
+const readOrigin = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(ORIGIN_KEY) ?? 'null')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Checkout. The order is saved on the server (/place-order), which works out the prices itself;
+ * the customer gets an email and the shop sees it under Orders in the admin.
+ */
 export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fees; whatsapp: string }) {
   const t = dictionary(locale)
   const c = t.co
@@ -33,6 +43,8 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const { cart, products, clear, ready } = useStore()
   const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 0, city: '', address: '', method: 'amman', pay: 'carddel' })
   const [errors, setErrors] = useState<Field[]>([])
+  const [sending, setSending] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
   const [done, setDone] = useState<Done | null>(null)
   const [replay, setReplay] = useState(0)
   const errRef = useRef<HTMLDivElement>(null)
@@ -51,11 +63,13 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
     const bad: Field[] = []
     if (!form.name.trim()) bad.push('name')
     if (form.phone.replace(/\D/g, '').length < 8) bad.push('phone')
+    if (!EMAIL.test(form.email.trim())) bad.push('email')
     if (!form.city.trim()) bad.push('city')
     if (!form.address.trim()) bad.push('address')
     return bad
   }
-  const message = (id: Field) => (id === 'phone' ? c.phoneErr : c.required({ name: c.fullName, city: c.city, address: c.address, email: c.email }[id]))
+  const message = (id: Field) =>
+    id === 'phone' ? c.phoneErr : id === 'email' ? c.emailErr : c.required({ name: c.fullName, city: c.city, address: c.address }[id])
 
   useEffect(() => {
     if (done) {
@@ -64,37 +78,54 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
     }
   }, [done])
 
-  const methodLabel = jordan ? (f.method === 'jordan' ? c.jordanCities : c.amman) : c.intl
-  const payLabel = !jordan ? c.payIntl : f.pay === 'cash' ? c.payCash : c.payCardDel
-
-  function orderMessage(no: string) {
-    const out: string[] = [c.orderHeading(no), '']
-    for (const { it, p } of lines) {
-      out.push(`${it.qty}× ${p.name} · ${money(unitPrice(p, it) * it.qty, locale)}`)
-      for (const [k, v] of optionLines(it, p, t, ar)) out.push(`   ${k ? `${k}: ` : ''}${v}`)
-      out.push(`   ${serverUrl}${paths.product(locale, p.slug)}`)
-    }
-    out.push('', `${t.subtotal}: ${money(subtotal, locale)}`, `${c.delivery} (${methodLabel}): ${money(fee, locale)}`, `${c.total}: ${money(total, locale)}`, '')
-    out.push(`${c.fullName}: ${f.name.trim()}`, `${c.phone}: ${f.phone.trim()}`)
-    if (f.email.trim()) out.push(`${c.email}: ${f.email.trim()}`)
-    out.push(`${c.country}: ${c.countries[f.country]}`, `${c.city}: ${f.city.trim()}`, `${c.address}: ${f.address.trim()}`, `${c.payment}: ${payLabel}`)
-    return out.join('\n')
-  }
-
-  function placeOrder(e: FormEvent) {
+  async function placeOrder(e: FormEvent) {
     e.preventDefault()
+    if (sending) return
     const found = validate(f)
     setErrors(found)
+    setFailure(null)
     if (found.length) {
       setTimeout(() => errRef.current?.focus(), 0)
       return
     }
-    const no = orderNumber()
-    const wa = `https://wa.me/${whatsapp}?text=${encodeURIComponent(orderMessage(no))}`
-    window.open(wa, '_blank', 'noopener')
-    const first = lines[0]
-    setDone({ first: f.name.trim().split(/\s+/)[0], phone: f.phone.trim(), no, item: first?.it ?? null, product: first?.p ?? null, wa })
-    clear()
+    setSending(true)
+    try {
+      const res = await fetch('/place-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale,
+          items: lines.map(({ it }) => it),
+          customer: { name: f.name, phone: f.phone, email: f.email },
+          shipping: { country: f.country, city: f.city, address: f.address, method: f.method },
+          payment: f.pay === 'cash' ? 'cash' : 'card_on_delivery',
+          origin: readOrigin(),
+        }),
+      })
+      const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; error?: string }
+      if (!res.ok || !result.number) {
+        setFailure(result.error === 'gone' ? c.goneErr : c.placeErr)
+        setTimeout(() => errRef.current?.focus(), 0)
+        return
+      }
+      const no = `#${result.number}`
+      const first = lines[0]
+      setDone({
+        first: f.name.trim().split(/\s+/)[0],
+        no,
+        email: f.email.trim(),
+        abroad: result.payment === 'whatsapp',
+        item: first?.it ?? null,
+        product: first?.p ?? null,
+        wa: `https://wa.me/${whatsapp}?text=${encodeURIComponent(c.waAbout(no))}`,
+      })
+      clear()
+    } catch {
+      setFailure(c.placeErr)
+      setTimeout(() => errRef.current?.focus(), 0)
+    } finally {
+      setSending(false)
+    }
   }
 
   if (done) {
@@ -145,7 +176,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           {c.thanks(done.first)}
         </h1>
         <div className="rope" aria-hidden="true" />
-        <p>{c.thanksP(done.no)}</p>
+        <p>{done.abroad ? c.thanksIntl(done.no, done.email) : c.thanksP(done.no, done.email)}</p>
         <a className="btn btn-primary" href={done.wa} target="_blank" rel="noopener">
           <Icon name="whatsapp" />
           <span>{c.openAgain}</span>
@@ -243,6 +274,10 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
               ))}
             </ul>
           </div>
+        ) : failure ? (
+          <div className="err-sum" ref={errRef} tabIndex={-1} role="alert">
+            <p>{failure}</p>
+          </div>
         ) : null}
         <fieldset className="block">
           <h2>
@@ -253,7 +288,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
             {field('name', c.fullName, { auto: 'name' })}
             {field('phone', c.phone, { type: 'tel', auto: 'tel', help: c.phoneHelp, ph: '+962 7X XXX XXXX' })}
           </div>
-          {field('email', c.email, { type: 'email', auto: 'email', req: false })}
+          {field('email', c.email, { type: 'email', auto: 'email', help: c.emailHelp })}
         </fieldset>
         <fieldset className="block">
           <h2>
@@ -352,10 +387,16 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
             )}
           </div>
         </fieldset>
-        <button className="btn btn-primary btn-block place" type="submit">
-          <Icon name="whatsapp" />
+        <button className="btn btn-primary btn-block place" type="submit" disabled={sending} aria-busy={sending || undefined}>
+          <Icon name="bag" />
           <span>
-            {c.place} · <span className="price">{money(total, locale)}</span>
+            {sending ? (
+              c.placing
+            ) : (
+              <>
+                {c.place} · <span className="price">{money(total, locale)}</span>
+              </>
+            )}
           </span>
         </button>
         <p className="help place-help">{c.placeHelp}</p>

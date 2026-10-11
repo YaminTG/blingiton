@@ -11,7 +11,7 @@ This project uses the Payload CMS skill at `.claude/skills/payload/`. Start with
 - `npm run build`: needs `DATABASE_URL`
 
 ## Layout
-- `src/collections/`: Products, Categories, Reviews, Pages, Media, Users. `src/globals/SiteSettings.ts` holds business details and the SEO writing settings.
+- `src/collections/`: Orders, Products, Categories, Reviews, Pages, Media, Users. `src/globals/SiteSettings.ts` holds business details and the SEO writing settings.
 - `src/fields/`: shared fields. `seo.ts` has the SEO tab, `seoStatus`, the hidden `ai` bookkeeping, and `legacy` (old WooCommerce IDs and URLs). `slug.ts` is the shared EN/AR slug. `label.ts` has `l(en, ar)` for bilingual admin labels.
 - `src/access/`: access rules. Published content is public; drafts are staff-only.
 - `src/lib/`: `locales.ts` (en/ar), `site.ts` (`serverUrl`, `isProduction`), `slugify.ts`.
@@ -19,7 +19,11 @@ This project uses the Payload CMS skill at `.claude/skills/payload/`. Start with
 - Storefront (`src/app/(frontend)/[locale]/`, `src/components/`): a port of the clickable preview in `../preview/`, which is the design reference. Styles are `site.css` (the preview's, unchanged) and `frontend.css` (the preview's per-page styles).
   - `components/preview/draw.ts`: the canvas name/engraving previews, ported from `preview/assets/site.js`
   - `components/store/`: the bag (kept in the browser's localStorage), drawers, toast and the silver/gold switch; `/bag-items` returns names and prices for it
-  - Checkout sends the order to the shop's WhatsApp until online payment exists
+  - Checkout posts to `/place-order` (`src/lib/orders.ts`), which re-prices everything from the database and creates the order. Never trust prices from the browser.
+  - Orders: WooCommerce-style statuses and list (`src/lib/orderOptions.ts`, admin cells in `components/admin/Order*`). Numbers start at 20001, past the old Woo ones.
+  - Order emails (`src/lib/orderEmails.ts`): customer on received/completed, shop on received, once each (`emails.*At`). SMTP via `SMTP_*`; without it they print to the server log.
+  - Origin (direct / organic / referral / utm) is recorded per browser tab in sessionStorage (`src/lib/origin.ts`) and sent with the order.
+  - Jordan pays card or cash on delivery; international orders are "on hold" and arranged on WhatsApp until HyperPay is connected.
   - UI text lives in `src/lib/dictionary.ts` (EN + AR)
 - `scripts/`:
   - `apply-preview.ts`: copies the preview's hand-tuned settings (personalization, home photos, top menu, Delivery/Silver care pages) into the database

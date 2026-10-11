@@ -468,3 +468,88 @@ html[data-theme='dark'] {
   font-weight: 700;
   text-decoration: none;
 }
+
+// Orders list: status tabs, status pills, total, origin and quick actions (WooCommerce-style).
+.bl-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 2px;
+  margin-bottom: 14px;
+  font-size: 13px;
+
+  &__tab {
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: var(--theme-elevation-700);
+    text-decoration: none;
+    font-weight: 600;
+
+    span { color: var(--theme-elevation-500); font-weight: 400; }
+
+    &:hover { color: var(--bl-pink); }
+
+    &.is-active {
+      background: var(--bl-pink-soft);
+      color: var(--bl-pink);
+      font-weight: 800;
+    }
+  }
+}
+
+.bl-status {
+  --c: var(--theme-elevation-600);
+  --soft: var(--theme-elevation-100);
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--c);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--processing { --c: var(--bl-good); --soft: var(--bl-good-soft); }
+  &--completed { --c: #2e4f73; --soft: #dde8f3; }
+  &--on-hold { --c: var(--bl-fair); --soft: var(--bl-fair-soft); }
+  &--failed { --c: var(--bl-poor); --soft: var(--bl-poor-soft); }
+}
+
+html[data-theme='dark'] .bl-status--completed { --c: #9cc0e6; --soft: #17263a; }
+
+.bl-total {
+  display: grid;
+  line-height: 1.3;
+
+  small { color: var(--theme-elevation-500); font-size: 12px; }
+}
+
+.bl-origin { white-space: nowrap; color: var(--theme-elevation-700); }
+
+.bl-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bl-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: var(--bl-pink); color: var(--bl-pink); }
+  &:disabled { opacity: 0.5; cursor: progress; }
+
+  &--completed { border-color: var(--bl-good); color: var(--bl-good); }
+  &--wa { width: 30px; padding: 0; justify-content: center; color: #1f9d55; }
+}

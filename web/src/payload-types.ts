@@ -67,6 +67,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    orders: Order;
     products: Product;
     categories: Category;
     reviews: Review;
@@ -86,6 +87,7 @@ export interface Config {
     };
   };
   collectionsSelect: {
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
@@ -142,6 +144,85 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  title?: string | null;
+  number?: number | null;
+  status: 'pending' | 'processing' | 'on-hold' | 'completed' | 'cancelled' | 'refunded' | 'failed';
+  /**
+   * Emails go out in this language.
+   */
+  locale?: ('en' | 'ar') | null;
+  /**
+   * Only the team sees this.
+   */
+  note?: string | null;
+  customer: {
+    name: string;
+    phone: string;
+    email?: string | null;
+  };
+  shipping: {
+    method: 'amman' | 'jordan' | 'intl';
+    country?: string | null;
+    city?: string | null;
+    address?: string | null;
+  };
+  items?:
+    | {
+        product?: (number | null) | Product;
+        name: string;
+        quantity: number;
+        unitPrice: number;
+        lineTotal?: number | null;
+        /**
+         * Name, style, finish, chain, stone and gift options, as the customer chose them.
+         */
+        details?:
+          | {
+              label?: string | null;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  deliveryFee?: number | null;
+  total?: number | null;
+  payment: {
+    method: 'card_online' | 'card_on_delivery' | 'cash' | 'whatsapp';
+    paidAt?: string | null;
+    checkoutId?: string | null;
+    transactionId?: string | null;
+    resultCode?: string | null;
+    resultDescription?: string | null;
+    cardBrand?: string | null;
+    cardLast4?: string | null;
+  };
+  /**
+   * Where the customer came from on the visit they ordered in.
+   */
+  attribution?: {
+    type?: ('direct' | 'organic' | 'referral' | 'utm' | 'admin') | null;
+    source?: string | null;
+    medium?: string | null;
+    campaign?: string | null;
+    landingPage?: string | null;
+    referrer?: string | null;
+  };
+  emails?: {
+    receivedAt?: string | null;
+    completedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -600,6 +681,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
         relationTo: 'products';
         value: number | Product;
       } | null)
@@ -668,6 +753,82 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  title?: T;
+  number?: T;
+  status?: T;
+  locale?: T;
+  note?: T;
+  customer?:
+    | T
+    | {
+        name?: T;
+        phone?: T;
+        email?: T;
+      };
+  shipping?:
+    | T
+    | {
+        method?: T;
+        country?: T;
+        city?: T;
+        address?: T;
+      };
+  items?:
+    | T
+    | {
+        product?: T;
+        name?: T;
+        quantity?: T;
+        unitPrice?: T;
+        lineTotal?: T;
+        details?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  subtotal?: T;
+  deliveryFee?: T;
+  total?: T;
+  payment?:
+    | T
+    | {
+        method?: T;
+        paidAt?: T;
+        checkoutId?: T;
+        transactionId?: T;
+        resultCode?: T;
+        resultDescription?: T;
+        cardBrand?: T;
+        cardLast4?: T;
+      };
+  attribution?:
+    | T
+    | {
+        type?: T;
+        source?: T;
+        medium?: T;
+        campaign?: T;
+        landingPage?: T;
+        referrer?: T;
+      };
+  emails?:
+    | T
+    | {
+        receivedAt?: T;
+        completedAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1036,6 +1197,11 @@ export interface SiteSetting {
     amman: number;
     jordan: number;
     international: number;
+    /**
+     * Shown to Google and AI search. 0 = no returns. Leave empty until the policy is decided.
+     */
+    returnDays?: number | null;
+    personalisedReturns?: boolean | null;
   };
   seoWriting?: {
     /**
@@ -1116,6 +1282,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         amman?: T;
         jordan?: T;
         international?: T;
+        returnDays?: T;
+        personalisedReturns?: T;
       };
   seoWriting?:
     | T

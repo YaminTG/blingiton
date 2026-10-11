@@ -162,8 +162,8 @@ export const SiteSettings: GlobalConfig = {
         },
         {
           name: 'delivery',
-          label: l('Delivery', 'التوصيل'),
-          description: l('Fees shown at checkout, in JOD.', 'الرسوم التي تظهر عند إتمام الطلب، بالدينار.'),
+          label: l('Delivery & returns', 'التوصيل والإرجاع'),
+          description: l('Fees shown at checkout, in JOD, and the return policy.', 'الرسوم التي تظهر عند إتمام الطلب، بالدينار، وسياسة الإرجاع.'),
           fields: [
             {
               type: 'row',
@@ -171,6 +171,31 @@ export const SiteSettings: GlobalConfig = {
                 { name: 'amman', type: 'number', label: l('Amman', 'داخل عمّان'), min: 0, defaultValue: 3, required: true, admin: { width: '33%' } },
                 { name: 'jordan', type: 'number', label: l('Other cities in Jordan', 'مدن أخرى في الأردن'), min: 0, defaultValue: 5, required: true, admin: { width: '33%' } },
                 { name: 'international', type: 'number', label: l('International (DHL Express)', 'دولي (DHL Express)'), min: 0, defaultValue: 15, required: true, admin: { width: '33%' } },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'returnDays',
+                  type: 'number',
+                  label: l('Days to return a piece', 'أيام إرجاع القطعة'),
+                  min: 0,
+                  admin: {
+                    width: '50%',
+                    description: l(
+                      'Shown to Google and AI search. 0 = no returns. Leave empty until the policy is decided.',
+                      'يظهر لجوجل وبحث الذكاء الاصطناعي. 0 = لا يوجد إرجاع. اتركه فارغاً حتى تُحدَّد السياسة.',
+                    ),
+                  },
+                },
+                {
+                  name: 'personalisedReturns',
+                  type: 'checkbox',
+                  label: l('Name and engraved pieces can be returned too', 'يمكن إرجاع قطع الأسماء والحفر أيضاً'),
+                  defaultValue: false,
+                  admin: { width: '50%' },
+                },
               ],
             },
           ],

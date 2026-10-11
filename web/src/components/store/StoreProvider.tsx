@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, u
 
 import { sameItem, type BagProduct, type CartItem } from '@/lib/cart'
 import type { Locale } from '@/lib/locales'
+import { classifyOrigin, ORIGIN_KEY } from '@/lib/origin'
 
 type Drawer = 'bag' | 'menu' | null
 type Metal = 'silver' | 'gold'
@@ -94,6 +95,17 @@ export function StoreProvider({ locale, addedText, children }: { locale: Locale;
     document.body.dataset.metal = metal
     document.dispatchEvent(new CustomEvent('bl:metal', { detail: metal }))
   }, [metal])
+
+  // Note where this visit came from, once per tab, for the order's Origin (see lib/origin.ts).
+  useEffect(() => {
+    try {
+      if (!sessionStorage.getItem(ORIGIN_KEY)) {
+        sessionStorage.setItem(ORIGIN_KEY, JSON.stringify(classifyOrigin(location.href, document.referrer, location.hostname)))
+      }
+    } catch {
+      // storage blocked: the order's origin shows as unknown
+    }
+  }, [])
 
   // Fetch names, photos and prices for anything in the bag we don't know yet (in this language).
   const missing = useMemo(() => [...new Set(cart.map((i) => i.id))].filter((id) => !products[`${locale}:${id}`]), [cart, products, locale])

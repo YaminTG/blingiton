@@ -1,3 +1,9 @@
+import { StatusCell as StatusCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
+import { ItemRowLabel as ItemRowLabel_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
+import { TotalCell as TotalCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
+import { OriginCell as OriginCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
+import { OrderActions as OrderActions_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
+import { OrderStatusTabs as OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae } from '../../../components/admin/OrderStatusTabs'
 import { PhotoCell as PhotoCell_009ca56fd1cbef94569a34a9ca15afce } from '../../../components/admin/PhotoCell'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -37,6 +43,12 @@ import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc056
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "/components/admin/OrderCells#StatusCell": StatusCell_76d4865f7a4c9abd72d6825af89c725d,
+  "/components/admin/OrderActions#ItemRowLabel": ItemRowLabel_42735e497e40d1f2d21d56bf07558f53,
+  "/components/admin/OrderCells#TotalCell": TotalCell_76d4865f7a4c9abd72d6825af89c725d,
+  "/components/admin/OrderCells#OriginCell": OriginCell_76d4865f7a4c9abd72d6825af89c725d,
+  "/components/admin/OrderActions#OrderActions": OrderActions_42735e497e40d1f2d21d56bf07558f53,
+  "/components/admin/OrderStatusTabs#OrderStatusTabs": OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae,
   "/components/admin/PhotoCell#PhotoCell": PhotoCell_009ca56fd1cbef94569a34a9ca15afce,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
