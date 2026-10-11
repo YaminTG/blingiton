@@ -1,0 +1,470 @@
+// Admin look: the shop's pink, fonts and rounder corners on top of Payload's own theme, plus the
+// styles for our admin components (src/components/admin). Payload's CSS sits in a cascade layer,
+// so plain rules here take precedence without !important.
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+
+:root {
+  --bl-pink: #c8336f;
+  --bl-pink-hover: #a92a5d;
+  --bl-pink-soft: #fdebee;
+  --bl-ink: #4e0f2a;
+  --bl-good: #1f7a4d;
+  --bl-good-soft: #e3f3ea;
+  --bl-fair: #b26a00;
+  --bl-fair-soft: #fdf0dc;
+  --bl-poor: #b3261e;
+  --bl-poor-soft: #fbe5e3;
+
+  --font-body: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --style-radius-s: 6px;
+  --style-radius-m: 10px;
+  --style-radius-l: 16px;
+}
+
+html[lang='ar'] {
+  --font-body: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+}
+
+html[data-theme='light'] {
+  --theme-bg: #fffaf9;
+  --theme-input-bg: #ffffff;
+}
+
+html[data-theme='dark'] {
+  --bl-pink-soft: #3a1626;
+  --bl-good-soft: #10291c;
+  --bl-fair-soft: #33240b;
+  --bl-poor-soft: #36110f;
+}
+
+// Brand accent on primary actions, links and focus.
+.btn--style-primary {
+  --bg-color: var(--bl-pink);
+  --hover-bg: var(--bl-pink-hover);
+  --color: #fff;
+  --hover-color: #fff;
+}
+
+.nav__link.active,
+.nav__link:hover {
+  color: var(--bl-pink);
+}
+
+.nav__link.active::before {
+  background: var(--bl-pink);
+}
+
+.tabs-field__tab-button--active {
+  border-bottom-color: var(--bl-pink);
+}
+
+:focus-visible {
+  outline-color: var(--bl-pink);
+}
+
+// Logo on the login page and the mark in the top bar.
+.bl-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  color: var(--theme-text);
+
+  img {
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgb(200 51 111 / 25%);
+  }
+}
+
+.bl-icon {
+  display: block;
+  border-radius: 50%;
+}
+
+// Products list: photo column and roomier rows.
+.collection-list--products {
+  .table td {
+    vertical-align: middle;
+  }
+}
+
+.bl-thumb {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--style-radius-m);
+  overflow: hidden;
+  background: var(--theme-elevation-50);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// SEO score badge (list cell, dashboard).
+.bl-score {
+  --c: var(--theme-elevation-400);
+  --soft: var(--theme-elevation-50);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  background: var(--soft);
+  white-space: nowrap;
+
+  &--good { --c: var(--bl-good); --soft: var(--bl-good-soft); }
+  &--fair { --c: var(--bl-fair); --soft: var(--bl-fair-soft); }
+  &--poor { --c: var(--bl-poor); --soft: var(--bl-poor-soft); }
+
+  &__num {
+    min-width: 30px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--c);
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  &__bar {
+    width: 48px;
+    height: 5px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c) 20%, transparent);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      background: var(--c);
+      border-radius: inherit;
+    }
+  }
+}
+
+// SEO panel in the product sidebar.
+.bl-seo {
+  --c: var(--theme-elevation-400);
+  --soft: var(--theme-elevation-50);
+  margin-bottom: var(--base);
+  padding: 16px;
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: var(--style-radius-l);
+  background: var(--theme-elevation-0);
+
+  &--good { --c: var(--bl-good); --soft: var(--bl-good-soft); }
+  &--fair { --c: var(--bl-fair); --soft: var(--bl-fair-soft); }
+  &--poor { --c: var(--bl-poor); --soft: var(--bl-poor-soft); }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  &__ring {
+    width: 72px;
+    height: 72px;
+    flex: none;
+
+    text {
+      font-size: 22px;
+      font-weight: 800;
+      fill: var(--theme-text);
+      font-family: var(--font-body);
+    }
+  }
+
+  &__track {
+    fill: none;
+    stroke: var(--soft);
+    stroke-width: 8;
+  }
+
+  &__value {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 8;
+    stroke-linecap: round;
+  }
+
+  &__head {
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  &__band {
+    color: var(--c);
+    font-weight: 700;
+  }
+
+  &__group {
+    margin: 4px 0 6px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--theme-elevation-500);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+
+    li {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 8px;
+      padding: 8px 10px;
+      border-radius: var(--style-radius-m);
+      background: var(--theme-elevation-50);
+      border-inline-start: 3px solid transparent;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    li.is-missing { border-inline-start-color: var(--bl-poor); }
+    li.is-partial { border-inline-start-color: var(--bl-fair); }
+
+    li.is-ok {
+      background: none;
+      padding: 2px 0;
+      grid-template-columns: 1fr;
+      color: var(--theme-elevation-600);
+
+      &::before {
+        content: '✓ ';
+        color: var(--bl-good);
+        font-weight: 800;
+      }
+    }
+  }
+
+  &__label { font-weight: 600; }
+
+  &__pts {
+    font-weight: 800;
+    color: var(--theme-elevation-500);
+    font-size: 12px;
+  }
+
+  &__note {
+    grid-column: 1 / -1;
+    color: var(--theme-elevation-500);
+    font-size: 12px;
+  }
+
+  &__done {
+    margin-top: 10px;
+
+    summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--theme-elevation-600);
+    }
+
+    .bl-seo__list { margin-top: 6px; display: block; }
+  }
+
+  &__muted {
+    margin: 0;
+    color: var(--theme-elevation-500);
+    font-size: 13px;
+  }
+
+  &__foot {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+}
+
+// Dashboard.
+.bl-dash {
+  margin-bottom: calc(var(--base) * 2);
+  display: grid;
+  gap: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  h3 {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  p { margin: 4px 0 0; color: var(--theme-elevation-500); }
+
+  &__hello {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px;
+    border-radius: var(--style-radius-l);
+    background: linear-gradient(120deg, var(--bl-pink-soft), var(--theme-elevation-0));
+    border: 1px solid var(--theme-elevation-100);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-items: start;
+    gap: 12px;
+  }
+}
+
+.bl-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { border-color: var(--bl-pink); color: var(--bl-pink); }
+
+  &--primary {
+    background: var(--bl-pink);
+    border-color: var(--bl-pink);
+    color: #fff;
+
+    &:hover { background: var(--bl-pink-hover); color: #fff; }
+  }
+}
+
+.bl-stat,
+.bl-card {
+  padding: 18px 20px;
+  border-radius: var(--style-radius-l);
+  border: 1px solid var(--theme-elevation-100);
+  background: var(--theme-elevation-0);
+}
+
+.bl-stat {
+  --c: var(--theme-text);
+  display: grid;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+
+  &:hover { border-color: var(--bl-pink); transform: translateY(-1px); }
+
+  &--good { --c: var(--bl-good); }
+  &--fair { --c: var(--bl-fair); }
+  &--poor { --c: var(--bl-poor); }
+
+  &__value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--c);
+  }
+
+  &__label { color: var(--theme-elevation-500); font-weight: 600; }
+}
+
+.bl-spread {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--theme-elevation-50);
+
+  &--good { background: var(--bl-good); }
+  &--fair { background: var(--bl-fair); }
+  &--poor { background: var(--bl-poor); }
+}
+
+.bl-legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--theme-elevation-600);
+
+  li::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-inline-end: 6px;
+    border-radius: 3px;
+    background: var(--c);
+  }
+
+  &--good { --c: var(--bl-good); }
+  &--fair { --c: var(--bl-fair); }
+  &--poor { --c: var(--bl-poor); }
+}
+
+.bl-lowest {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--theme-elevation-100);
+  }
+
+  a {
+    color: var(--theme-text);
+    text-decoration: none;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover { color: var(--bl-pink); }
+  }
+}
+
+.bl-more {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--bl-pink);
+  font-weight: 700;
+  text-decoration: none;
+}
