@@ -6,11 +6,13 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 
 
 import { Icon } from '@/components/Icon'
 import { NamePreview } from '@/components/preview/NamePreview'
+import { useMoney } from '@/components/store/Money'
 import { useStore } from '@/components/store/StoreProvider'
 import { optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import { ORIGIN_KEY } from '@/lib/origin'
+import { track } from '@/lib/track'
 import { money, paths } from '@/lib/urls'
 
 type Fees = { amman: number; jordan: number; international: number }
@@ -40,7 +42,8 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const t = dictionary(locale)
   const c = t.co
   const ar = locale === 'ar'
-  const { cart, products, clear, ready } = useStore()
+  const { cart, products, clear, ready, currency } = useStore()
+  const { fmt, total: sum } = useMoney()
   const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 0, city: '', address: '', method: 'amman', pay: 'carddel' })
   const [errors, setErrors] = useState<Field[]>([])
   const [sending, setSending] = useState(false)
@@ -50,11 +53,17 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const errRef = useRef<HTMLDivElement>(null)
   const thanksRef = useRef<HTMLHeadingElement>(null)
 
+  // Shop funnel: checkout opened with these pieces in the bag (each counted once per visit).
+  const bagIds = [...new Set(cart.map((i) => i.id))].join(',')
+  useEffect(() => {
+    if (ready && !done) for (const id of bagIds.split(',').filter(Boolean)) track('checkout', Number(id))
+  }, [ready, done, bagIds])
+
   const jordan = f.country === 0
   const fee = jordan ? (f.method === 'jordan' ? fees.jordan : fees.amman) : fees.international
   const lines = cart.map((it) => ({ it, p: products[it.id] })).filter((l): l is { it: CartItem; p: BagProduct } => Boolean(l.p))
-  const subtotal = lines.reduce((s, { it, p }) => s + unitPrice(p, it) * it.qty, 0)
-  const total = subtotal + fee
+  const lineTotals = lines.map(({ it, p }) => unitPrice(p, it) * it.qty)
+  const total = lineTotals.reduce((s, n) => s + n, 0) + fee
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((prev) => ({ ...prev, [k]: v }))
 
@@ -327,7 +336,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                     <b>{c.amman}</b>
                     <small>{c.ammanTime}</small>
                   </span>
-                  <span className="fee">{money(fees.amman, locale)}</span>
+                  <span className="fee">{fmt(fees.amman)}</span>
                 </label>
                 <label className="rc">
                   <input type="radio" name="method" value="jordan" checked={f.method === 'jordan'} onChange={() => set('method', 'jordan')} />
@@ -335,7 +344,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                     <b>{c.jordanCities}</b>
                     <small>{c.jordanTime}</small>
                   </span>
-                  <span className="fee">{money(fees.jordan, locale)}</span>
+                  <span className="fee">{fmt(fees.jordan)}</span>
                 </label>
               </>
             ) : (
@@ -345,7 +354,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                   <b>{c.intl}</b>
                   <small>{c.intlTime}</small>
                 </span>
-                <span className="fee">{money(fees.international, locale)}</span>
+                <span className="fee">{fmt(fees.international)}</span>
               </label>
             )}
           </div>
@@ -394,7 +403,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
               c.placing
             ) : (
               <>
-                {c.place} · <span className="price">{money(total, locale)}</span>
+                {c.place} · <span className="price">{sum([...lineTotals, fee])}</span>
               </>
             )}
           </span>
@@ -421,7 +430,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
               </div>
               <div className="li-row">
                 <span />
-                <span className="price">{money(unitPrice(p, it) * it.qty, locale)}</span>
+                <span className="price">{fmt(unitPrice(p, it) * it.qty)}</span>
               </div>
             </div>
           </div>
@@ -429,16 +438,17 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
         <div className="sum-lines">
           <div>
             <span>{t.subtotal}</span>
-            <span className="price">{money(subtotal, locale)}</span>
+            <span className="price">{sum(lineTotals)}</span>
           </div>
           <div>
             <span>{c.delivery}</span>
-            <span className="price">{money(fee, locale)}</span>
+            <span className="price">{fmt(fee)}</span>
           </div>
           <div className="total">
             <span>{c.total}</span>
-            <span className="price">{money(total, locale)}</span>
+            <span className="price">{sum([...lineTotals, fee])}</span>
           </div>
+          {currency !== 'JOD' ? <p className="in-jod">{c.inJod(money(total, locale))}</p> : null}
         </div>
       </aside>
     </div>

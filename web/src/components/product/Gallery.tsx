@@ -11,7 +11,7 @@ export function Gallery({ photos, label, showLabel }: { photos: Photo[]; label: 
   return (
     <section className="gallery" aria-label={label}>
       <div className="stage">
-        {main ? <Image className="photo" src={main.large} alt={main.alt} width={1200} height={1200} sizes="(min-width: 1024px) 600px, 100vw" priority /> : null}
+        {main ? <Image className="photo" src={main.large} alt={main.alt} width={1200} height={1200} sizes="(min-width: 1024px) 600px, 100vw" loading="eager" fetchPriority="high" /> : null}
         <Image className="sticker" src="/logo.png" alt="" width={88} height={88} />
       </div>
       {photos.length > 1 ? (

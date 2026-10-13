@@ -469,6 +469,91 @@ html[data-theme='dark'] {
   text-decoration: none;
 }
 
+// Shop funnel (components/admin/Funnel.tsx): one series, so one hue; numbers in text colours.
+.bl-note { margin: -8px 0 14px !important; font-size: 13px; }
+
+.bl-funnel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(110px, 160px) minmax(0, 1fr) minmax(120px, auto);
+    align-items: center;
+    gap: 4px 14px;
+  }
+
+  &__label { font-weight: 700; }
+
+  &__track {
+    height: 14px;
+    border-radius: 4px;
+    background: var(--theme-elevation-50);
+  }
+
+  &__bar {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--bl-pink);
+  }
+
+  &__value {
+    small { color: var(--theme-elevation-500); font-weight: 600; }
+  }
+
+  &__drop {
+    grid-column: 2 / -1;
+    margin-top: -2px;
+    color: var(--theme-elevation-500);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 640px) {
+    li { grid-template-columns: 1fr auto; }
+    .bl-funnel__track { grid-column: 1 / -1; grid-row: 2; }
+    .bl-funnel__drop { grid-column: 1 / -1; }
+  }
+}
+
+.bl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+
+  th, td {
+    padding: 7px 6px;
+    border-bottom: 1px solid var(--theme-elevation-100);
+    text-align: end;
+  }
+
+  th[scope='row'], thead th:first-child { text-align: start; font-weight: 600; }
+  thead th { color: var(--theme-elevation-500); font-weight: 700; }
+
+  a {
+    color: var(--theme-text);
+    text-decoration: none;
+
+    &:hover { color: var(--bl-pink); }
+  }
+}
+
+.bl-chip {
+  display: inline-block;
+  margin-inline-start: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--bl-pink-soft);
+  color: var(--theme-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 // Orders list: status tabs, status pills, total, origin and quick actions (WooCommerce-style).
 .bl-tabs {
   display: flex;
@@ -515,6 +600,29 @@ html[data-theme='dark'] {
 }
 
 html[data-theme='dark'] .bl-status--completed { --c: #9cc0e6; --soft: #17263a; }
+
+// Products list: availability pill, with the piece count next to "In stock".
+.bl-avail {
+  &--in_stock { --c: var(--bl-good); --soft: var(--bl-good-soft); }
+  &--sold_out { --c: var(--bl-poor); --soft: var(--bl-poor-soft); }
+
+  &__count {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--c);
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.bl-restock {
+  white-space: nowrap;
+  color: var(--theme-elevation-700);
+
+  &--one_off { color: var(--bl-fair); font-weight: 700; }
+}
 
 .bl-total {
   display: grid;

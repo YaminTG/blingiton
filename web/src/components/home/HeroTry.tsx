@@ -15,8 +15,8 @@ type Props = {
   intro: ReactNode
   /** The name necklace "Design yours" opens. */
   productHref: string | null
-  photo: { src: string; alt: string; caption: string } | null
-  note: string | null
+  photo: { src: string; alt: string; caption: ReactNode } | null
+  note: ReactNode
 }
 
 /** Home page hero: type a name and watch it turn into a silver (or gold) necklace. */
@@ -56,7 +56,7 @@ export function HeroTry({ locale, intro, productHref, photo, note }: Props) {
       </div>
       <div className="hero-art">
         <NamePreview shape="plate" text={name} sample={t.sampleName} style={style} />
-        <Image className="sticker hero-sticker" src="/logo.png" alt="Bling it on!" width={144} height={144} priority />
+        <Image className="sticker hero-sticker" src="/logo.png" alt="Bling it on!" width={144} height={144} loading="eager" />
         {photo ? (
           <figure className="hero-photo">
             <Image src={photo.src} alt={photo.alt} width={146} height={146} sizes="160px" />

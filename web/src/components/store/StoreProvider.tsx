@@ -3,8 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 
 import { sameItem, type BagProduct, type CartItem } from '@/lib/cart'
+import { CURRENCY_COOKIE, isCurrency, type Currency, type Rates } from '@/lib/currency'
 import type { Locale } from '@/lib/locales'
-import { classifyOrigin, ORIGIN_KEY } from '@/lib/origin'
+import { ensureOrigin, track } from '@/lib/track'
 
 type Drawer = 'bag' | 'menu' | null
 type Metal = 'silver' | 'gold'
@@ -20,6 +21,10 @@ type Store = {
   clear(): void
   metal: Metal
   setMetal(m: Metal): void
+  /** The currency prices are shown in (orders are still priced and charged in JOD). */
+  currency: Currency
+  setCurrency(c: Currency): void
+  rates: Rates
   drawer: Drawer
   openDrawer(d: Exclude<Drawer, null>): void
   closeDrawer(): void
@@ -68,6 +73,16 @@ const subscribe = (cb: () => void) => {
   }
 }
 
+// The currency lives in a cookie, so the proxy can set it from the visitor's country on the first visit.
+const readCurrency = (): Currency => {
+  const v = document.cookie.match(new RegExp(`(?:^|; )${CURRENCY_COOKIE}=([A-Z]{3})`))?.[1]
+  return isCurrency(v) ? v : 'JOD'
+}
+const writeCurrency = (c: Currency) => {
+  document.cookie = `${CURRENCY_COOKIE}=${c}; path=/; max-age=31536000; samesite=lax`
+  listeners.forEach((l) => l())
+}
+
 const parseCart = (raw: string): CartItem[] => {
   try {
     const list = JSON.parse(raw)
@@ -77,11 +92,18 @@ const parseCart = (raw: string): CartItem[] => {
   }
 }
 
-export function StoreProvider({ locale, addedText, children }: { locale: Locale; addedText: string; children: ReactNode }) {
+export function StoreProvider({ locale, addedText, rates, children }: { locale: Locale; addedText: string; rates: Rates; children: ReactNode }) {
   const cartRaw = useSyncExternalStore(subscribe, () => readRaw('bl-cart', '[]'), () => '[]')
   const cart = useMemo(() => parseCart(cartRaw), [cartRaw])
   const metal: Metal = useSyncExternalStore(subscribe, () => readRaw('bl-metal', '"silver"'), () => '"silver"') === '"gold"' ? 'gold' : 'silver'
+  const currency = useSyncExternalStore(subscribe, readCurrency, () => 'JOD' as Currency)
   const ready = useSyncExternalStore(subscribe, () => true, () => false)
+
+  // Pages arrive priced in JOD; until this runs, the layout's CSS hides prices for anyone
+  // seeing another currency, so they don't flash from JOD to theirs.
+  useEffect(() => {
+    document.documentElement.dataset.curReady = ''
+  }, [])
 
   const [products, setProducts] = useState<Record<string, BagProduct>>({})
   const [drawer, setDrawer] = useState<Drawer>(null)
@@ -96,15 +118,24 @@ export function StoreProvider({ locale, addedText, children }: { locale: Locale;
     document.dispatchEvent(new CustomEvent('bl:metal', { detail: metal }))
   }, [metal])
 
-  // Note where this visit came from, once per tab, for the order's Origin (see lib/origin.ts).
+  // Note where this visit came from, once per tab, for the order's Origin (see lib/origin.ts),
+  // then count the visit for the shop funnel (lib/track.ts).
   useEffect(() => {
     try {
-      if (!sessionStorage.getItem(ORIGIN_KEY)) {
-        sessionStorage.setItem(ORIGIN_KEY, JSON.stringify(classifyOrigin(location.href, document.referrer, location.hostname)))
-      }
+      ensureOrigin()
     } catch {
       // storage blocked: the order's origin shows as unknown
     }
+    track('visit')
+    // A tap on any WhatsApp link, with the product when it's on a product page.
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.('a[href*="wa.me/"]')
+      if (!link) return
+      const id = Number(document.querySelector<HTMLElement>('[data-product-id]')?.dataset.productId)
+      track('whatsapp', Number.isInteger(id) && id > 0 ? id : undefined)
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
   }, [])
 
   // Fetch names, photos and prices for anything in the bag we don't know yet (in this language).
@@ -154,6 +185,7 @@ export function StoreProvider({ locale, addedText, children }: { locale: Locale;
       const current = parseCart(readRaw('bl-cart', '[]'))
       const same = current.find((x) => sameItem(x, { ...item, qty: 0 }))
       save(same ? current.map((x) => (x === same ? { ...x, qty: x.qty + 1 } : x)) : [...current, { ...item, qty: 1 }])
+      track('add', item.id)
       setBump((n) => n + 1)
       setToast({ text: addedText, key: Date.now(), visible: true })
       if (open) setDrawer('bag')
@@ -171,6 +203,9 @@ export function StoreProvider({ locale, addedText, children }: { locale: Locale;
     setMetal(m) {
       writeRaw('bl-metal', JSON.stringify(m))
     },
+    currency,
+    setCurrency: writeCurrency,
+    rates,
     drawer,
     openDrawer: setDrawer,
     closeDrawer,

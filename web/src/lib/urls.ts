@@ -1,3 +1,4 @@
+import { formatMoney } from './currency'
 import type { Locale } from './locales'
 import { locales } from './locales'
 import { serverUrl } from './site'
@@ -10,6 +11,7 @@ export const paths = {
   product: (l: Locale, slug: string) => `/${l}/product/${slug}`,
   page: (l: Locale, slug: string) => `/${l}/${slug}`,
   checkout: (l: Locale) => `/${l}/checkout`,
+  review: (l: Locale) => `/${l}/review`,
 }
 
 export const absolute = (path: string) => (path.startsWith('http') ? path : `${serverUrl}${path}`)
@@ -21,7 +23,5 @@ export function alternates(locale: Locale, build: (l: Locale) => string, query =
   return { canonical: absolute(build(locale) + query), languages }
 }
 
-export const money = (amount: number, locale: Locale) =>
-  locale === 'ar'
-    ? `${new Intl.NumberFormat('ar-JO-u-nu-latn', { maximumFractionDigits: 2 }).format(amount)} د.أ`
-    : `${new Intl.NumberFormat('en-JO', { maximumFractionDigits: 2 }).format(amount)} JOD`
+/** An amount in JOD, for places that always show the shop's own currency (emails, llms.txt). Pages use <Price>. */
+export const money = (amount: number, locale: Locale) => formatMoney(amount, 'JOD', locale)

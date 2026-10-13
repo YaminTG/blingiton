@@ -5,6 +5,7 @@ import { l } from '@/fields/label'
 import { aiField, legacyField, seoStatusField, seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
 import { productAfterChange, productAfterDelete } from '@/hooks/lifecycle'
+import { availabilityOptions, restockOptions } from '@/lib/productOptions'
 
 // Option lists mirror the preview store (preview/assets/data.js).
 const kinds = [
@@ -22,7 +23,7 @@ export const Products: CollectionConfig = {
   labels: { singular: l('Product', 'منتج'), plural: l('Products', 'المنتجات') },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'images', 'price', 'categories', 'availability', 'seoScore', '_status'],
+    defaultColumns: ['name', 'images', 'price', 'categories', 'availability', 'restock', 'seoScore', '_status'],
     listSearchableFields: ['name', 'slug'],
     group: l('Shop', 'المتجر'),
   },
@@ -125,19 +126,27 @@ export const Products: CollectionConfig = {
                   label: l('Availability', 'التوفر'),
                   required: true,
                   defaultValue: 'made_to_order',
-                  options: [
-                    { label: l('Made to order', 'يُصنع حسب الطلب'), value: 'made_to_order' },
-                    { label: l('In stock', 'متوفر'), value: 'in_stock' },
-                    { label: l('Sold out', 'نفدت الكمية'), value: 'sold_out' },
-                  ],
-                  admin: { width: '50%' },
+                  options: availabilityOptions.map((o) => ({ ...o })),
+                  admin: { width: '33%', components: { Cell: '/components/admin/ProductCells#AvailabilityCell' } },
                 },
                 {
                   name: 'stock',
                   type: 'number',
                   label: l('Pieces in stock', 'الكمية المتوفرة'),
                   min: 0,
-                  admin: { width: '50%', condition: (data) => data?.availability === 'in_stock' },
+                  admin: { width: '33%', condition: (data) => data?.availability === 'in_stock' },
+                },
+                {
+                  name: 'restock',
+                  type: 'select',
+                  label: l('Restocking', 'إعادة التوفير'),
+                  defaultValue: 'restocked',
+                  options: restockOptions.map((o) => ({ ...o })),
+                  admin: {
+                    width: '33%',
+                    description: l('One-off: gone for good once it sells.', 'لمرة واحدة: لا تتوفر مجدداً بعد بيعها.'),
+                    components: { Cell: '/components/admin/ProductCells#RestockCell' },
+                  },
                 },
               ],
             },

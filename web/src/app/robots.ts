@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 import { isProduction } from '@/lib/site'
 import { absolute } from '@/lib/urls'
 
-const PRIVATE = ['/admin', '/api', '/redirect-lookup', '/bag-items', '/en/checkout', '/ar/checkout']
+const PRIVATE = ['/admin', '/api', '/redirect-lookup', '/bag-items', '/place-order', '/submit-review', '/track', '/en/checkout', '/ar/checkout', '/en/review', '/ar/review']
 
 // AI search and assistant crawlers, named so the welcome is explicit (some hosts and CDNs block
 // them unless the site says otherwise). They get the same rules as everyone else.

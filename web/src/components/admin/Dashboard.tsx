@@ -3,6 +3,7 @@ import type { ServerProps } from 'payload'
 import { serverUrl } from '@/lib/site'
 import { scoreBand } from '@/seo/score'
 
+import { Funnel } from './Funnel'
 import { ScoreBadge } from './SeoScoreCell'
 
 const copy = {
@@ -137,6 +138,8 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
           </a>
         </div>
       </div>
+
+      <Funnel payload={payload} lang={lang} admin={admin} />
     </section>
   )
 }

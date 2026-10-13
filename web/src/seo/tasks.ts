@@ -1,12 +1,13 @@
 import type { TaskConfig } from 'payload'
 
 import { applyCategorySeo, applyPageSeo, applyProductSeo } from './apply'
+import { writerEnabled, writeSeo } from './writer'
 
 /**
  * Background job queued after every product/category/page save.
- * Today: re-checks the SEO status (✓ / ⚠ and the reasons) after a person's edit.
- * With ANTHROPIC_API_KEY set: the Claude API writer will produce the missing text first and pass
- * it in as `input` below — same rules, same "never overwrite a person's text" guarantee.
+ * With ANTHROPIC_API_KEY set, Claude first writes whatever text is still missing (src/seo/writer.ts).
+ * Then the SEO status (✓ / ⚠ and the reasons) and score are re-checked. Only empty fields are
+ * filled, so a person's text is never overwritten.
  */
 export const seoRefreshTask: TaskConfig<'seo-refresh'> = {
   slug: 'seo-refresh',
@@ -17,9 +18,22 @@ export const seoRefreshTask: TaskConfig<'seo-refresh'> = {
   ],
   handler: async ({ input, req }) => {
     const id = Number(input.id)
-    if (input.collection === 'categories') await applyCategorySeo(req.payload, id, {}, 'refresh')
-    else if (input.collection === 'pages') await applyPageSeo(req.payload, id, {}, 'refresh')
-    else await applyProductSeo(req.payload, id, {}, 'refresh')
+    const collection = input.collection
+    let written = null
+    let failure: unknown = null
+    if (writerEnabled()) {
+      try {
+        written = await writeSeo(req.payload, collection, id)
+      } catch (err) {
+        failure = err
+      }
+    }
+    const source = written ? 'api' : 'refresh'
+    if (collection === 'categories') await applyCategorySeo(req.payload, id, written ?? {}, source)
+    else if (collection === 'pages') await applyPageSeo(req.payload, id, written ?? {}, source)
+    else await applyProductSeo(req.payload, id, written ?? {}, source)
+    // The status is up to date either way; failing the job lets the queue retry the writing.
+    if (failure) throw failure
     return { output: {} }
   },
 }

@@ -8,8 +8,9 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from '@/components/Icon'
 import { optionLines, unitPrice } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
-import { money, paths } from '@/lib/urls'
+import { paths } from '@/lib/urls'
 
+import { useMoney } from './Money'
 import { useStore } from './StoreProvider'
 
 /* ---------- header buttons ---------- */
@@ -118,6 +119,7 @@ function Drawer({ id, side, open, title, onClose, closeLabel, children, foot }: 
 
 function BagLines() {
   const { cart, products, setQty, remove, locale } = useStore()
+  const { fmt } = useMoney()
   const t = dictionary(locale)
   const ar = locale === 'ar'
   return (
@@ -149,7 +151,7 @@ function BagLines() {
                     +
                   </button>
                 </div>
-                <span className="price">{money(unitPrice(p, it) * it.qty, locale)}</span>
+                <span className="price">{fmt(unitPrice(p, it) * it.qty)}</span>
               </div>
               <button className="link-btn" type="button" onClick={() => remove(i)}>
                 {t.remove}
@@ -173,7 +175,8 @@ export function Drawers({ links }: { links: { href: string; label: string }[] })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  const subtotal = cart.reduce((s, it) => (products[it.id] ? s + unitPrice(products[it.id], it) * it.qty : s), 0)
+  const { total } = useMoney()
+  const lineTotals = cart.filter((it) => products[it.id]).map((it) => unitPrice(products[it.id], it) * it.qty)
 
   return (
     <>
@@ -198,7 +201,7 @@ export function Drawers({ links }: { links: { href: string; label: string }[] })
             <div className="drawer-foot">
               <div className="sum-row">
                 <span>{t.subtotal}</span>
-                <span className="price">{money(subtotal, locale)}</span>
+                <span className="price">{total(lineTotals)}</span>
               </div>
               <Link className="btn btn-primary btn-block" href={paths.checkout(locale)} onClick={closeDrawer}>
                 {t.checkout} <Icon name="arrow" className="flip" />

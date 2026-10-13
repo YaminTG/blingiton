@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { ProductCard } from '@/components/ProductCard'
+import { Price, PriceRange } from '@/components/store/Money'
 import type { Category, Product } from '@/payload-types'
 import type { PriceBand, SortOrder } from '@/lib/data'
 import type { Dictionary } from '@/lib/dictionary'
@@ -67,12 +68,17 @@ export function ShopView({ locale, t, title, lead, categories, current, subcateg
             <div className="opts" role="group" aria-label={t.priceLabel}>
               {bands.map((b) => (
                 <Link key={b} className="chip" rel="nofollow" href={listingHref(base, { ...keep, price: filters.price === b ? undefined : b })} aria-pressed={filters.price === b} role="button">
-                  {locale === 'ar' && b === '40to60' ? (
-                    <>
-                      <bdi dir="ltr">40–60</bdi> د.أ
-                    </>
+                  {/* One span each: the chip is a flex box, which would add its gap to the space. */}
+                  {b === 'lt40' ? (
+                    <span>
+                      {t.priceUnder} <Price jod={40} />
+                    </span>
+                  ) : b === 'gt60' ? (
+                    <span>
+                      {t.priceOver} <Price jod={60} />
+                    </span>
                   ) : (
-                    t.prices[b]
+                    <PriceRange from={40} to={60} />
                   )}
                 </Link>
               ))}

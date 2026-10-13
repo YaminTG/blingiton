@@ -5,6 +5,8 @@ import { OriginCell as OriginCell_76d4865f7a4c9abd72d6825af89c725d } from '../..
 import { OrderActions as OrderActions_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
 import { OrderStatusTabs as OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae } from '../../../components/admin/OrderStatusTabs'
 import { PhotoCell as PhotoCell_009ca56fd1cbef94569a34a9ca15afce } from '../../../components/admin/PhotoCell'
+import { AvailabilityCell as AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
+import { RestockCell as RestockCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -50,6 +52,8 @@ export const importMap = {
   "/components/admin/OrderActions#OrderActions": OrderActions_42735e497e40d1f2d21d56bf07558f53,
   "/components/admin/OrderStatusTabs#OrderStatusTabs": OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae,
   "/components/admin/PhotoCell#PhotoCell": PhotoCell_009ca56fd1cbef94569a34a9ca15afce,
+  "/components/admin/ProductCells#AvailabilityCell": AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0,
+  "/components/admin/ProductCells#RestockCell": RestockCell_28ed3dae73b0ea5b9003d6daff4035d0,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,

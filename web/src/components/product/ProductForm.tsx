@@ -1,17 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Icon } from '@/components/Icon'
 import type { EngraveShape } from '@/components/preview/draw'
 import { NamePreview } from '@/components/preview/NamePreview'
 import { MetalSwitch } from '@/components/store/Chrome'
+import { useMoney } from '@/components/store/Money'
 import { useStore } from '@/components/store/StoreProvider'
 import { unitPrice, type BagProduct, type CartItem, type LetterStyle } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import { stoneLabel, stones } from '@/lib/stones'
-import { money } from '@/lib/urls'
+import { track } from '@/lib/track'
 
 export type FormProduct = BagProduct & {
   shape: 'plate' | EngraveShape | null
@@ -29,6 +30,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   const t = dictionary(locale)
   const ar = locale === 'ar'
   const { add, metal } = useStore()
+  const { fmt } = useMoney()
 
   const personal = p.type !== 'none'
   const letters = p.type === 'letters'
@@ -65,8 +67,18 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   const stoneList = stones.map((s, i) => ({ ...s, i })).filter((s) => kind === 'gem' || s.en)
   const setSize = (v: number) => setTsize(Math.max(50, Math.min(130, v)))
 
+  // Shop funnel: the product was seen, and (for name pieces) someone started typing a name, here
+  // or in the home page's "Design yours".
+  useEffect(() => {
+    track('view', p.id)
+  }, [p.id])
+  useEffect(() => {
+    if (personal && name.trim()) track('personalize', p.id)
+  }, [personal, name, p.id])
+
   return (
     <form
+      data-product-id={p.id}
       className="opts-form"
       noValidate
       onSubmit={(e) => {
@@ -148,7 +160,11 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
         <fieldset>
           <div className="opt-head">
             <span className="legend">{t.fFinish}</span>
-            {p.goldExtra ? <span className="val">{t.gold} +{money(p.goldExtra, locale)}</span> : null}
+            {p.goldExtra ? (
+              <span className="val">
+                {t.gold} +<span data-price="">{fmt(p.goldExtra)}</span>
+              </span>
+            ) : null}
           </div>
           <MetalSwitch />
         </fieldset>
@@ -211,7 +227,12 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
             {o.choices.map((c) => (
               <button key={c.id} className="chip" type="button" role="radio" aria-checked={choices[o.id] === c.id} onClick={() => setChoices((prev) => ({ ...prev, [o.id]: c.id }))}>
                 {c.label}
-                {c.extra ? ` +${money(c.extra, locale)}` : ''}
+                {c.extra ? (
+                  <>
+                    {' +'}
+                    <span data-price="">{fmt(c.extra)}</span>
+                  </>
+                ) : null}
               </button>
             ))}
           </div>
@@ -255,7 +276,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
             <button className="btn btn-primary btn-block" type="submit">
               <Icon name="bag" />
               <span>
-                {t.add} · {money(price, locale)}
+                {t.add} · <span data-price="">{fmt(price)}</span>
               </span>
             </button>
             <div className="assure">

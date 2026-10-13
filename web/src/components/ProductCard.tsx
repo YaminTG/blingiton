@@ -3,10 +3,11 @@ import Link from 'next/link'
 
 import type { Product } from '@/payload-types'
 import { CardAdd } from '@/components/store/Chrome'
+import { Price } from '@/components/store/Money'
 import { imageUrl, mediaOf } from '@/lib/data'
 import type { Dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
-import { money, paths } from '@/lib/urls'
+import { paths } from '@/lib/urls'
 
 export function ProductCard({ product, locale, t, priority = false }: { product: Product; locale: Locale; t: Dictionary; priority?: boolean }) {
   const media = mediaOf(product.images?.[0])
@@ -18,7 +19,18 @@ export function ProductCard({ product, locale, t, priority = false }: { product:
   return (
     <article className="card">
       <div className="card-img">
-        {src ? <Image src={src} alt={media?.alt || product.name} width={594} height={594} sizes="(min-width: 1024px) 280px, (min-width: 768px) 33vw, 50vw" priority={priority} /> : null}
+        {src ? (
+          <Image
+            src={src}
+            alt={media?.alt || product.name}
+            width={594}
+            height={594}
+            sizes="(min-width: 1024px) 280px, (min-width: 768px) 33vw, 50vw"
+            // The first row is the page's largest paint. (Next 16 deprecated `priority`.)
+            loading={priority ? 'eager' : undefined}
+            fetchPriority={priority ? 'high' : undefined}
+          />
+        ) : null}
         {soldOut ? <span className="card-tag">{t.soldOut}</span> : personal ? <span className="card-tag">{t.personalise}</span> : null}
       </div>
       <h3 className="card-name">
@@ -28,7 +40,7 @@ export function ProductCard({ product, locale, t, priority = false }: { product:
         {product.name}
       </h3>
       <div className="card-row">
-        <span className="price">{money(product.price, locale)}</span>
+        <Price className="price" jod={product.price} />
         {quickAdd ? <CardAdd id={product.id} label={t.addNamed(product.name)} /> : null}
       </div>
     </article>

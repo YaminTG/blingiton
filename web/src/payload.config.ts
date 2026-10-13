@@ -13,6 +13,7 @@ import sharp from 'sharp'
 
 import { admins } from './access'
 import { Categories } from './collections/Categories'
+import { Events } from './collections/Events'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
@@ -38,7 +39,7 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: ' · Blingiton',
-      icons: [{ rel: 'icon', type: 'image/png', url: '/logo.png' }],
+      icons: [{ rel: 'icon', type: 'image/png', url: '/icon-96.png' }],
     },
     components: {
       graphics: {
@@ -48,7 +49,7 @@ export default buildConfig({
       beforeDashboard: ['/components/admin/Dashboard#Dashboard'],
     },
   },
-  collections: [Orders, Products, Categories, Reviews, Pages, Media, Users],
+  collections: [Orders, Products, Categories, Reviews, Pages, Media, Users, Events],
   globals: [SiteSettings],
   // Order emails go through any SMTP service (Resend, Brevo, Zoho, Google Workspace…). Without
   // SMTP_HOST, Payload writes the emails to the server log instead, which is fine for development.

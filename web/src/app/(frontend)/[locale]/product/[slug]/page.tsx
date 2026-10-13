@@ -7,11 +7,12 @@ import { JsonLd } from '@/components/JsonLd'
 import { ProductCard } from '@/components/ProductCard'
 import { Gallery } from '@/components/product/Gallery'
 import { ProductForm, type FormProduct } from '@/components/product/ProductForm'
+import { Price } from '@/components/store/Money'
 import type { Category } from '@/payload-types'
 import { getProduct, getProductReviews, getSettings, imageUrl, listCategories, listProducts, lookupRedirect, mediaOf, retiredProductTarget, toBagProduct } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
 import { isLocale, type Locale } from '@/lib/locales'
-import { absolute, alternates, money, paths } from '@/lib/urls'
+import { absolute, alternates, paths } from '@/lib/urls'
 import { breadcrumbJsonLd, categoryCrumbs, productJsonLd } from '@/seo/jsonld'
 
 type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ name?: string | string[]; style?: string | string[] }> }
@@ -108,8 +109,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <section className="info" aria-labelledby="p-title">
           <h1 id="p-title">{product.name}</h1>
           <p className="price-lg">
-            {money(product.price, locale)}
-            {product.compareAtPrice && product.compareAtPrice > product.price ? <s>{money(product.compareAtPrice, locale)}</s> : null}
+            <Price jod={product.price} />
+            {product.compareAtPrice && product.compareAtPrice > product.price ? (
+              <s>
+                <Price jod={product.compareAtPrice} />
+              </s>
+            ) : null}
           </p>
           {product.shortDescription ? <p className="desc">{product.shortDescription}</p> : null}
           <ProductForm locale={locale} product={formProduct} askHref={askHref} initial={initial} />

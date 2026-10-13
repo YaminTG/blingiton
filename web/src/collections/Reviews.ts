@@ -30,8 +30,12 @@ export const Reviews: CollectionConfig = {
   labels: { singular: l('Review', 'تقييم'), plural: l('Reviews', 'التقييمات') },
   admin: {
     useAsTitle: 'author',
-    defaultColumns: ['author', 'product', 'rating', 'approved', 'date'],
+    defaultColumns: ['author', 'product', 'rating', 'approved', 'verifiedPurchase', 'date'],
     group: l('Shop', 'المتجر'),
+    description: l(
+      'Customers review their order from the link in the "on its way" email. New reviews wait here until you tick Approved.',
+      'يقيّم الزبائن طلبهم من الرابط في رسالة "طلبك في الطريق". تنتظر التقييمات الجديدة هنا حتى تختار "معتمد".',
+    ),
   },
   defaultSort: '-date',
   hooks: { afterChange: [reviewAfterChange], afterDelete: [reviewAfterDelete] },
@@ -66,6 +70,15 @@ export const Reviews: CollectionConfig = {
     { name: 'date', type: 'date', label: l('Date', 'التاريخ'), required: true, defaultValue: () => new Date().toISOString() },
     { name: 'approved', type: 'checkbox', label: l('Approved', 'معتمد'), defaultValue: false, index: true, admin: { position: 'sidebar' } },
     { name: 'verifiedPurchase', type: 'checkbox', label: l('Verified purchase', 'شراء مؤكد'), admin: { position: 'sidebar' } },
+    {
+      // Set when the customer reviews from their order email; one review per product per order.
+      name: 'order',
+      type: 'relationship',
+      relationTo: 'orders',
+      label: l('From order', 'من الطلب'),
+      index: true,
+      admin: { position: 'sidebar', readOnly: true, condition: (data) => Boolean(data?.order) },
+    },
     {
       name: 'source',
       type: 'select',

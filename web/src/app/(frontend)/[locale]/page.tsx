@@ -7,11 +7,12 @@ import { HeroTry } from '@/components/home/HeroTry'
 import { Icon } from '@/components/Icon'
 import { JsonLd } from '@/components/JsonLd'
 import { ProductCard } from '@/components/ProductCard'
+import { Price } from '@/components/store/Money'
 import type { Media, Product } from '@/payload-types'
 import { getProduct, getSettings, imageUrl, listCategories, listProducts, mediaOf } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
 import { isLocale } from '@/lib/locales'
-import { absolute, alternates, money, paths } from '@/lib/urls'
+import { absolute, alternates, paths } from '@/lib/urls'
 import { storeJsonLd, websiteJsonLd } from '@/seo/jsonld'
 
 type Props = { params: Promise<{ locale: string }> }
@@ -68,8 +69,26 @@ export default async function Home({ params }: Props) {
         <HeroTry
           locale={locale}
           productHref={hero?.slug ? paths.product(locale, hero.slug) : null}
-          note={fromPrice ? t.tryNote(money(fromPrice, locale)) : null}
-          photo={heroSrc && hero ? { src: heroSrc, alt: heroMedia?.alt || hero.name, caption: `${hero.name} · ${money(hero.price, locale)}` } : null}
+          note={
+            fromPrice ? (
+              <>
+                {t.tryFrom} <Price jod={fromPrice} />
+              </>
+            ) : null
+          }
+          photo={
+            heroSrc && hero
+              ? {
+                  src: heroSrc,
+                  alt: heroMedia?.alt || hero.name,
+                  caption: (
+                    <>
+                      {hero.name} · <Price jod={hero.price} />
+                    </>
+                  ),
+                }
+              : null
+          }
           intro={
             <>
               <span className="pill">

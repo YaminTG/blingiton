@@ -30,8 +30,8 @@ export async function GET() {
   if (summary) out.push(`> ${line(summary)}`, '')
   out.push(
     `${name} is an online jewelry shop${city ? ` based in ${city}, Jordan` : ' in Jordan'}. The site is in English (${absolute(paths.home('en'))}) and Arabic (${absolute(paths.home('ar'))}).`,
-    // Update when online payment replaces the WhatsApp checkout.
-    `Orders are placed on the website; checkout sends the order to the shop on WhatsApp to confirm.`,
+    // Mirrors placeOrder in src/lib/orders.ts. Update when HyperPay takes international card payments.
+    `Orders are placed on the website. In Jordan, customers pay by card or cash on delivery. For international orders, the shop arranges payment with the customer on WhatsApp after the order is placed.`,
   )
   const contact = [
     settings.whatsapp && `WhatsApp: +${settings.whatsapp}`,

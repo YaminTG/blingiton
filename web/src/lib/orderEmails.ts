@@ -5,6 +5,7 @@ import type { Order, SiteSetting } from '@/payload-types'
 import { dictionary } from './dictionary'
 import type { Locale } from './locales'
 import { paymentMethods } from './orderOptions'
+import { reviewLink } from './reviewCheck'
 import { serverUrl } from './site'
 import { money } from './urls'
 
@@ -61,6 +62,7 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
   const methodLabel = { amman: t.co.amman, jordan: t.co.jordanCities, intl: t.co.intl }[order.shipping.method]
   const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(t.co.waAbout(no))}` : null
   const font = ar ? "Tahoma, 'Segoe UI', Arial, sans-serif" : "'Helvetica Neue', Arial, sans-serif"
+  const review = kind === 'completed' ? reviewLink(locale, order.id) : null
 
   const itemsHtml = (order.items ?? [])
     .map((it) => {
@@ -84,7 +86,7 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
 <body style="margin:0;padding:0;background:#fdebee;font-family:${font};color:${INK}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdebee"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="${dir}" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden">
-  <tr><td align="center" style="background:${PINK};padding:22px"><img src="${serverUrl}/logo.png" width="72" height="72" alt="Blingiton" style="display:block;border-radius:50%"></td></tr>
+  <tr><td align="center" style="background:${PINK};padding:22px"><img src="${serverUrl}/apple-icon.png" width="72" height="72" alt="Blingiton" style="display:block;border-radius:50%"></td></tr>
   <tr><td style="padding:28px 28px 4px">
     <h1 style="margin:0 0 10px;font-size:24px;line-height:1.3;color:${INK}">${esc(heading)}</h1>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:${INK}">${esc(intro)}</p>
@@ -103,6 +105,17 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
       ${esc(order.customer.name)}<br>${esc(order.shipping.address)}<br>${esc(order.shipping.city)}${order.shipping.country ? `, ${esc(order.shipping.country)}` : ''}<br><span dir="ltr">${esc(order.customer.phone)}</span>
     </div>
   </td></tr>
+  ${
+    review
+      ? `<tr><td style="padding:22px 28px 0">
+    <div style="padding:18px;border-radius:12px;border:2px solid #f3d9e1;text-align:center">
+      <div style="font-size:22px;letter-spacing:4px;color:${PINK}">★★★★★</div>
+      <p style="margin:8px 0 14px;font-size:15px;line-height:1.6;color:${INK}">${esc(m.reviewAsk)}</p>
+      <a href="${esc(review)}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:${INK};color:#ffffff;font-weight:800;text-decoration:none">${esc(m.reviewBtn)}</a>
+    </div>
+  </td></tr>`
+      : ''
+  }
   <tr><td style="padding:22px 28px 28px">
     <p style="margin:0 0 14px;font-size:14px;color:${MUTED}">${esc(m.questions)}</p>
     ${wa ? `<a href="${esc(wa)}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:${PINK};color:#ffffff;font-weight:800;text-decoration:none">${esc(m.whatsapp)}</a>` : ''}
@@ -130,6 +143,7 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
     '',
     `${m.deliverTo}: ${order.customer.name}, ${order.shipping.address}, ${order.shipping.city}${order.shipping.country ? `, ${order.shipping.country}` : ''}`,
     '',
+    ...(review ? [m.reviewAsk, `${m.reviewBtn}: ${review}`, ''] : []),
     m.questions,
     wa ?? '',
   ].join('\n')

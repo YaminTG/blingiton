@@ -74,6 +74,7 @@ export interface Config {
     pages: Page;
     media: Media;
     users: User;
+    events: Event;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -94,6 +95,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -252,6 +254,10 @@ export interface Product {
   description?: string | null;
   availability: 'made_to_order' | 'in_stock' | 'sold_out';
   stock?: number | null;
+  /**
+   * One-off: gone for good once it sells.
+   */
+  restock?: ('restocked' | 'one_off') | null;
   /**
    * What customers might type into Google for this piece, separated by commas.
    */
@@ -442,6 +448,8 @@ export interface Media {
   };
 }
 /**
+ * Customers review their order from the link in the "on its way" email. New reviews wait here until you tick Approved.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews".
  */
@@ -455,6 +463,7 @@ export interface Review {
   date: string;
   approved?: boolean | null;
   verifiedPurchase?: boolean | null;
+  order?: (number | null) | Order;
   source?: ('site' | 'woocommerce') | null;
   legacyId?: number | null;
   updatedAt: string;
@@ -535,6 +544,22 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  type: 'visit' | 'view' | 'personalize' | 'add' | 'checkout' | 'whatsapp';
+  product?: number | null;
+  session: string;
+  sourceType?: ('direct' | 'organic' | 'referral' | 'utm' | 'unknown') | null;
+  source?: string | null;
+  locale?: ('en' | 'ar') | null;
+  path?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -709,6 +734,10 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: number | Redirect;
       } | null);
@@ -845,6 +874,7 @@ export interface ProductsSelect<T extends boolean = true> {
   description?: T;
   availability?: T;
   stock?: T;
+  restock?: T;
   keywords?: T;
   featured?: T;
   personalization?:
@@ -944,6 +974,7 @@ export interface ReviewsSelect<T extends boolean = true> {
   date?: T;
   approved?: T;
   verifiedPurchase?: T;
+  order?: T;
   source?: T;
   legacyId?: T;
   updatedAt?: T;
@@ -1050,6 +1081,21 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  type?: T;
+  product?: T;
+  session?: T;
+  sourceType?: T;
+  source?: T;
+  locale?: T;
+  path?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
