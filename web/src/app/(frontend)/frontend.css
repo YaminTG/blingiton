@@ -339,10 +339,7 @@ html[lang="ar"] .sp-eyebrow { letter-spacing: 0; font-size: 16px; }
 .sp-prize { margin: 4px 0 8px; font-size: clamp(30px, 9vw, 40px); font-weight: 800; line-height: 1.15; }
 html[lang="ar"] .sp-prize { line-height: 1.4; }
 .sp-claim { margin: 0; color: var(--ink); font-weight: 600; }
-.sp-code { margin-top: 16px; padding: 3px; border-radius: 16px; background: var(--rope); }
-.sp-code > div { display: grid; gap: 2px; padding: 10px; border-radius: 13px; background: var(--cream); }
-.sp-code small { color: var(--ink-soft); font-size: 13px; }
-.sp-code strong { color: var(--ink); font-size: 32px; font-weight: 800; letter-spacing: .3em; padding-inline-start: .3em; }
+.sp-time { margin: 8px 0 0; color: var(--ink-soft); font-size: 13px; }
 .sp-actions { margin-top: 18px; }
 @keyframes spFade { from { opacity: 0; } }
 @keyframes spPop { from { opacity: 0; transform: translateY(40px) scale(.8); } }

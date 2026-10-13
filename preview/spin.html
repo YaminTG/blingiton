@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Spin the wheel · Blingiton</title>
+<meta name="theme-color" content="#F8D3DA">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&amp;family=Tajawal:wght@400;700;800&amp;display=swap">
+<!--
+  Bazaar prize wheel, standalone so it can go live with this static folder.
+  The store's own version is web/src/components/spin/SpinWheel.tsx; prizes are in PRIZES below.
+-->
+<style>
+  :root {
+    --cream: #FFF8F5; --paper: #FFFFFF; --blush: #F8D3DA; --blush-soft: #FDEBEE; --blush-deep: #F3B9C5;
+    --pink: #C8336F; --pink-hover: #A92A5D; --glitter: #D23E78; --ink: #4E0F2A; --ink-soft: #7A3552; --line: #EFD3DA;
+    --rope: repeating-linear-gradient(-55deg, #FBFBFC 0 5px, #CFCED5 5px 8px, #9C9BA4 8px 9px, #EDEDF0 9px 14px);
+    --silver-ring: linear-gradient(135deg, #F4F4F7, #A9A8B1 45%, #5E5D68 55%, #E9E9EE);
+    --r-sm: 12px; --r-lg: 32px;
+    --font: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ease: cubic-bezier(.2,.8,.2,1);
+    --spring: cubic-bezier(.34,1.56,.64,1);
+    --gutter: 16px;
+  }
+  html[lang="ar"] { --font: "Tajawal", "Segoe UI", Tahoma, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { min-height: 100svh; display: flex; flex-direction: column; background: var(--blush); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
+  button { font: inherit; cursor: pointer; }
+  a { color: inherit; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .glitter-text { color: transparent; background: var(--glitter) url('img/glitter.webp') 50% 50% / 550px auto repeat; -webkit-background-clip: text; background-clip: text; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: max(10px, env(safe-area-inset-top)) var(--gutter) 10px; background: rgba(255,248,245,.94); border-bottom: 1px solid var(--line); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .14em; text-decoration: none; }
+  .brand img { width: 44px; height: 44px; border-radius: 50%; }
+  .tools { display: flex; gap: 8px; }
+  .pill { display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font-weight: 800; }
+  .pill svg { width: 22px; height: 22px; color: var(--pink); }
+  #lang-btn { font-family: "Tajawal", var(--font); }
+  html[lang="ar"] #lang-btn { font-family: "Nunito Sans", sans-serif; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border: 2px solid transparent; border-radius: 999px; font-weight: 800; font-size: 15px; letter-spacing: .04em; text-decoration: none; touch-action: manipulation; }
+  .btn-primary { background: var(--pink); color: #fff; }
+  .btn-primary:hover { background: var(--pink-hover); }
+  .btn-block { width: 100%; }
+
+  .sp { position: relative; flex: 1; overflow: hidden; padding: 14px 0 max(28px, env(safe-area-inset-bottom)); background: radial-gradient(120% 75% at 50% 45%, var(--blush-soft) 0%, var(--blush) 58%, var(--blush-deep) 100%); }
+  .sp-inner { position: relative; z-index: 1; display: grid; justify-items: center; gap: 8px; padding-inline: var(--gutter); text-align: center; }
+  .sp h1 { margin: 0; font-size: clamp(40px, 11vw, 68px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; filter: drop-shadow(0 2px 0 #fff); }
+  html[lang="ar"] .sp h1 { letter-spacing: 0; line-height: 1.35; }
+  .sp-lead { margin: 0; max-width: 34ch; color: var(--ink-soft); font-size: clamp(15px, 4vw, 18px); font-weight: 600; line-height: 1.5; }
+  .sp-stage { --size: min(92vw, 460px, max(270px, calc(100svh - 330px))); position: relative; width: var(--size); aspect-ratio: 1; margin-block: 18px 14px; }
+  .sp-stage::before { content: ""; position: absolute; inset: -9%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,.95), rgba(255,255,255,.4) 70%, rgba(255,255,255,0)); }
+  .sp-rotor { position: absolute; inset: 0; will-change: transform; filter: drop-shadow(0 16px 22px rgba(78,15,42,.3)); }
+  .sp-rotor svg { display: block; width: 100%; height: 100%; overflow: visible; font-family: var(--font); }
+  .sp-on-glitter text { paint-order: stroke; stroke: rgba(78,15,42,.45); stroke-width: 1.1px; stroke-linejoin: round; }
+  .sp-bulb { fill: #fff; animation: spBlink 1.1s steps(1) infinite; }
+  .sp-bulb.b2 { animation-delay: -.55s; }
+  .sp[data-state="spinning"] .sp-bulb { animation-duration: .28s; }
+  .sp[data-state="spinning"] .sp-bulb.b2 { animation-delay: -.14s; }
+  @keyframes spBlink { 50% { fill: #F3B9C5; } }
+  .sp-pointer { position: absolute; z-index: 2; top: -5.5%; left: 50%; width: 13%; margin-left: -6.5%; transform-origin: 50% 30%; filter: drop-shadow(0 4px 4px rgba(78,15,42,.35)); }
+  .sp-pointer svg { display: block; width: 100%; height: auto; }
+  .sp-hub { position: absolute; z-index: 1; top: 50%; left: 50%; width: 28%; aspect-ratio: 1; padding: calc(var(--size) * .012); border: 0; border-radius: 50%; translate: -50% -50%; background: var(--silver-ring); box-shadow: 0 6px 16px rgba(78,15,42,.35), inset 0 0 0 1px rgba(255,255,255,.7); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .sp-hub img { display: block; width: 100%; height: 100%; border-radius: 50%; }
+  .sp[data-state="idle"] .sp-hub { animation: spPulse 1.6s var(--ease) infinite; }
+  .sp-hub:active:not([disabled]) { scale: .94; }
+  .sp-hub[disabled] { cursor: default; }
+  @keyframes spPulse { 0%, 100% { scale: 1; box-shadow: 0 6px 16px rgba(78,15,42,.35), 0 0 0 0 rgba(210,62,120,.55); } 50% { scale: 1.06; box-shadow: 0 6px 16px rgba(78,15,42,.35), 0 0 0 14px rgba(210,62,120,0); } }
+  .sp-btn { min-width: min(260px, 100%); min-height: 62px; font-size: 20px; letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 7px 0 var(--ink), 0 14px 24px rgba(78,15,42,.25); transition: transform .12s var(--ease), box-shadow .12s var(--ease), background-color .2s var(--ease); }
+  html[lang="ar"] .sp-btn { letter-spacing: 0; font-size: 22px; }
+  .sp-btn:active:not([disabled]) { transform: translateY(5px); box-shadow: 0 2px 0 var(--ink), 0 6px 12px rgba(78,15,42,.25); }
+  .sp-btn[disabled] { opacity: .75; cursor: default; }
+  .sp-sparkles i { position: absolute; color: #fff; font-style: normal; line-height: 1; text-shadow: 0 0 10px rgba(210,62,120,.6); animation: spTwinkle 2.6s var(--ease) infinite; pointer-events: none; }
+  .sp-sparkles i:nth-child(3n) { color: var(--glitter); text-shadow: 0 0 10px #fff; }
+  @keyframes spTwinkle { 0%, 100% { opacity: .15; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(45deg); } }
+  .sp-confetti { position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; pointer-events: none; }
+  .sp-result { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; padding: 64px 16px 16px; background: rgba(78,15,42,.45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: spFade .25s var(--ease); overflow-y: auto; }
+  .sp-result[hidden] { display: none; }
+  .sp-card { position: relative; width: min(100%, 380px); padding: 0 22px 22px; border: 3px solid transparent; border-radius: var(--r-lg); background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--silver-ring) border-box; box-shadow: 0 24px 60px rgba(78,15,42,.4); text-align: center; animation: spPop .5s var(--spring); }
+  .sp-card-logo { display: block; width: 104px; height: 104px; margin: -54px auto 10px; border-radius: 50%; box-shadow: 0 0 0 4px #fff, 0 8px 20px rgba(78,15,42,.3); }
+  .sp-close { position: absolute; top: 8px; inset-inline-end: 10px; width: 40px; height: 40px; border: 0; background: none; color: var(--ink-soft); font-size: 28px; line-height: 1; }
+  .sp-note { margin: 0 0 8px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--blush-soft); color: var(--ink-soft); font-size: 14px; }
+  .sp-eyebrow { margin: 0; color: var(--pink); font-size: 13px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+  html[lang="ar"] .sp-eyebrow { letter-spacing: 0; font-size: 16px; }
+  .sp-prize { margin: 4px 0 8px; font-size: clamp(30px, 9vw, 40px); font-weight: 800; line-height: 1.15; }
+  html[lang="ar"] .sp-prize { line-height: 1.4; }
+  .sp-claim { margin: 0; color: var(--ink); font-weight: 600; line-height: 1.5; }
+  .sp-time { margin: 8px 0 0; color: var(--ink-soft); font-size: 13px; }
+  .sp-actions { margin-top: 18px; }
+  @keyframes spFade { from { opacity: 0; } }
+  @keyframes spPop { from { opacity: 0; transform: translateY(40px) scale(.8); } }
+  @media (prefers-reduced-motion: reduce) { .sp-bulb, .sp-sparkles i, .sp[data-state="idle"] .sp-hub, .sp-card, .sp-result { animation: none; } }
+</style>
+</head>
+<body>
+  <header class="top">
+    <span class="brand"><img src="img/logo.png" alt="" width="44" height="44">BLINGITON</span>
+    <div class="tools">
+      <button type="button" class="pill" id="lang-btn"></button>
+      <button type="button" class="pill" id="sound-btn" aria-pressed="true"></button>
+    </div>
+  </header>
+
+  <main class="sp" id="sp" data-state="idle">
+    <span class="sp-sparkles" id="sparkles" aria-hidden="true"></span>
+    <div class="sp-inner">
+      <h1 class="glitter-text" data-t="heading"></h1>
+      <p class="sp-lead" data-t="lead"></p>
+      <div class="sp-stage">
+        <div class="sp-pointer" id="pointer" aria-hidden="true">
+          <svg viewBox="0 0 40 52">
+            <defs>
+              <linearGradient id="sp-pin" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#7C7B86"/><stop offset=".35" stop-color="#F4F4F7"/><stop offset=".6" stop-color="#A9A8B1"/><stop offset="1" stop-color="#5E5D68"/>
+              </linearGradient>
+            </defs>
+            <path d="M20 50 L4 18 A16 16 0 1 1 36 18 Z" fill="url(#sp-pin)" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="20" cy="16" r="7" fill="#D23E78" stroke="#fff" stroke-width="2"/>
+            <circle cx="17.5" cy="13.5" r="2" fill="#fff" opacity=".85"/>
+          </svg>
+        </div>
+        <div class="sp-rotor" id="rotor"></div>
+        <button type="button" class="sp-hub" id="hub"><img src="img/logo.png" alt="Blingiton" width="180" height="180"></button>
+      </div>
+      <button type="button" class="btn btn-primary sp-btn" id="spin-btn"></button>
+    </div>
+  </main>
+
+  <canvas class="sp-confetti" id="confetti" aria-hidden="true"></canvas>
+  <p class="sr-only" id="live" aria-live="polite"></p>
+  <div class="sp-result" id="result" hidden></div>
+
+<script>
+(() => {
+  /*
+   * Prizes. Placeholders for now.
+   * weight: how likely, relative to the others (2 is twice as likely as 1).
+   * big / small: the two lines on the slice; title: the "you won" card.
+   * again: no prize, spin once more.
+   * Keep an even number (a multiple of 4 is best) so neighbouring slices never share a colour.
+   */
+  const PRIZES = [
+    { id: 'off10', weight: 2, en: { big: '10%', small: 'OFF', title: '10% off your order' }, ar: { big: '10%', small: 'خصم', title: 'خصم 10% على طلبك' } },
+    { id: 'voucher5', weight: 3, en: { big: '5 JD', small: 'VOUCHER', title: '5 JD voucher' }, ar: { big: '5 د.أ', small: 'قسيمة', title: 'قسيمة بقيمة 5 دنانير' } },
+    { id: 'off5', weight: 4, en: { big: '5%', small: 'OFF', title: '5% off your order' }, ar: { big: '5%', small: 'خصم', title: 'خصم 5% على طلبك' } },
+    { id: 'mystery', weight: 1, en: { big: 'MYSTERY', small: 'GIFT', title: 'A mystery gift' }, ar: { big: 'هدية', small: 'مفاجأة', title: 'هدية مفاجأة' } },
+    { id: 'voucher10', weight: 2, en: { big: '10 JD', small: 'VOUCHER', title: '10 JD voucher' }, ar: { big: '10 د.أ', small: 'قسيمة', title: 'قسيمة بقيمة 10 دنانير' } },
+    { id: 'again', weight: 2, again: true, en: { big: 'SPIN', small: 'AGAIN', title: 'Free spin!' }, ar: { big: 'لفّة', small: 'إضافية', title: 'لفّة إضافية!' } },
+    { id: 'off15', weight: 1, en: { big: '15%', small: 'OFF', title: '15% off your order' }, ar: { big: '15%', small: 'خصم', title: 'خصم 15% على طلبك' } },
+    { id: 'voucher20', weight: 1, en: { big: '20 JD', small: 'VOUCHER', title: '20 JD voucher' }, ar: { big: '20 د.أ', small: 'قسيمة', title: 'قسيمة بقيمة 20 ديناراً' } },
+  ];
+  const INSTAGRAM = 'https://www.instagram.com/blingitonnnn';
+
+  const T = {
+    en: {
+      title: 'Spin the wheel · Blingiton', heading: 'Spin to win!', lead: 'Bazaar special: one spin per phone. Tap the wheel and see what sparkles.',
+      wheel: 'Prize wheel', spin: 'Spin', spinning: 'Spinning…', seePrize: 'See my prize', youWon: 'You won', lucky: 'Lucky you',
+      claim: 'Show this screen at the Blingiton stand to claim it.', again: 'Spin again',
+      already: 'You’ve already spun on this phone. Here’s your prize.', follow: 'Follow us on Instagram', close: 'Close',
+      soundOn: 'Turn sound on', soundOff: 'Turn sound off', other: 'عربي', otherLabel: 'العربية',
+    },
+    ar: {
+      title: 'لفّ العجلة · Blingiton', heading: 'لفّ واربح!', lead: 'عرض البازار: لفّة واحدة لكل هاتف. اضغط على العجلة واكتشف جائزتك.',
+      wheel: 'عجلة الجوائز', spin: 'لفّ', spinning: 'العجلة تدور…', seePrize: 'اعرض جائزتي', youWon: 'ربحت', lucky: 'يا لحظّك',
+      claim: 'أظهر هذه الشاشة في جناح Blingiton لاستلام جائزتك.', again: 'لفّ مرة أخرى',
+      already: 'لقد لففت العجلة على هذا الهاتف من قبل. هذه جائزتك.', follow: 'تابعنا على إنستغرام', close: 'إغلاق',
+      soundOn: 'تشغيل الصوت', soundOff: 'كتم الصوت', other: 'English', otherLabel: 'English',
+    },
+  };
+
+  // One spin per phone: the win is kept here and shown again on reload. ?reset clears it (for testing).
+  const STORE = 'bl-spin-v1';
+  const MUTE = 'bl-spin-mute';
+  const TURNS = 6;
+  const DURATION = 5200;
+  // Slice fills, in turn: glitter, white, deep pink, blush. Text colour to match.
+  const FILLS = ['url(#sp-glitter)', '#FFFFFF', '#C8336F', '#F8D3DA'];
+  const INKS = ['#FFFFFF', '#C8336F', '#FFFFFF', '#4E0F2A'];
+  // Background twinkles: x %, y %, size px.
+  const SPARKLES = [[5, 14, 22], [88, 8, 16], [12, 46, 14], [93, 38, 24], [3, 72, 18], [90, 66, 14], [20, 90, 12], [80, 88, 20], [30, 4, 12], [68, 24, 10]];
+
+  const $ = (id) => document.getElementById(id);
+  const N = PRIZES.length;
+  const SLICE = 360 / N;
+  const memory = {};
+  const read = (k) => { try { const v = localStorage.getItem(k); return v === null ? (memory[k] ?? null) : v; } catch (e) { return memory[k] ?? null; } };
+  const write = (k, v) => { memory[k] = v; try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
+  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const params = new URLSearchParams(location.search);
+  if (params.has('reset')) {
+    write(STORE, null);
+    params.delete('reset');
+    history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : ''));
+  }
+
+  // Language: ?lang=, then the one chosen on the preview site, then the phone's.
+  let savedLang = null;
+  try { savedLang = JSON.parse(read('bl-lang')); } catch (e) {}
+  let lang = ['en', 'ar'].includes(params.get('lang')) ? params.get('lang')
+    : ['en', 'ar'].includes(savedLang) ? savedLang
+    : (navigator.language || '').toLowerCase().startsWith('ar') ? 'ar' : 'en';
+
+  let win = null;
+  try {
+    const saved = JSON.parse(read(STORE) || 'null');
+    if (saved && PRIZES.some((p) => p.id === saved.id)) win = saved;
+  } catch (e) {}
+  let already = Boolean(win);
+  let spinning = false;
+  let extra = false;
+  let open = Boolean(win);
+  let muted = read(MUTE) === '1';
+  let angle = -SLICE / 2;
+  let audio = null;
+  let stopConfetti = () => {};
+
+  const rad = (d) => (d * Math.PI) / 180;
+  const at = (r, d) => `${(r * Math.sin(rad(d))).toFixed(3)} ${(-r * Math.cos(rad(d))).toFixed(3)}`;
+  const sizeFor = (s, sizes) => (s.length <= 4 ? sizes[0] : s.length <= 6 ? sizes[1] : sizes[2]);
+  const setAngle = (d) => { angle = d; $('rotor').style.transform = `rotate(${d}deg)`; };
+
+  function wheelSVG() {
+    const slices = PRIZES.map((p, i) => {
+      const w = p[lang];
+      const mid = i * SLICE + SLICE / 2;
+      return `<path d="M0 0 L${at(92, i * SLICE)} A92 92 0 0 1 ${at(92, (i + 1) * SLICE)} Z" fill="${FILLS[i % 4]}"/>
+        <g transform="rotate(${mid})" fill="${INKS[i % 4]}" text-anchor="middle" font-weight="800"${i % 4 === 0 ? ' class="sp-on-glitter"' : ''}>
+          <text y="-63" font-size="${sizeFor(w.big, [17, 12.5, 9.5])}">${w.big}</text>
+          <text y="-49" font-size="${sizeFor(w.small, [8, 7, 5.8])}" letter-spacing=".4">${w.small}</text>
+        </g>`;
+    }).join('');
+    const lines = PRIZES.map((_, i) => `<line x1="0" y1="0" x2="${(92 * Math.sin(rad(i * SLICE))).toFixed(3)}" y2="${(-92 * Math.cos(rad(i * SLICE))).toFixed(3)}" stroke="#fff" stroke-width="1.4"/>`).join('');
+    const bulbs = Array.from({ length: N * 2 }, (_, i) => {
+      const d = (i * 360) / (N * 2);
+      return `<circle class="sp-bulb${i % 2 ? ' b2' : ''}" cx="${(96 * Math.sin(rad(d))).toFixed(3)}" cy="${(-96 * Math.cos(rad(d))).toFixed(3)}" r="2.3"/>`;
+    }).join('');
+    return `<svg viewBox="-100 -100 200 200" role="img" aria-label="${T[lang].wheel}">
+      <defs>
+        <pattern id="sp-glitter" patternUnits="userSpaceOnUse" width="88" height="21">
+          <rect width="88" height="21" fill="#D23E78"/><image href="img/glitter.webp" width="88" height="21" preserveAspectRatio="none"/>
+        </pattern>
+        <linearGradient id="sp-rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#E9E9EE"/><stop offset=".34" stop-color="#A9A8B1"/><stop offset=".52" stop-color="#5E5D68"/><stop offset=".68" stop-color="#BEBDC6"/><stop offset="1" stop-color="#7C7B86"/>
+        </linearGradient>
+      </defs>
+      ${slices}${lines}
+      <circle r="96" fill="none" stroke="url(#sp-rim)" stroke-width="8.5"/>
+      <circle r="91.6" fill="none" stroke="#fff" stroke-width="1.2"/>
+      ${bulbs}
+    </svg>`;
+  }
+
+  function cardHTML() {
+    const t = T[lang];
+    const showing = extra ? PRIZES.find((p) => p.again) : win && PRIZES.find((p) => p.id === win.id);
+    if (!showing) return '';
+    let body;
+    if (extra) {
+      body = `<div class="sp-actions"><button type="button" class="btn btn-primary btn-block" data-act="spin">${t.again}</button></div>`;
+    } else {
+      const time = new Date(win.at).toLocaleString(lang === 'ar' ? 'ar-JO-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+      body = `<p class="sp-claim">${t.claim}</p>
+        <p class="sp-time">${time}</p>
+        <div class="sp-actions"><a class="btn btn-primary btn-block" href="${INSTAGRAM}" target="_blank" rel="noopener">${t.follow}</a></div>`;
+    }
+    return `<div class="sp-card" role="dialog" aria-modal="true" aria-labelledby="sp-prize">
+      <button type="button" class="sp-close" data-act="close" aria-label="${t.close}">×</button>
+      <img class="sp-card-logo" src="img/logo.png" alt="Blingiton" width="104" height="104">
+      ${already && !extra ? `<p class="sp-note">${t.already}</p>` : ''}
+      <p class="sp-eyebrow">${extra ? t.lucky : t.youWon}</p>
+      <h2 id="sp-prize" class="sp-prize glitter-text">${showing[lang].title}</h2>
+      ${body}
+    </div>`;
+  }
+
+  function render({ wheel = false } = {}) {
+    const t = T[lang];
+    const state = spinning ? 'spinning' : win || extra ? 'done' : 'idle';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = t.title;
+    document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t[el.dataset.t]; });
+    $('sp').dataset.state = state;
+    const label = spinning ? t.spinning : win && !extra ? t.seePrize : extra ? t.again : t.spin;
+    $('spin-btn').textContent = label;
+    $('spin-btn').disabled = spinning;
+    $('hub').disabled = spinning;
+    $('hub').setAttribute('aria-label', label);
+    $('lang-btn').textContent = t.other;
+    $('lang-btn').setAttribute('aria-label', t.otherLabel);
+    $('lang-btn').lang = lang === 'ar' ? 'en' : 'ar';
+    $('sound-btn').setAttribute('aria-label', muted ? t.soundOn : t.soundOff);
+    $('sound-btn').setAttribute('aria-pressed', String(!muted));
+    $('sound-btn').innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>${muted
+      ? '<path d="M16.5 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+      : '<path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'}</svg>`;
+    if (wheel) $('rotor').innerHTML = wheelSVG();
+    const result = $('result');
+    const wasOpen = !result.hidden;
+    result.hidden = !open;
+    result.innerHTML = open ? cardHTML() : '';
+    if (open && !wasOpen) result.querySelector('.sp-actions .btn')?.focus();
+  }
+
+  // Sound: made on the fly with Web Audio. The context has to be created inside the tap (iOS).
+  function unlockAudio() {
+    if (!audio) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audio = new Ctx();
+    }
+    audio?.resume();
+  }
+  function tone(freq, start, length, volume = 0.12, type = 'triangle') {
+    if (!audio || muted) return;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    const when = audio.currentTime + start;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, when);
+    gain.gain.setValueAtTime(volume, when);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + length);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(when);
+    osc.stop(when + length + 0.02);
+  }
+
+  /** A burst of pink, white and silver confetti over the whole screen. */
+  function confetti(canvas) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return () => {};
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = innerWidth, h = innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const colors = ['#D23E78', '#C8336F', '#F8D3DA', '#FFFFFF', '#C9C8D0', '#F3B9C5', '#E9E9EE'];
+    const bits = Array.from({ length: 170 }, (_, i) => {
+      const side = i % 3 === 0 ? (i % 2 ? -1 : 1) : 0;
+      return {
+        x: side ? (side < 0 ? 0 : w) : w / 2,
+        y: side ? h * 0.75 : h * 0.42,
+        vx: side ? -side * (4 + Math.random() * 9) : (Math.random() - 0.5) * 16,
+        vy: -(side ? 10 + Math.random() * 10 : 5 + Math.random() * 12),
+        s: 5 + Math.random() * 7,
+        r: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.35,
+        c: colors[i % colors.length],
+        star: Math.random() < 0.25,
+      };
+    });
+    const start = performance.now();
+    let id = 0;
+    const frame = (now) => {
+      const t = now - start;
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = Math.max(0, 1 - Math.max(0, t - 2000) / 1400);
+      for (const b of bits) {
+        b.vy += 0.3; b.vx *= 0.985; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.r);
+        ctx.fillStyle = b.c;
+        if (b.star) {
+          // Four-point sparkle, like the glints in the logo.
+          const s = b.s;
+          ctx.beginPath();
+          ctx.moveTo(0, -s);
+          ctx.quadraticCurveTo(0, 0, s, 0);
+          ctx.quadraticCurveTo(0, 0, 0, s);
+          ctx.quadraticCurveTo(0, 0, -s, 0);
+          ctx.quadraticCurveTo(0, 0, 0, -s);
+          ctx.fill();
+        } else {
+          ctx.scale(1, Math.cos(b.r * 3));
+          ctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2);
+        }
+        ctx.restore();
+      }
+      if (t < 3400) id = requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, w, h);
+    };
+    id = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(id); ctx.clearRect(0, 0, w, h); };
+  }
+
+  function pick() {
+    let r = Math.random() * PRIZES.reduce((s, p) => s + p.weight, 0);
+    for (let i = 0; i < N; i++) if ((r -= PRIZES[i].weight) < 0) return i;
+    return N - 1;
+  }
+
+  function spin() {
+    if (spinning) return;
+    if (win && !extra) { open = true; render(); return; }
+    unlockAudio();
+    open = false;
+    extra = false;
+    spinning = true;
+    $('live').textContent = '';
+    render();
+
+    const index = pick();
+    const prize = PRIZES[index];
+    // Land somewhere inside the slice, not always dead centre, and never on a divider.
+    const jitter = (Math.random() - 0.5) * (SLICE - 8);
+    const target = -(index * SLICE + SLICE / 2) + jitter;
+    const from = angle;
+    const to = from + TURNS * 360 + ((((target - from) % 360) + 360) % 360);
+    const duration = reducedMotion() ? 1200 : DURATION;
+    const start = performance.now();
+    let last = Math.floor(from / SLICE);
+
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const deg = from + (to - from) * (1 - Math.pow(1 - p, 4));
+      setAngle(deg);
+      // A click and a flick of the pointer each time a peg passes it.
+      const current = Math.floor(deg / SLICE);
+      if (current !== last) {
+        last = current;
+        tone(1500 + Math.random() * 300, 0, 0.035, 0.08, 'square');
+        $('pointer').animate?.([{ transform: 'rotate(-22deg)' }, { transform: 'rotate(0deg)' }], { duration: 140, easing: 'ease-out' });
+      }
+      if (p < 1) { requestAnimationFrame(step); return; }
+
+      setAngle(((to % 360) + 360) % 360);
+      spinning = false;
+      if (prize.again) {
+        extra = true;
+        [660, 880].forEach((f, i) => tone(f, i * 0.12, 0.25));
+      } else {
+        win = { id: prize.id, at: Date.now() };
+        already = false;
+        write(STORE, JSON.stringify(win));
+        [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * 0.1, 0.45, 0.14));
+        navigator.vibrate?.([60, 40, 120]);
+        if (!reducedMotion()) { stopConfetti(); stopConfetti = confetti($('confetti')); }
+      }
+      open = true;
+      $('live').textContent = `${extra ? T[lang].lucky : T[lang].youWon}: ${prize[lang].title}`;
+      render();
+    };
+    requestAnimationFrame(step);
+  }
+
+  $('sparkles').innerHTML = SPARKLES.map(([x, y, s], i) => `<i style="inset-inline-start:${x}%;top:${y}%;font-size:${s}px;animation-delay:${i * -0.37}s">✦</i>`).join('');
+  $('spin-btn').addEventListener('click', spin);
+  $('hub').addEventListener('click', spin);
+  $('sound-btn').addEventListener('click', () => { muted = !muted; write(MUTE, muted ? '1' : '0'); render(); });
+  $('lang-btn').addEventListener('click', () => {
+    lang = lang === 'ar' ? 'en' : 'ar';
+    write('bl-lang', JSON.stringify(lang));
+    render({ wheel: true });
+  });
+  $('result').addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'spin') { spin(); return; }
+    if (act === 'close' || e.target === e.currentTarget) { open = false; render(); }
+  });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) { open = false; render(); } });
+
+  // Coming back to the page: point the wheel at the prize already won.
+  render({ wheel: true });
+  if (win) setAngle(-(PRIZES.findIndex((p) => p.id === win.id) * SLICE + SLICE / 2));
+  else setAngle(angle);
+})();
+</script>
+</body>
+</html>

@@ -9,7 +9,7 @@ import type { Locale } from '@/lib/locales'
 import type { Prize } from '@/lib/spinPrizes'
 
 type Props = { locale: Locale; t: Dictionary['spin']; prizes: Prize[]; shopHref: string }
-type Win = { id: string; code: string; at: number }
+type Win = { id: string; at: number }
 
 // One spin per phone: the win is kept here and shown again on reload. `?reset` clears it (for testing).
 const STORE = 'bl-spin-v1'
@@ -37,10 +37,6 @@ function pick(prizes: Prize[]) {
   return prizes.length - 1
 }
 
-function claimCode() {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
 
 // localStorage as an external store. The in-memory copy covers browsers that block it (some
 // private modes): the win then lasts until reload.
@@ -276,7 +272,7 @@ export function SpinWheel({ locale, t, prizes, shopHref }: Props) {
         setExtra(true)
         ;[660, 880].forEach((f, i) => tone(f, i * 0.12, 0.25))
       } else {
-        const result: Win = { id: prize.id, code: claimCode(), at: Date.now() }
+        const result: Win = { id: prize.id, at: Date.now() }
         setJustWon(true)
         write(STORE, JSON.stringify(result))
         ;[784, 988, 1175, 1568].forEach((f, i) => tone(f, i * 0.1, 0.45, 0.14))
@@ -424,13 +420,7 @@ export function SpinWheel({ locale, t, prizes, shopHref }: Props) {
             ) : win ? (
               <>
                 <p className="sp-claim">{t.claim}</p>
-                <div className="sp-code">
-                  <div>
-                    <small>{t.code}</small>
-                    <strong dir="ltr">{win.code}</strong>
-                    <small>{time}</small>
-                  </div>
-                </div>
+                <p className="sp-time">{time}</p>
                 <div className="sp-actions">
                   <Link className="btn btn-primary btn-block" href={shopHref}>
                     {t.shop}
