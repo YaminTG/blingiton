@@ -1,3 +1,4 @@
+import { resolve, stepRank, type Question, type Variant } from './choices'
 import type { Dictionary } from './dictionary'
 import { stoneLabel } from './stones'
 
@@ -13,7 +14,7 @@ export type CartItem = {
   chain?: number
   stone?: number | null
   tsize?: number
-  /** Price-changing options: option id → choice id. */
+  /** Answers to the product's questions: question id → choice id. */
   choices?: Record<string, string>
   gift?: boolean
   note?: string
@@ -27,41 +28,49 @@ export type BagProduct = {
   price: number
   image: string | null
   type: 'none' | 'name' | 'letters' | 'engrave'
+  textOptional: boolean
   stones: 'none' | 'birthstone' | 'gem'
   goldExtra: number
-  options: { id: string; name: string; choices: { id: string; label: string; extra: number }[] }[]
+  questions: Question[]
+  variants: Variant[]
   soldOut: boolean
 }
 
 export const sameItem = (a: CartItem, b: CartItem) => JSON.stringify({ ...a, qty: 0 }) === JSON.stringify({ ...b, qty: 0 })
 
+export const resolveItem = (p: BagProduct, it: CartItem) => resolve(p.price, p.questions, p.variants, it.choices ?? {})
+
 export function unitPrice(p: BagProduct, it: CartItem) {
-  let price = p.price
+  let price = resolveItem(p, it).price
   if (it.finish === 'gold') price += p.goldExtra
-  for (const o of p.options) {
-    const choice = o.choices.find((c) => c.id === it.choices?.[o.id])
-    if (choice) price += choice.extra
-  }
   return price
 }
 
-/** The customer's choices as label/value pairs, for the bag, checkout and the WhatsApp order. */
+/** The photo for this line: the one for the chosen design/colour if there is one, else the main photo. */
+export const itemImage = (p: BagProduct, it: CartItem) => resolveItem(p, it).photo?.thumb ?? p.image
+
+/** The customer's choices as label/value pairs, in the order they were asked, for the bag, checkout and the order. */
 export function optionLines(it: CartItem, p: BagProduct | undefined, t: Dictionary, ar: boolean): [string, string][] {
-  const L: [string, string][] = []
-  if (it.name) L.push([p?.type === 'engrave' ? t.lines.engrave : t.lines.name, it.name])
-  if (it.style) L.push([t.lines.style, t.styles[it.style]])
-  if (it.finish) L.push([t.lines.finish, t[it.finish]])
-  if (it.chain) L.push([t.lines.chain, `${it.chain} ${t.cm}`])
+  const L: [number, string, string][] = []
+  if (p) {
+    const { steps, answers } = resolveItem(p, it)
+    for (const s of steps) {
+      const choice = s.choices.find((c) => c.id === answers[s.id])
+      if (choice) L.push([stepRank[s.look], s.name, choice.label])
+    }
+  }
+  if (it.chain) L.push([stepRank.length, t.lines.chain, `${it.chain} ${t.cm}`])
   if (it.stone !== undefined && it.stone !== null) {
     const kind = p?.stones === 'birthstone' ? 'birthstone' : 'gem'
-    L.push([kind === 'birthstone' ? t.lines.stone : t.lines.gem, stoneLabel(it.stone, kind, ar)])
+    L.push([stepRank.stone, kind === 'birthstone' ? t.lines.stone : t.lines.gem, stoneLabel(it.stone, kind, ar)])
   }
-  for (const o of p?.options ?? []) {
-    const choice = o.choices.find((c) => c.id === it.choices?.[o.id])
-    if (choice) L.push([o.name, choice.label])
-  }
-  if (it.tsize && it.tsize !== 100) L.push([t.lines.size, `${it.tsize}%`])
-  if (it.gift) L.push(['', t.lines.gift])
-  if (it.note) L.push([t.lines.note, `“${it.note}”`])
-  return L
+  if (it.name) L.push([stepRank.text, p?.type === 'engrave' ? t.lines.engrave : t.lines.name, it.name])
+  if (it.style) L.push([stepRank.font, t.lines.style, t.styles[it.style]])
+  if (it.finish) L.push([stepRank.finish, t.lines.finish, t[it.finish]])
+  if (it.tsize && it.tsize !== 100) L.push([stepRank.font, t.lines.size, `${it.tsize}%`])
+  // Stable sort keeps the order within a rank.
+  const lines: [string, string][] = L.sort((a, b) => a[0] - b[0]).map(([, k, v]) => [k, v])
+  if (it.gift) lines.push(['', t.lines.gift])
+  if (it.note) lines.push([t.lines.note, `“${it.note}”`])
+  return lines
 }

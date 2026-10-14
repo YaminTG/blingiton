@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { Icon } from '@/components/Icon'
-import { optionLines, unitPrice } from '@/lib/cart'
+import { itemImage, optionLines, unitPrice } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
 import { paths } from '@/lib/urls'
 
@@ -129,7 +129,7 @@ function BagLines() {
         if (!p) return null
         return (
           <div className="line-item" key={i}>
-            {p.image ? <Image src={p.image} alt="" width={76} height={76} sizes="76px" /> : <span />}
+            {itemImage(p, it) ? <Image src={itemImage(p, it)!} alt="" width={76} height={76} sizes="76px" /> : <span />}
             <div>
               <div className="li-name">
                 <Link href={paths.product(locale, p.slug)}>{p.name}</Link>

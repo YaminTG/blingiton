@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 
 import type { Order } from '@/payload-types'
 
-import { optionLines, unitPrice, type CartItem, type LetterStyle } from './cart'
+import { optionLines, resolveItem, unitPrice, type CartItem, type LetterStyle } from './cart'
 import { toBagProduct } from './data'
 import { dictionary } from './dictionary'
 import { isLocale, type Locale } from './locales'
@@ -54,6 +54,43 @@ function cleanItem(raw: unknown): CartItem {
   return item
 }
 
+const mediaId = (v: unknown) => (v && typeof v === 'object' && 'id' in v ? (v as { id: number }).id : (v ?? null))
+
+/**
+ * Takes the ordered pieces off the product's stock and its combinations' counts; a product that
+ * reaches 0 becomes "sold out". Re-read fresh (not the visitor's cached copy) right before writing.
+ * Not atomic: two orders in the same instant for the last piece can both go through.
+ */
+async function takeStock(payload: Payload, ids: number[], fromProduct: Map<number, number>, fromVariants: Map<number, Map<string, number>>) {
+  for (const id of ids) {
+    try {
+      const doc = await payload.findByID({ collection: 'products', id, depth: 0 })
+      const data: Record<string, unknown> = {}
+      const qty = fromProduct.get(id)
+      if (qty && typeof doc.stock === 'number') {
+        data.stock = Math.max(0, doc.stock - qty)
+        if (data.stock === 0) data.availability = 'sold_out'
+      }
+      const take = fromVariants.get(id)
+      if (take) {
+        // Whole rows, so nothing else in the combinations changes.
+        const variants = (doc.personalization?.variants ?? []).map((v) => ({
+          id: v.id,
+          when: v.when,
+          price: v.price,
+          photo: mediaId(v.photo),
+          stock: typeof v.stock === 'number' && v.id && take.has(v.id) ? Math.max(0, v.stock - take.get(v.id)!) : v.stock,
+        }))
+        data.personalization = { variants }
+      }
+      await payload.update({ collection: 'products', id, data: data as never, depth: 0, context: { skipSeo: true } })
+    } catch (err) {
+      // The order is placed either way; the shop fixes the count by hand.
+      payload.logger.error({ err, product: id }, 'Could not update stock after an order')
+    }
+  }
+}
+
 export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod }
 
 /**
@@ -92,10 +129,28 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   const byId = new Map(found.docs.map((p) => [p.id, p]))
   if (ids.some((id) => !byId.has(id) || byId.get(id)!.availability === 'sold_out')) throw new OrderError('gone')
 
+  // Pieces each line takes: from the product (in-stock pieces) and from a combination's own count.
+  const takeProduct = new Map<number, number>()
+  const takeVariant = new Map<number, Map<string, number>>()
+
   const lines = items.map((it) => {
     const product = byId.get(it.id)!
     if (it.finish === 'gold' && !product.personalization?.goldPlated) it.finish = 'silver'
     const p = toBagProduct(product)
+    if (p.soldOut) throw new OrderError('gone')
+    // Every question needs an answer that is still on offer, and a name unless it's optional.
+    const r = resolveItem(p, it)
+    if (!r.complete) throw new OrderError('invalid')
+    it.choices = Object.keys(r.answers).length ? r.answers : undefined
+    if (p.type !== 'none' && !p.textOptional && !it.name) throw new OrderError('invalid')
+    if (p.type === 'none') delete it.name
+
+    if (product.availability === 'in_stock' && typeof product.stock === 'number') takeProduct.set(product.id, (takeProduct.get(product.id) ?? 0) + it.qty)
+    if (r.stockVariant) {
+      const m = takeVariant.get(product.id) ?? new Map<string, number>()
+      m.set(r.stockVariant.id, (m.get(r.stockVariant.id) ?? 0) + it.qty)
+      takeVariant.set(product.id, m)
+    }
     return {
       product: product.id,
       name: product.name,
@@ -104,6 +159,12 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
       details: optionLines(it, p, t, locale === 'ar').map(([label, value]) => ({ label: label || undefined, value })),
     }
   })
+
+  for (const [id, qty] of takeProduct) if (qty > (byId.get(id)!.stock ?? 0)) throw new OrderError('gone')
+  for (const [id, m] of takeVariant) {
+    const variants = byId.get(id)!.personalization?.variants ?? []
+    for (const [vid, qty] of m) if (qty > (variants.find((v) => v.id === vid)?.stock ?? 0)) throw new OrderError('gone')
+  }
 
   const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
   const fees = { amman: settings.delivery?.amman ?? 3, jordan: settings.delivery?.jordan ?? 5, intl: settings.delivery?.international ?? 15 }
@@ -125,6 +186,7 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   for (let attempt = 1; ; attempt++) {
     try {
       const order = await payload.create({ collection: 'orders', data })
+      await takeStock(payload, [...new Set([...takeProduct.keys(), ...takeVariant.keys()])], takeProduct, takeVariant)
       return { number: order.number!, total: order.total ?? 0, status, payment }
     } catch (err) {
       const unique = err instanceof Error && /unique|number/i.test(err.message)

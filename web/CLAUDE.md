@@ -20,6 +20,8 @@ This project uses the Payload CMS skill at `.claude/skills/payload/`. Start with
   - Prompt: `prompts.ts`, built from Site settings → SEO writing (facts, voice, never say, search phrases).
 - Storefront (`src/app/(frontend)/[locale]/`, `src/components/`): a port of the clickable preview in `../preview/`, which is the design reference. Styles are `site.css` (the preview's, unchanged) and `frontend.css` (the preview's per-page styles).
   - `components/preview/draw.ts`: the canvas name/engraving previews, ported from `preview/assets/site.js`
+  - Product choices (`src/lib/choices.ts`): a product's `personalization.options` are ordered questions (kind: design / size / chain / sparkle / finish / colour / other), each with choices that can add a price, show a little picture (swatch or chain pattern) and switch the photo. Questions and choices can be conditional ("only when…": a list of choice ids, same question = or, different questions = and). `personalization.variants` set a price, stock count or photo for a combination; the most specific match wins. The site asks in a fixed order by kind (`stepRank`), with the built-in steps (chain length, stone, name, lettering, silver/gold) slotted in. The same module prices the bag and the server's re-pricing, and `placeOrder` refuses incomplete answers and takes stock off products and combinations. Admin condition picker: `components/admin/ChoiceFields.tsx`.
+  - Product page: `components/product/ProductForm.tsx` is the step-by-step piece builder (chain-link progress, one question at a time, a price tag at the end); `live.ts` tells the gallery and headline price what was picked.
   - `components/store/`: the bag (kept in the browser's localStorage), drawers, toast and the silver/gold switch; `/bag-items` returns names and prices for it
   - Checkout posts to `/place-order` (`src/lib/orders.ts`), which re-prices everything from the database and creates the order. Never trust prices from the browser.
   - Orders: WooCommerce-style statuses and list (`src/lib/orderOptions.ts`, admin cells in `components/admin/Order*`). Numbers start at 20001, past the old Woo ones.
@@ -33,6 +35,7 @@ This project uses the Payload CMS skill at `.claude/skills/payload/`. Start with
 - `scripts/`:
   - `apply-preview.ts`: copies the preview's hand-tuned settings (personalization, home photos, top menu, Delivery/Silver care pages) into the database
   - `import-woo.ts`: one-time WooCommerce import
+  - `demo-merged.ts`: builds five merged products from the owner's catalog spec (`Bling_It_On_Developer_Product_Tables (1).docx`) from the old separate products' photos and prices, to show the piece builder. Re-runnable; leaves the old products alone.
   - `backfill-media.ts`: photo fingerprints and low-resolution flags
   - `seo-export.ts` / `seo-apply.ts`: bulk SEO writing done in a Claude Code session. Outputs go to `scripts/output/<SEO_DIR>/`, which git ignores (`seo/` was the first backfill, `seo-v2/` the full rewrite to the length rules in `src/seo/rules.ts`).
     - Export: `SEO_ALL=1 SEO_DIR=seo-v2 npx payload run scripts/seo-export.ts < /dev/null` (all published products, not just gaps).

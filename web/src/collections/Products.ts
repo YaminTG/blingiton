@@ -5,7 +5,7 @@ import { l } from '@/fields/label'
 import { aiField, legacyField, seoStatusField, seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
 import { productAfterChange, productAfterDelete } from '@/hooks/lifecycle'
-import { availabilityOptions, restockOptions } from '@/lib/productOptions'
+import { availabilityOptions, choicePictures, restockOptions } from '@/lib/productOptions'
 
 // Option lists mirror the preview store (preview/assets/data.js).
 const kinds = [
@@ -265,39 +265,133 @@ export const Products: CollectionConfig = {
               options: ['14', '16', '18', '20', '40', '45', '50', '55'].map((v) => ({ label: `${v} cm`, value: v })),
             },
             {
-              // Choices the customer picks that can change the price, e.g. "Number of names":
-              // One (+0) / Two (+10) / Three (+20), or "Style": Plain / With zircon (+5).
+              // The questions a customer answers, e.g. Design → Size → Chain → Finish. The site asks
+              // them in the shop's fixed order by kind (src/lib/choices.ts `stepRank`); rows of the
+              // same kind keep their order here.
               name: 'options',
               type: 'array',
               dbName: 'product_options', // keeps generated Postgres names under 63 characters
-              label: l('Options', 'الخيارات'),
-              labels: { singular: l('Option', 'خيار'), plural: l('Options', 'الخيارات') },
+              label: l('Questions', 'الأسئلة'),
+              labels: { singular: l('Question', 'سؤال'), plural: l('Questions', 'الأسئلة') },
               admin: {
                 description: l(
-                  'Choices that can change the price, like number of names or plain / with zircon.',
-                  'اختيارات قد تغيّر السعر، مثل عدد الأسماء أو سادة / مع زركون.',
+                  'What the customer picks, one question at a time: design, size, chain, sparkle, finish… They are asked in this order: design → size → chain → sparkle/stone → name → lettering → finish/colour → other.',
+                  'ما يختاره الزبون، سؤالاً بعد سؤال: التصميم، الحجم، السلسلة، اللمعة، اللون… وتُسأل بهذا الترتيب: التصميم ← الحجم ← السلسلة ← اللمعة/الحجر ← الاسم ← الخط ← اللون/المعدن ← غير ذلك.',
                 ),
                 initCollapsed: true,
+                components: { RowLabel: '/components/admin/ChoiceFields#QuestionRowLabel' },
               },
               fields: [
-                { name: 'name', type: 'text', label: l('Option name', 'اسم الخيار'), required: true, localized: true },
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'name', type: 'text', label: l('Question', 'السؤال'), required: true, localized: true, admin: { width: '50%', placeholder: 'Size / الحجم' } },
+                    {
+                      name: 'look',
+                      type: 'select',
+                      label: l('Kind', 'النوع'),
+                      defaultValue: 'other',
+                      options: [
+                        { label: l('Design', 'التصميم'), value: 'design' },
+                        { label: l('Size', 'الحجم'), value: 'size' },
+                        { label: l('Chain', 'السلسلة'), value: 'chain' },
+                        { label: l('Sparkle (zircon, stones)', 'اللمعة (زركون، أحجار)'), value: 'sparkle' },
+                        { label: l('Finish (silver / gold)', 'المعدن (فضة / ذهب)'), value: 'finish' },
+                        { label: l('Colour', 'اللون'), value: 'colour' },
+                        { label: l('Other', 'غير ذلك'), value: 'other' },
+                      ],
+                      admin: { width: '50%', description: l('Sets when it is asked and how it looks.', 'يحدد متى يُسأل وكيف يظهر.') },
+                    },
+                  ],
+                },
+                {
+                  name: 'when',
+                  type: 'json',
+                  label: l('Only ask when…', 'اسأل فقط عندما…'),
+                  admin: { components: { Field: '/components/admin/ChoiceFields#ChoiceConditionField' } },
+                },
                 {
                   name: 'choices',
                   type: 'array',
                   dbName: 'product_option_choices',
                   label: l('Choices', 'الاختيارات'),
                   minRows: 1,
+                  admin: { components: { RowLabel: '/components/admin/ChoiceFields#ChoiceRowLabel' } },
                   fields: [
                     {
                       type: 'row',
                       fields: [
-                        { name: 'label', type: 'text', label: l('Choice', 'الاختيار'), required: true, localized: true, admin: { width: '60%' } },
-                        { name: 'extraPrice', type: 'number', label: l('Extra (JOD)', 'إضافة (د.أ)'), defaultValue: 0, admin: { width: '40%', step: 0.5 } },
+                        { name: 'label', type: 'text', label: l('Choice', 'الاختيار'), required: true, localized: true, admin: { width: '40%' } },
+                        { name: 'extraPrice', type: 'number', label: l('Extra (JOD)', 'إضافة (د.أ)'), defaultValue: 0, admin: { width: '20%', step: 0.5 } },
+                        {
+                          name: 'picture',
+                          type: 'select',
+                          label: l('Little picture', 'صورة صغيرة'),
+                          options: choicePictures,
+                          admin: { width: '40%', description: l('A colour dot or chain drawing next to the choice.', 'نقطة لون أو رسمة سلسلة بجانب الاختيار.') },
+                        },
                       ],
+                    },
+                    {
+                      name: 'photo',
+                      type: 'upload',
+                      relationTo: 'media',
+                      label: l('Photo when chosen (optional)', 'صورة عند الاختيار (اختياري)'),
+                      admin: { description: l('The product photo switches to this one when the customer picks it.', 'تتغير صورة المنتج إلى هذه عندما يختارها الزبون.') },
+                    },
+                    {
+                      name: 'when',
+                      type: 'json',
+                      label: l('Only offer when…', 'اعرضه فقط عندما…'),
+                      admin: { components: { Field: '/components/admin/ChoiceFields#ChoiceConditionField' } },
                     },
                   ],
                 },
               ],
+            },
+            {
+              // Overrides for particular combinations, e.g. Pink design → 4 in stock, or
+              // Jordanian Shemagh + Gold → 45 JOD. The most specific matching row wins.
+              name: 'variants',
+              type: 'array',
+              dbName: 'product_variants',
+              label: l('Combinations', 'التركيبات'),
+              labels: { singular: l('Combination', 'تركيبة'), plural: l('Combinations', 'التركيبات') },
+              admin: {
+                description: l(
+                  'A different price, stock count or photo for particular choices. Leave a box empty to use the product’s own. When several rows fit, the one naming the most questions wins.',
+                  'سعر أو كمية أو صورة مختلفة لاختيارات معينة. اترك الخانة فارغة لاستخدام ما للمنتج. إذا انطبق أكثر من سطر، يُعتمد السطر الذي يذكر أكثر عدد من الأسئلة.',
+                ),
+                initCollapsed: true,
+                condition: (_, siblingData) => Boolean(siblingData?.options?.length),
+                components: { RowLabel: '/components/admin/ChoiceFields#VariantRowLabel' },
+              },
+              fields: [
+                {
+                  name: 'when',
+                  type: 'json',
+                  label: l('When the customer picks', 'عندما يختار الزبون'),
+                  required: true,
+                  admin: { components: { Field: '/components/admin/ChoiceFields#ChoiceConditionField' } },
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'price', type: 'number', label: l('Price (JOD)', 'السعر (د.أ)'), min: 0, admin: { width: '33%', step: 0.5, description: l('Replaces the price and choice extras.', 'يحل محل السعر والإضافات.') } },
+                    { name: 'stock', type: 'number', label: l('Pieces in stock', 'الكمية المتوفرة'), min: 0, admin: { width: '33%', description: l('Empty: no limit.', 'فارغ: بلا حد.') } },
+                    { name: 'photo', type: 'upload', relationTo: 'media', label: l('Photo', 'الصورة'), admin: { width: '34%' } },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'textOptional',
+              type: 'checkbox',
+              label: l('The text is optional', 'النص اختياري'),
+              admin: {
+                description: l('For pieces that can be bought without a name or engraving.', 'للقطع التي يمكن شراؤها بدون اسم أو نقش.'),
+                condition: (_, siblingData) => siblingData?.type && siblingData.type !== 'none',
+              },
             },
             {
               name: 'maxCharacters',

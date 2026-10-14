@@ -7,6 +7,10 @@ import { OrderStatusTabs as OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae } f
 import { PhotoCell as PhotoCell_009ca56fd1cbef94569a34a9ca15afce } from '../../../components/admin/PhotoCell'
 import { AvailabilityCell as AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
 import { RestockCell as RestockCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
+import { ChoiceConditionField as ChoiceConditionField_8b6af8343f55a309e6af56d67ce8b88c } from '../../../components/admin/ChoiceFields'
+import { ChoiceRowLabel as ChoiceRowLabel_8b6af8343f55a309e6af56d67ce8b88c } from '../../../components/admin/ChoiceFields'
+import { QuestionRowLabel as QuestionRowLabel_8b6af8343f55a309e6af56d67ce8b88c } from '../../../components/admin/ChoiceFields'
+import { VariantRowLabel as VariantRowLabel_8b6af8343f55a309e6af56d67ce8b88c } from '../../../components/admin/ChoiceFields'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -54,6 +58,10 @@ export const importMap = {
   "/components/admin/PhotoCell#PhotoCell": PhotoCell_009ca56fd1cbef94569a34a9ca15afce,
   "/components/admin/ProductCells#AvailabilityCell": AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0,
   "/components/admin/ProductCells#RestockCell": RestockCell_28ed3dae73b0ea5b9003d6daff4035d0,
+  "/components/admin/ChoiceFields#ChoiceConditionField": ChoiceConditionField_8b6af8343f55a309e6af56d67ce8b88c,
+  "/components/admin/ChoiceFields#ChoiceRowLabel": ChoiceRowLabel_8b6af8343f55a309e6af56d67ce8b88c,
+  "/components/admin/ChoiceFields#QuestionRowLabel": QuestionRowLabel_8b6af8343f55a309e6af56d67ce8b88c,
+  "/components/admin/ChoiceFields#VariantRowLabel": VariantRowLabel_8b6af8343f55a309e6af56d67ce8b88c,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,

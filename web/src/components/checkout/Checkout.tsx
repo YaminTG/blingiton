@@ -8,7 +8,7 @@ import { Icon } from '@/components/Icon'
 import { NamePreview } from '@/components/preview/NamePreview'
 import { useMoney } from '@/components/store/Money'
 import { useStore } from '@/components/store/StoreProvider'
-import { optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
+import { itemImage, optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import { ORIGIN_KEY } from '@/lib/origin'
@@ -415,7 +415,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
         <h2 id="sum-h">{c.summary}</h2>
         {lines.map(({ it, p }, i) => (
           <div className="line-item" key={i}>
-            {p.image ? <Image src={p.image} alt="" width={76} height={76} sizes="76px" /> : <span />}
+            {itemImage(p, it) ? <Image src={itemImage(p, it)!} alt="" width={76} height={76} sizes="76px" /> : <span />}
             <div>
               <div className="li-name">
                 {p.name}

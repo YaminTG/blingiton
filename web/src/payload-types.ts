@@ -273,21 +273,99 @@ export interface Product {
     goldPlatedExtra?: number | null;
     chainLengths?: ('14' | '16' | '18' | '20' | '40' | '45' | '50' | '55')[] | null;
     /**
-     * Choices that can change the price, like number of names or plain / with zircon.
+     * What the customer picks, one question at a time: design, size, chain, sparkle, finish… They are asked in this order: design → size → chain → sparkle/stone → name → lettering → finish/colour → other.
      */
     options?:
       | {
           name: string;
+          /**
+           * Sets when it is asked and how it looks.
+           */
+          look?: ('design' | 'size' | 'chain' | 'sparkle' | 'finish' | 'colour' | 'other') | null;
+          when?:
+            | {
+                [k: string]: unknown;
+              }
+            | unknown[]
+            | string
+            | number
+            | boolean
+            | null;
           choices?:
             | {
                 label: string;
                 extraPrice?: number | null;
+                /**
+                 * A colour dot or chain drawing next to the choice.
+                 */
+                picture?:
+                  | (
+                      | 'silver'
+                      | 'gold'
+                      | 'rose'
+                      | 'black'
+                      | 'navy'
+                      | 'white'
+                      | 'pink'
+                      | 'turquoise'
+                      | 'orange'
+                      | 'purple'
+                      | 'red'
+                      | 'green'
+                      | 'blue'
+                      | 'cable'
+                      | 'paperclip'
+                    )
+                  | null;
+                /**
+                 * The product photo switches to this one when the customer picks it.
+                 */
+                photo?: (number | null) | Media;
+                when?:
+                  | {
+                      [k: string]: unknown;
+                    }
+                  | unknown[]
+                  | string
+                  | number
+                  | boolean
+                  | null;
                 id?: string | null;
               }[]
             | null;
           id?: string | null;
         }[]
       | null;
+    /**
+     * A different price, stock count or photo for particular choices. Leave a box empty to use the product’s own. When several rows fit, the one naming the most questions wins.
+     */
+    variants?:
+      | {
+          when:
+            | {
+                [k: string]: unknown;
+              }
+            | unknown[]
+            | string
+            | number
+            | boolean
+            | null;
+          /**
+           * Replaces the price and choice extras.
+           */
+          price?: number | null;
+          /**
+           * Empty: no limit.
+           */
+          stock?: number | null;
+          photo?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * For pieces that can be bought without a name or engraving.
+     */
+    textOptional?: boolean | null;
     maxCharacters?: number | null;
   };
   meta?: {
@@ -892,15 +970,30 @@ export interface ProductsSelect<T extends boolean = true> {
           | T
           | {
               name?: T;
+              look?: T;
+              when?: T;
               choices?:
                 | T
                 | {
                     label?: T;
                     extraPrice?: T;
+                    picture?: T;
+                    photo?: T;
+                    when?: T;
                     id?: T;
                   };
               id?: T;
             };
+        variants?:
+          | T
+          | {
+              when?: T;
+              price?: T;
+              stock?: T;
+              photo?: T;
+              id?: T;
+            };
+        textOptional?: T;
         maxCharacters?: T;
       };
   meta?:

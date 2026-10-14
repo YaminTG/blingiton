@@ -5,6 +5,7 @@ import { getPayload, type Where } from 'payload'
 import type { Category, Media, Page, Product, Review, SiteSetting } from '@/payload-types'
 
 import type { BagProduct } from './cart'
+import type { Photo, Question, Variant } from './choices'
 import type { Locale } from './locales'
 import { serverUrl } from './site'
 import { tags } from './tags'
@@ -176,12 +177,43 @@ export const getBagProducts = unstable_cache(
     const res = await (await payload()).find({ collection: 'products', locale, where: { id: { in: ids } }, limit: ids.length, ...asVisitor })
     return res.docs.map(toBagProduct)
   },
-  ['bag-products'],
+  ['bag-products', 'v2'],
   { tags: [tags.products] },
 )
 
+const ids = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
+
+const photoOf = (value: number | Media | null | undefined): Photo | null => {
+  const media = mediaOf(value)
+  const large = imageUrl(media, 'large')
+  return large ? { large, thumb: imageUrl(media, 'thumb') ?? large } : null
+}
+
 export const toBagProduct = (p: Product): BagProduct => {
   const pers = p.personalization
+  const questions: Question[] = (pers?.options ?? []).map((o) => ({
+    id: o.id ?? '',
+    name: o.name,
+    look: o.look ?? 'other',
+    when: ids(o.when),
+    choices: (o.choices ?? []).map((c) => ({
+      id: c.id ?? '',
+      label: c.label,
+      extra: c.extraPrice ?? 0,
+      picture: c.picture ?? null,
+      photo: photoOf(c.photo),
+      when: ids(c.when),
+    })),
+  }))
+  const variants: Variant[] = (pers?.variants ?? []).map((v) => ({
+    id: v.id ?? '',
+    when: ids(v.when),
+    price: v.price ?? null,
+    stock: v.stock ?? null,
+    photo: photoOf(v.photo),
+  }))
+  // Only "in stock" pieces count their stock; made-to-order pieces are made as they sell.
+  const out = p.availability === 'sold_out' || (p.availability === 'in_stock' && typeof p.stock === 'number' && p.stock <= 0)
   return {
     id: p.id,
     slug: p.slug ?? '',
@@ -189,14 +221,12 @@ export const toBagProduct = (p: Product): BagProduct => {
     price: p.price,
     image: imageUrl(mediaOf(p.images?.[0]), 'thumb'),
     type: pers?.type ?? 'none',
+    textOptional: Boolean(pers?.textOptional),
     stones: pers?.stones ?? 'none',
     goldExtra: pers?.goldPlated ? (pers.goldPlatedExtra ?? 0) : 0,
-    options: (pers?.options ?? []).map((o) => ({
-      id: o.id ?? '',
-      name: o.name,
-      choices: (o.choices ?? []).map((c) => ({ id: c.id ?? '', label: c.label, extra: c.extraPrice ?? 0 })),
-    })),
-    soldOut: p.availability === 'sold_out',
+    questions,
+    variants,
+    soldOut: out,
   }
 }
 

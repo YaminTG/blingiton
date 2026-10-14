@@ -37,6 +37,8 @@ export type ApplyOptions = { rewrite?: boolean }
 
 // With locale: 'all', localized fields come back as { en, ar }.
 type AllLocales = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+/** An upload loaded at depth 1 comes back as an object; writes take its id. */
+const idOf = (v: unknown) => (v && typeof v === 'object' && 'id' in v ? (v as { id: number }).id : (v ?? null))
 const at = (v: unknown, l: Locale): string | undefined =>
   v && typeof v === 'object' ? ((v as Record<string, string | undefined>)[l] ?? undefined) : undefined
 
@@ -121,7 +123,7 @@ export async function applyProductSeo(payload: Payload, id: number, input: Produ
     fill(plan, 'meta.title', 'metaTitle', l, at(doc.meta?.title, l), input.metaTitle?.[l], (v) => ((d.meta ??= {}).title = v))
     fill(plan, 'meta.description', 'metaDescription', l, at(doc.meta?.description, l), input.metaDescription?.[l], (v) => ((d.meta ??= {}).description = v))
 
-    // Options are arrays: send every row (with ids) so nothing else in the array changes.
+    // Questions are arrays: send every row (with ids) and all its fields so nothing else changes.
     const options: AllLocales[] = doc.personalization?.options ?? []
     if (options.length && input.options?.length) {
       let changed = false
@@ -138,9 +140,9 @@ export async function applyProductSeo(payload: Payload, id: number, input: Produ
             label = gen.choices[j][l]
             changed = true
           }
-          return { id: c.id, label, extraPrice: c.extraPrice }
+          return { id: c.id, label, extraPrice: c.extraPrice, picture: c.picture, photo: idOf(c.photo), when: c.when }
         })
-        return { id: o.id, name, choices }
+        return { id: o.id, name, look: o.look, when: o.when, choices }
       })
       if (changed) {
         d.personalization = { options: rows }

@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon'
 import { JsonLd } from '@/components/JsonLd'
 import { ProductCard } from '@/components/ProductCard'
 import { Gallery } from '@/components/product/Gallery'
+import { LivePrice } from '@/components/product/LivePrice'
 import { ProductForm, type FormProduct } from '@/components/product/ProductForm'
 import { Price } from '@/components/store/Money'
 import type { Category } from '@/payload-types'
@@ -73,8 +74,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
     .map((m) => ({ id: m.id, large: imageUrl(m, 'large') ?? '', thumb: imageUrl(m, 'thumb') ?? '', alt: m.alt || product.name }))
   const pers = product.personalization
   const personal = Boolean(pers?.type && pers.type !== 'none')
+  const bag = toBagProduct(product)
+  // "From …" when the choices change the price; the lowest price any combination can have.
+  const varies = bag.goldExtra > 0 || bag.questions.some((q) => q.choices.some((c) => c.extra)) || bag.variants.some((v) => v.price !== null && v.price !== bag.price)
+  const fromPrice = varies ? Math.min(bag.price, ...bag.variants.flatMap((v) => (v.price !== null ? [v.price] : []))) : null
   const formProduct: FormProduct = {
-    ...toBagProduct(product),
+    ...bag,
     shape: pers?.previewShape ?? null,
     defaultStyle: pers?.defaultStyle ?? 'script',
     sample: pers?.sampleText ?? '',
@@ -109,7 +114,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <section className="info" aria-labelledby="p-title">
           <h1 id="p-title">{product.name}</h1>
           <p className="price-lg">
-            <Price jod={product.price} />
+            <LivePrice base={product.price} from={fromPrice} fromLabel={t.b.from} />
             {product.compareAtPrice && product.compareAtPrice > product.price ? (
               <s>
                 <Price jod={product.compareAtPrice} />
