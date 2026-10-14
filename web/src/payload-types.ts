@@ -487,6 +487,7 @@ export interface Media {
     | boolean
     | null;
   wooId?: number | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1104,6 +1105,7 @@ export interface MediaSelect<T extends boolean = true> {
   sha256?: T;
   ai?: T;
   wooId?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
