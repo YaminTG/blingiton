@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { admins } from './access'
+import { AuditLog } from './collections/AuditLog'
 import { Categories } from './collections/Categories'
 import { Events } from './collections/Events'
 import { Media } from './collections/Media'
@@ -19,9 +20,11 @@ import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
 import { Products } from './collections/Products'
 import { Reviews } from './collections/Reviews'
+import { TwoFactor } from './collections/TwoFactor'
 import { Users } from './collections/Users'
 import { SiteSettings } from './globals/SiteSettings'
 import { refreshAfterChange, refreshAfterDelete } from './hooks/lifecycle'
+import { withAudit, withAuditGlobal } from './lib/audit'
 import { tags } from './lib/tags'
 import { seoRefreshTask } from './seo/tasks'
 import { defaultLocale } from './lib/locales'
@@ -47,9 +50,11 @@ export default buildConfig({
         Icon: '/components/admin/Brand#Icon',
       },
       beforeDashboard: ['/components/admin/Dashboard#Dashboard'],
+      // The two-factor code step, shown on the login page while a login waits for its code.
+      beforeLogin: ['/components/admin/TwoFactor#TwoFactor'],
     },
   },
-  collections: [Orders, Products, Categories, Reviews, Pages, Media, Users, Events],
+  collections: [Orders, Products, Categories, Reviews, Pages, Media, Users, Events, AuditLog, TwoFactor],
   globals: [SiteSettings],
   // Order emails go through any SMTP service (Resend, Brevo, Zoho, Google Workspace…). Without
   // SMTP_HOST, Payload writes the emails to the server log instead, which is fine for development.
@@ -135,6 +140,14 @@ export default buildConfig({
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
       },
+    }),
+    // Last, so it sees the plugins' collections too (Redirects): every change a signed-in person
+    // makes goes into the audit log (src/lib/audit.ts). Not the log itself, the two-factor
+    // records, the raw funnel rows or Payload's internal collections.
+    (incoming) => ({
+      ...incoming,
+      collections: withAudit(incoming.collections ?? [], ['audit-log', 'two-factor', 'events']),
+      globals: (incoming.globals ?? []).map(withAuditGlobal),
     }),
   ],
 })

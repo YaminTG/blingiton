@@ -685,3 +685,118 @@ html[data-theme='dark'] .bl-status--completed { --c: #9cc0e6; --soft: #17263a; }
   }
   &__help { margin: 8px 0 0; color: var(--theme-elevation-500); font-size: 12px; }
 }
+
+// Two-factor code step on the login page (components/admin/TwoFactor*.tsx).
+.bl-2fa {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+
+  h2 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .btn {
+    margin: 4px 0 0;
+  }
+}
+
+.bl-2fa__qr {
+  align-self: center;
+  width: 200px;
+  padding: 8px;
+  border-radius: var(--style-radius-m);
+  background: #fff; // QR codes need a light background, in dark mode too.
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+.bl-2fa__manual {
+  font-size: 0.85rem;
+  color: var(--theme-elevation-600);
+
+  code {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    word-break: break-all;
+    user-select: all;
+  }
+}
+
+.bl-2fa__label {
+  font-weight: 600;
+}
+
+.bl-2fa__input {
+  padding: 10px 12px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  text-align: center;
+
+  &:focus {
+    outline: 2px solid var(--bl-pink);
+    outline-offset: 1px;
+  }
+}
+
+.bl-2fa__hint {
+  font-size: 0.8rem;
+  color: var(--theme-elevation-500);
+}
+
+.bl-2fa__error {
+  padding: 8px 12px;
+  border-radius: var(--style-radius-s);
+  background: var(--bl-poor-soft);
+  color: var(--bl-poor);
+}
+
+.bl-2fa__cancel {
+  align-self: center;
+  border: 0;
+  background: none;
+  color: var(--theme-elevation-600);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bl-2fa__codes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 24px;
+  margin: 0;
+  padding: 12px 12px 12px 36px;
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 1rem;
+}
+
+.bl-2fa__row {
+  display: flex;
+  gap: 8px;
+}
+
+.bl-2fa__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

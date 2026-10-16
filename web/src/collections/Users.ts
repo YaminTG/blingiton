@@ -2,7 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, adminsField, adminsOrSelf } from '@/access'
 import { l } from '@/fields/label'
-import { alertOnFailedLogin, alertOnNewPlace, alertOnPasswordReset } from '@/lib/loginAlerts'
+import { alertOnFailedLogin, alertOnPasswordReset, alertOnTeamChange, alertOnTeamDelete } from '@/lib/loginAlerts'
+import { auditLogout, dropTwoFactor, holdForTwoFactor, twoFactorEndpoint } from '@/lib/twoFactor'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -11,9 +12,19 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'role'],
     group: l('Team', 'الفريق'),
   },
-  // 5 wrong passwords lock the account for 15 minutes.
-  auth: { maxLoginAttempts: 5, lockTime: 15 * 60 * 1000 },
-  hooks: { afterError: [alertOnFailedLogin], afterLogin: [alertOnNewPlace], afterForgotPassword: [alertOnPasswordReset] },
+  // 5 wrong passwords lock the account for 15 minutes. Sessions must stay on: two-factor login
+  // (src/lib/twoFactor.ts) holds each new session back until the code is right.
+  auth: { maxLoginAttempts: 5, lockTime: 15 * 60 * 1000, useSessions: true },
+  endpoints: [twoFactorEndpoint],
+  hooks: {
+    afterError: [alertOnFailedLogin],
+    afterLogin: [holdForTwoFactor],
+    afterLogout: [auditLogout],
+    afterForgotPassword: [alertOnPasswordReset],
+    afterChange: [alertOnTeamChange],
+    beforeDelete: [dropTwoFactor],
+    afterDelete: [alertOnTeamDelete],
+  },
   access: {
     // The very first account is created through /admin/create-first-user, which skips these rules.
     create: admins,
@@ -35,7 +46,7 @@ export const Users: CollectionConfig = {
       ],
       access: { update: adminsField },
     },
-    // Countries (or IPs) this account has logged in from; a new one emails the shop (src/lib/loginAlerts.ts).
+    // Countries (or IPs) this account has logged in from; a new one emails the team (src/lib/loginAlerts.ts).
     { name: 'loginPlaces', type: 'json', admin: { hidden: true }, access: { update: () => false } },
   ],
 }

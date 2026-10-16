@@ -75,6 +75,8 @@ export interface Config {
     media: Media;
     users: User;
     events: Event;
+    'audit-log': AuditLog;
+    'two-factor': TwoFactor;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -96,6 +98,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
+    'two-factor': TwoFactorSelect<false> | TwoFactorSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -655,6 +659,94 @@ export interface Event {
   createdAt: string;
 }
 /**
+ * Logins, two-factor events and every change made by the team. Entries can’t be edited or deleted.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log".
+ */
+export interface AuditLog {
+  id: number;
+  at: string;
+  action:
+    | 'login.password-ok'
+    | 'login.success'
+    | 'login.failed'
+    | 'login.locked'
+    | 'login.code-failed'
+    | 'login.code-blocked'
+    | 'login.recovery-code'
+    | 'login.cancelled'
+    | 'logout'
+    | 'password.reset-requested'
+    | 'password.reset'
+    | '2fa.enabled'
+    | 'recovery.script'
+    | 'create'
+    | 'update'
+    | 'delete';
+  summary: string;
+  actor?: (number | null) | User;
+  actorEmail?: string | null;
+  target?: string | null;
+  ip?: string | null;
+  location?: string | null;
+  agent?: string | null;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  prev?: string | null;
+  hash?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "two-factor".
+ */
+export interface TwoFactor {
+  id: number;
+  user: number | User;
+  secret?: string | null;
+  enabledAt?: string | null;
+  lastStep?: number | null;
+  recoveryCodes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  setupSecret?: string | null;
+  pending?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  failures?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -829,6 +921,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'audit-log';
+        value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'two-factor';
+        value: number | TwoFactor;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1206,6 +1306,42 @@ export interface EventsSelect<T extends boolean = true> {
   source?: T;
   locale?: T;
   path?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log_select".
+ */
+export interface AuditLogSelect<T extends boolean = true> {
+  at?: T;
+  action?: T;
+  summary?: T;
+  actor?: T;
+  actorEmail?: T;
+  target?: T;
+  ip?: T;
+  location?: T;
+  agent?: T;
+  detail?: T;
+  prev?: T;
+  hash?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "two-factor_select".
+ */
+export interface TwoFactorSelect<T extends boolean = true> {
+  user?: T;
+  secret?: T;
+  enabledAt?: T;
+  lastStep?: T;
+  recoveryCodes?: T;
+  setupSecret?: T;
+  pending?: T;
+  failures?: T;
   updatedAt?: T;
   createdAt?: T;
 }
