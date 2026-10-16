@@ -113,7 +113,13 @@ async function applyHome() {
         instagramPhotos: insta.map(mainImage).filter((id): id is number => typeof id === 'number'),
         followers: '69K',
       },
-      delivery: { amman: 3, jordan: 5, international: 15 },
+      delivery: {
+        amman: 3,
+        jordan: 5,
+        giftCard: 3,
+        dhl: { middleEast: 20, europe: 25, us: 30 },
+        standard: { middleEast: 8, europe: 12, us: 17 },
+      },
     },
   })
   console.log('✓ home page photos and delivery fees')

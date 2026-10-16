@@ -170,9 +170,40 @@ export const SiteSettings: GlobalConfig = {
               fields: [
                 { name: 'amman', type: 'number', label: l('Amman', 'داخل عمّان'), min: 0, defaultValue: 3, required: true, admin: { width: '33%' } },
                 { name: 'jordan', type: 'number', label: l('Other cities in Jordan', 'مدن أخرى في الأردن'), min: 0, defaultValue: 5, required: true, admin: { width: '33%' } },
-                { name: 'international', type: 'number', label: l('International (DHL Express)', 'دولي (DHL Express)'), min: 0, defaultValue: 15, required: true, admin: { width: '33%' } },
+                {
+                  name: 'giftCard',
+                  type: 'number',
+                  label: l('Gift card', 'بطاقة الإهداء'),
+                  min: 0,
+                  defaultValue: 3,
+                  required: true,
+                  admin: { width: '33%', description: l('Added at checkout, with the customer’s message.', 'تُضاف عند إتمام الطلب مع رسالة العميل.') },
+                },
               ],
             },
+            // Abroad: one price per zone for each way of shipping. Countries outside the Middle East
+            // and Europe pay the US price (zones: src/lib/shipping.ts).
+            ...(
+              [
+                ['dhl', l('International · DHL Express (3–5 business days)', 'دولي · DHL Express (3–5 أيام عمل)'), [20, 25, 30]],
+                ['standard', l('International · Standard shipping (14–20 business days)', 'دولي · شحن عادي (14–20 يوم عمل)'), [8, 12, 17]],
+              ] as const
+            ).map(([name, label, [me, eu, us]]) => ({
+              name,
+              type: 'group' as const,
+              label,
+              admin: { description: l('Canada, Australia and every other country pay the US price.', 'كندا وأستراليا وباقي الدول تدفع سعر أمريكا.') },
+              fields: [
+                {
+                  type: 'row' as const,
+                  fields: [
+                    { name: 'middleEast', type: 'number' as const, label: l('Middle East & Gulf', 'الشرق الأوسط والخليج'), min: 0, defaultValue: me, required: true, admin: { width: '33%' } },
+                    { name: 'europe', type: 'number' as const, label: l('Europe', 'أوروبا'), min: 0, defaultValue: eu, required: true, admin: { width: '33%' } },
+                    { name: 'us', type: 'number' as const, label: l('USA & rest of world', 'أمريكا وباقي العالم'), min: 0, defaultValue: us, required: true, admin: { width: '33%' } },
+                  ],
+                },
+              ],
+            })),
             {
               type: 'row',
               fields: [

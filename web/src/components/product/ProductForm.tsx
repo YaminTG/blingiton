@@ -70,8 +70,6 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   const [chain, setChain] = useState<number | null>(chains.length === 1 ? chains[0] : null)
   const [stone, setStone] = useState<number | null>(null)
   const [tsize, setTsize] = useState(100)
-  const [gift, setGift] = useState(false)
-  const [note, setNote] = useState('')
   const [tried, setTried] = useState(false)
   const [done, setDone] = useState<Set<string>>(() => {
     const s = new Set<string>()
@@ -123,10 +121,6 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   if (chain) item.chain = chain
   if (hasStone) item.stone = stone
   if (engraved && tsize !== 100) item.tsize = tsize
-  if (gift) {
-    item.gift = true
-    if (note.trim()) item.note = note.trim()
-  }
   const price = unitPrice(p, { ...item, qty: 1 })
   const comboGone = r.complete && r.stock !== null && r.stock <= 0
   const soldOut = p.soldOut || comboGone
@@ -595,24 +589,6 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
                 <span data-price="">{fmt(price)}</span>
               </p>
               <p className="tag-line">{t.b.yoursLine}</p>
-            </div>
-          ) : null}
-
-          {!soldOut ? (
-            <div className="gift-box">
-              <label className="check">
-                <input type="checkbox" checked={gift} onChange={(e) => setGift(e.target.checked)} />
-                <span>
-                  {t.giftToggle}
-                  <small>{t.giftHelp}</small>
-                </span>
-              </label>
-              {gift ? (
-                <div className="field gift-note">
-                  <label htmlFor="note-in">{t.note}</label>
-                  <textarea className="textarea" id="note-in" maxLength={140} placeholder={t.notePh} value={note} onChange={(e) => setNote(e.target.value)} autoFocus />
-                </div>
-              ) : null}
             </div>
           ) : null}
         </>

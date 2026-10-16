@@ -170,7 +170,7 @@ export interface Order {
     email?: string | null;
   };
   shipping: {
-    method: 'amman' | 'jordan' | 'intl';
+    method: 'amman' | 'jordan' | 'intl' | 'intl_standard';
     country?: string | null;
     city?: string | null;
     address?: string | null;
@@ -183,7 +183,7 @@ export interface Order {
         unitPrice: number;
         lineTotal?: number | null;
         /**
-         * Name, style, finish, chain, stone and gift options, as the customer chose them.
+         * Name, style, finish, chain and stone, as the customer chose them.
          */
         details?:
           | {
@@ -195,8 +195,13 @@ export interface Order {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Write this on the card and leave the prices out of the box.
+   */
+  giftMessage?: string | null;
   subtotal?: number | null;
   deliveryFee?: number | null;
+  giftCardFee?: number | null;
   total?: number | null;
   payment: {
     method: 'card_online' | 'card_on_delivery' | 'cash' | 'whatsapp';
@@ -604,6 +609,15 @@ export interface User {
   id: number;
   name: string;
   role: 'admin' | 'staff';
+  loginPlaces?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -904,8 +918,10 @@ export interface OrdersSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  giftMessage?: T;
   subtotal?: T;
   deliveryFee?: T;
+  giftCardFee?: T;
   total?: T;
   payment?:
     | T
@@ -1159,6 +1175,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  loginPlaces?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1337,7 +1354,26 @@ export interface SiteSetting {
   delivery: {
     amman: number;
     jordan: number;
-    international: number;
+    /**
+     * Added at checkout, with the customer’s message.
+     */
+    giftCard: number;
+    /**
+     * Canada, Australia and every other country pay the US price.
+     */
+    dhl: {
+      middleEast: number;
+      europe: number;
+      us: number;
+    };
+    /**
+     * Canada, Australia and every other country pay the US price.
+     */
+    standard: {
+      middleEast: number;
+      europe: number;
+      us: number;
+    };
     /**
      * Shown to Google and AI search. 0 = no returns. Leave empty until the policy is decided.
      */
@@ -1422,7 +1458,21 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         amman?: T;
         jordan?: T;
-        international?: T;
+        giftCard?: T;
+        dhl?:
+          | T
+          | {
+              middleEast?: T;
+              europe?: T;
+              us?: T;
+            };
+        standard?:
+          | T
+          | {
+              middleEast?: T;
+              europe?: T;
+              us?: T;
+            };
         returnDays?: T;
         personalisedReturns?: T;
       };

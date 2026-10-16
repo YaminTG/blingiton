@@ -8,6 +8,7 @@ import { dictionary } from './dictionary'
 import { isLocale, type Locale } from './locales'
 import type { OrderStatus, PaymentMethod } from './orderOptions'
 import { sanitizeOrigin } from './origin'
+import { countryByCode, deliveryFee, feesFrom, type Method } from './shipping'
 
 /** `gone`: a product in the bag was unpublished, deleted or sold out. `invalid`: anything else that fails the checks. */
 export class OrderError extends Error {
@@ -48,9 +49,6 @@ function cleanItem(raw: unknown): CartItem {
         .map(([k, v]) => [k.slice(0, 64), (v as string).slice(0, 64)]),
     )
   }
-  if (r.gift === true) item.gift = true
-  const note = text(r.note, 300)
-  if (note) item.note = note
   return item
 }
 
@@ -111,12 +109,17 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   if (!customer.name || customer.phone.replace(/\D/g, '').length < 8 || !EMAIL.test(customer.email)) throw new OrderError('invalid')
 
   const s = (b.shipping ?? {}) as Record<string, unknown>
-  const countryIndex = int(s.country, 0, dictionary('en').co.countries.length - 1)
+  const country = countryByCode(s.country)
   const city = text(s.city, 100)
   const address = text(s.address, 500)
-  if (countryIndex === undefined || !city || !address) throw new OrderError('invalid')
-  const jordan = countryIndex === 0
-  const method: Order['shipping']['method'] = jordan ? (s.method === 'jordan' ? 'jordan' : 'amman') : 'intl'
+  if (!country || !city || !address) throw new OrderError('invalid')
+  const jordan = country.zone === 'jordan'
+  const method: Method = jordan ? (s.method === 'jordan' ? 'jordan' : 'amman') : s.method === 'intl_standard' ? 'intl_standard' : 'intl'
+
+  // A gift card needs the words to write on it.
+  const g = b.giftCard as Record<string, unknown> | null | undefined
+  const giftMessage = g ? text(g.message, 300) : ''
+  if (g && !giftMessage) throw new OrderError('invalid')
 
   // Jordan: card or cash on delivery. Abroad: online card payment once HyperPay is connected;
   // until then the shop arranges payment on WhatsApp and the order waits "on hold".
@@ -167,16 +170,18 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   }
 
   const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
-  const fees = { amman: settings.delivery?.amman ?? 3, jordan: settings.delivery?.jordan ?? 5, intl: settings.delivery?.international ?? 15 }
+  const fees = feesFrom(settings.delivery)
   const origin = sanitizeOrigin(b.origin)
 
   const data = {
     status,
     locale,
     customer,
-    shipping: { method, country: dictionary('en').co.countries[countryIndex], city, address },
+    shipping: { method, country: country.en, city, address },
     items: lines,
-    deliveryFee: fees[method],
+    deliveryFee: deliveryFee(fees, country.zone, method),
+    giftCardFee: giftMessage ? fees.giftCard : 0,
+    giftMessage: giftMessage || undefined,
     payment: { method: payment },
     // null rather than missing, so the "Web admin" default (for orders made in the admin) doesn't apply.
     attribution: origin ?? { type: null },

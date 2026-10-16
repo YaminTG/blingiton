@@ -177,7 +177,7 @@ export const getBagProducts = unstable_cache(
     const res = await (await payload()).find({ collection: 'products', locale, where: { id: { in: ids } }, limit: ids.length, ...asVisitor })
     return res.docs.map(toBagProduct)
   },
-  ['bag-products', 'v2'],
+  ['bag-products', 'v3'],
   { tags: [tags.products] },
 )
 
@@ -227,6 +227,7 @@ export const toBagProduct = (p: Product): BagProduct => {
     questions,
     variants,
     soldOut: out,
+    made: p.availability !== 'in_stock',
   }
 }
 

@@ -5,6 +5,7 @@ import { Checkout } from '@/components/checkout/Checkout'
 import { getSettings } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
 import { isLocale } from '@/lib/locales'
+import { feesFrom } from '@/lib/shipping'
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -18,10 +19,9 @@ export default async function CheckoutPage({ params }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
   const settings = await getSettings(locale)
-  const fees = { amman: settings.delivery?.amman ?? 3, jordan: settings.delivery?.jordan ?? 5, international: settings.delivery?.international ?? 15 }
   return (
     <div className="wrap" id="co-root">
-      <Checkout locale={locale} fees={fees} whatsapp={settings.whatsapp || '962796384424'} />
+      <Checkout locale={locale} fees={feesFrom(settings.delivery)} whatsapp={settings.whatsapp || '962796384424'} />
     </div>
   )
 }

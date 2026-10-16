@@ -12,14 +12,24 @@ import { itemImage, optionLines, unitPrice, type BagProduct, type CartItem } fro
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import { ORIGIN_KEY } from '@/lib/origin'
+import { COUNTRIES, countryByCode, deliveryFee, type Fees, type Method } from '@/lib/shipping'
 import { track } from '@/lib/track'
 import { money, paths } from '@/lib/urls'
 
-type Fees = { amman: number; jordan: number; international: number }
-type Method = 'amman' | 'jordan' | 'intl'
 type Pay = 'carddel' | 'cash' | 'intl'
-type Form = { name: string; phone: string; email: string; country: number; city: string; address: string; method: Method; pay: Pay }
-type Field = 'name' | 'phone' | 'email' | 'city' | 'address'
+type Form = {
+  name: string
+  phone: string
+  email: string
+  country: string
+  city: string
+  address: string
+  method: Method
+  pay: Pay
+  gift: boolean
+  giftMessage: string
+}
+type Field = 'name' | 'phone' | 'email' | 'city' | 'address' | 'giftMessage'
 type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -44,7 +54,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const ar = locale === 'ar'
   const { cart, products, clear, ready, currency } = useStore()
   const { fmt, total: sum } = useMoney()
-  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 0, city: '', address: '', method: 'amman', pay: 'carddel' })
+  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 'JO', city: '', address: '', method: 'amman', pay: 'carddel', gift: false, giftMessage: '' })
   const [errors, setErrors] = useState<Field[]>([])
   const [sending, setSending] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
@@ -59,11 +69,16 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
     if (ready && !done) for (const id of bagIds.split(',').filter(Boolean)) track('checkout', Number(id))
   }, [ready, done, bagIds])
 
-  const jordan = f.country === 0
-  const fee = jordan ? (f.method === 'jordan' ? fees.jordan : fees.amman) : fees.international
+  const zone = countryByCode(f.country)?.zone ?? 'jordan'
+  const jordan = zone === 'jordan'
+  const fee = deliveryFee(fees, zone, f.method)
+  const giftFee = f.gift ? fees.giftCard : 0
   const lines = cart.map((it) => ({ it, p: products[it.id] })).filter((l): l is { it: CartItem; p: BagProduct } => Boolean(l.p))
   const lineTotals = lines.map(({ it, p }) => unitPrice(p, it) * it.qty)
-  const total = lineTotals.reduce((s, n) => s + n, 0) + fee
+  const total = lineTotals.reduce((s, n) => s + n, 0) + fee + giftFee
+  // The order ships together, so one custom piece means waiting for it to be made.
+  const made = lines.some(({ p }) => p.made)
+  const shipTime = (time: string) => (made ? c.madeFirst(time) : time)
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((prev) => ({ ...prev, [k]: v }))
 
@@ -75,10 +90,11 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
     if (!EMAIL.test(form.email.trim())) bad.push('email')
     if (!form.city.trim()) bad.push('city')
     if (!form.address.trim()) bad.push('address')
+    if (form.gift && !form.giftMessage.trim()) bad.push('giftMessage')
     return bad
   }
   const message = (id: Field) =>
-    id === 'phone' ? c.phoneErr : id === 'email' ? c.emailErr : c.required({ name: c.fullName, city: c.city, address: c.address }[id])
+    id === 'phone' ? c.phoneErr : id === 'email' ? c.emailErr : id === 'giftMessage' ? c.giftMsgErr : c.required({ name: c.fullName, city: c.city, address: c.address }[id])
 
   useEffect(() => {
     if (done) {
@@ -108,6 +124,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           customer: { name: f.name, phone: f.phone, email: f.email },
           shipping: { country: f.country, city: f.city, address: f.address, method: f.method },
           payment: f.pay === 'cash' ? 'cash' : 'card_on_delivery',
+          giftCard: f.gift ? { message: f.giftMessage } : null,
           origin: readOrigin(),
         }),
       })
@@ -215,7 +232,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
     )
   }
 
-  const field = (id: Field, label: string, o: { type?: string; req?: boolean; help?: string; auto?: string; area?: boolean; ph?: string } = {}) => {
+  const field = (id: Field, label: string, o: { type?: string; req?: boolean; help?: string; auto?: string; area?: boolean; ph?: string; max?: number } = {}) => {
     const req = o.req !== false
     const e = errors.includes(id) ? message(id) : null
     const common = {
@@ -242,7 +259,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           ) : null}
         </label>
         {o.area ? (
-          <textarea className="textarea" {...common} onChange={(ev) => set(id, ev.target.value)} />
+          <textarea className="textarea" {...common} placeholder={o.ph} maxLength={o.max} onChange={(ev) => set(id, ev.target.value)} />
         ) : (
           <input
             className="input"
@@ -313,14 +330,29 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                 autoComplete="country-name"
                 value={f.country}
                 onChange={(e) => {
-                  const country = Number(e.target.value)
-                  setF((prev) => ({ ...prev, country, method: country === 0 ? 'amman' : 'intl', pay: country === 0 ? (prev.pay === 'intl' ? 'carddel' : prev.pay) : 'intl' }))
+                  const country = e.target.value
+                  const home = countryByCode(country)?.zone === 'jordan'
+                  setF((prev) => ({
+                    ...prev,
+                    country,
+                    method: home ? (prev.method === 'jordan' ? 'jordan' : 'amman') : prev.method === 'intl_standard' ? 'intl_standard' : 'intl',
+                    pay: home ? (prev.pay === 'intl' ? 'carddel' : prev.pay) : 'intl',
+                  }))
                 }}
               >
-                {c.countries.map((n, i) => (
-                  <option key={n} value={i}>
-                    {n}
+                {COUNTRIES.filter((x) => x.zone === 'jordan').map((x) => (
+                  <option key={x.code} value={x.code}>
+                    {x[locale]}
                   </option>
+                ))}
+                {(['me', 'europe', 'us'] as const).map((z) => (
+                  <optgroup key={z} label={c.zones[z]}>
+                    {COUNTRIES.filter((x) => x.zone === z).map((x) => (
+                      <option key={x.code} value={x.code}>
+                        {x[locale]}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
@@ -348,16 +380,32 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                 </label>
               </>
             ) : (
-              <label className="rc">
-                <input type="radio" name="method" value="intl" checked readOnly />
-                <span>
-                  <b>{c.intl}</b>
-                  <small>{c.intlTime}</small>
-                </span>
-                <span className="fee">{fmt(fees.international)}</span>
-              </label>
+              <>
+                <label className="rc">
+                  <input type="radio" name="method" value="intl" checked={f.method === 'intl'} onChange={() => set('method', 'intl')} />
+                  <span>
+                    <b>{c.intl}</b>
+                    <small>{shipTime(c.intlTime)}</small>
+                  </span>
+                  <span className="fee">{fmt(deliveryFee(fees, zone, 'intl'))}</span>
+                </label>
+                <label className="rc">
+                  <input type="radio" name="method" value="intl_standard" checked={f.method === 'intl_standard'} onChange={() => set('method', 'intl_standard')} />
+                  <span>
+                    <b>{c.intlStd}</b>
+                    <small>{shipTime(c.intlStdTime)}</small>
+                  </span>
+                  <span className="fee">{fmt(deliveryFee(fees, zone, 'intl_standard'))}</span>
+                </label>
+              </>
             )}
           </div>
+          {!jordan ? (
+            <p className="help ship-note">
+              {made ? `${c.madeNote} ` : null}
+              {c.surcharge}
+            </p>
+          ) : null}
         </fieldset>
         <fieldset className="block">
           <h2>
@@ -396,6 +444,16 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
             )}
           </div>
         </fieldset>
+        <div className="gift-box co-gift">
+          <label className="check">
+            <input type="checkbox" checked={f.gift} onChange={(e) => set('gift', e.target.checked)} />
+            <span>
+              {c.giftCard} · <span className="price">{fmt(fees.giftCard)}</span>
+              <small>{c.giftCardHelp}</small>
+            </span>
+          </label>
+          {f.gift ? <div className="gift-note">{field('giftMessage', c.giftMsg, { area: true, ph: c.giftMsgPh, max: 300 })}</div> : null}
+        </div>
         <button className="btn btn-primary btn-block place" type="submit" disabled={sending} aria-busy={sending || undefined}>
           <Icon name="bag" />
           <span>
@@ -403,7 +461,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
               c.placing
             ) : (
               <>
-                {c.place} · <span className="price">{sum([...lineTotals, fee])}</span>
+                {c.place} · <span className="price">{sum([...lineTotals, fee, giftFee])}</span>
               </>
             )}
           </span>
@@ -444,9 +502,15 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
             <span>{c.delivery}</span>
             <span className="price">{fmt(fee)}</span>
           </div>
+          {f.gift ? (
+            <div>
+              <span>{c.giftLine}</span>
+              <span className="price">{fmt(giftFee)}</span>
+            </div>
+          ) : null}
           <div className="total">
             <span>{c.total}</span>
-            <span className="price">{sum([...lineTotals, fee])}</span>
+            <span className="price">{sum([...lineTotals, fee, giftFee])}</span>
           </div>
           {currency !== 'JOD' ? <p className="in-jod">{c.inJod(money(total, locale))}</p> : null}
         </div>

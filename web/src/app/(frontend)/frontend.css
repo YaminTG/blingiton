@@ -193,6 +193,8 @@ html[dir="rtl"] .sort-btn { padding: 0 18px 0 14px; }
 .rc small { display: block; color: var(--ink-soft); font-size: 13px; font-weight: 600; }
 .rc .fee { font-weight: 800; font-variant-numeric: tabular-nums; }
 .rc .icon { color: var(--pink); }
+.ship-note { margin: 0; }
+.co-gift { margin-top: 24px; }
 .err-sum { margin-top: 20px; padding: 16px 18px; border-radius: var(--r-sm); border: 2px solid var(--error); background: #FFF1F0; color: var(--error); font-weight: 700; }
 .err-sum ul { margin: 8px 0 0; padding-inline-start: 20px; }
 .err-sum a { color: var(--error); text-decoration: underline; }

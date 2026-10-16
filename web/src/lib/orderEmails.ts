@@ -42,6 +42,11 @@ export async function sendOrderEmails(payload: Payload, id: number, kind: Kind) 
   })
 }
 
+function methodName(order: Order, locale: Locale) {
+  const c = dictionary(locale).co
+  return { amman: c.amman, jordan: c.jordanCities, intl: c.intl, intl_standard: c.intlStd }[order.shipping.method]
+}
+
 const PINK = '#c8336f'
 const INK = '#4e0f2a'
 const MUTED = '#7a5a66'
@@ -59,7 +64,8 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
   const heading = kind === 'received' ? m.receivedHeading(first) : m.completedHeading(first)
   const intro = kind === 'completed' ? m.completedIntro : abroad ? m.receivedIntl : m.receivedIntro
   const payLabel = paymentMethods.find((p) => p.value === order.payment.method)?.label[locale] ?? ''
-  const methodLabel = { amman: t.co.amman, jordan: t.co.jordanCities, intl: t.co.intl }[order.shipping.method]
+  const methodLabel = methodName(order, locale)
+  const gift = order.giftCardFee || order.giftMessage ? `${t.co.giftLine}${order.giftMessage ? `: “${order.giftMessage}”` : ''}` : null
   const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(t.co.waAbout(no))}` : null
   const font = ar ? "Tahoma, 'Segoe UI', Arial, sans-serif" : "'Helvetica Neue', Arial, sans-serif"
   const review = kind === 'completed' ? reviewLink(locale, order.id) : null
@@ -96,6 +102,7 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
   <tr><td style="padding:12px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px">
     ${row(t.subtotal, money(order.subtotal ?? 0, locale))}
     ${row(`${t.co.delivery} (${methodLabel})`, money(order.deliveryFee ?? 0, locale))}
+    ${gift ? row(gift, money(order.giftCardFee ?? 0, locale)) : ''}
     ${row(t.co.total, money(order.total ?? 0, locale), true)}
     ${row(t.co.payment, payLabel)}
   </table></td></tr>
@@ -138,6 +145,7 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
     '',
     `${t.subtotal}: ${money(order.subtotal ?? 0, locale)}`,
     `${t.co.delivery} (${methodLabel}): ${money(order.deliveryFee ?? 0, locale)}`,
+    ...(gift ? [`${gift}: ${money(order.giftCardFee ?? 0, locale)}`] : []),
     `${t.co.total}: ${money(order.total ?? 0, locale)}`,
     `${t.co.payment}: ${payLabel}`,
     '',
@@ -162,6 +170,8 @@ function shopNotice(order: Order) {
     ...(order.items ?? []).flatMap((it) => [`${it.quantity} × ${it.name}`, ...(it.details ?? []).map((d) => `   ${d.label ? `${d.label}: ` : ''}${d.value}`)]),
     '',
     `Payment: ${pay}`,
+    `Delivery: ${methodName(order, 'en')} · ${money(order.deliveryFee ?? 0, 'en')}`,
+    ...(order.giftMessage ? [`GIFT CARD (${money(order.giftCardFee ?? 0, 'en')}), write: “${order.giftMessage}”. Leave the prices out of the box.`] : []),
     `Customer: ${order.customer.name}, ${order.customer.phone}, ${order.customer.email ?? ''}`,
     `Deliver to: ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.country ?? ''}`,
     '',

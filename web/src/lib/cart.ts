@@ -16,8 +16,6 @@ export type CartItem = {
   tsize?: number
   /** Answers to the product's questions: question id → choice id. */
   choices?: Record<string, string>
-  gift?: boolean
-  note?: string
 }
 
 /** What the bag and checkout need to know about a product, in one language. */
@@ -34,6 +32,8 @@ export type BagProduct = {
   questions: Question[]
   variants: Variant[]
   soldOut: boolean
+  /** Made to order (custom): it takes 3–5 days to make before it can ship. */
+  made: boolean
 }
 
 export const sameItem = (a: CartItem, b: CartItem) => JSON.stringify({ ...a, qty: 0 }) === JSON.stringify({ ...b, qty: 0 })
@@ -69,8 +69,5 @@ export function optionLines(it: CartItem, p: BagProduct | undefined, t: Dictiona
   if (it.finish) L.push([stepRank.finish, t.lines.finish, t[it.finish]])
   if (it.tsize && it.tsize !== 100) L.push([stepRank.font, t.lines.size, `${it.tsize}%`])
   // Stable sort keeps the order within a rank.
-  const lines: [string, string][] = L.sort((a, b) => a[0] - b[0]).map(([, k, v]) => [k, v])
-  if (it.gift) lines.push(['', t.lines.gift])
-  if (it.note) lines.push([t.lines.note, `“${it.note}”`])
-  return lines
+  return L.sort((a, b) => a[0] - b[0]).map(([, k, v]) => [k, v])
 }

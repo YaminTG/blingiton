@@ -16,11 +16,11 @@ const orderBeforeChange: CollectionBeforeChangeHook<Order> = async ({ data, orig
     data.number = Math.max(FIRST_ORDER_NUMBER - 1, last.docs[0]?.number ?? 0) + 1
   }
   // Line totals and the order total always follow the items, including orders made by hand in the admin.
-  if (data.items || data.deliveryFee != null) {
+  if (data.items || data.deliveryFee != null || data.giftCardFee != null) {
     const items = data.items ?? originalDoc?.items ?? []
     for (const it of items) it.lineTotal = (it.unitPrice ?? 0) * (it.quantity ?? 1)
     data.subtotal = items.reduce((s, it) => s + (it.lineTotal ?? 0), 0)
-    data.total = data.subtotal + (data.deliveryFee ?? originalDoc?.deliveryFee ?? 0)
+    data.total = data.subtotal + (data.deliveryFee ?? originalDoc?.deliveryFee ?? 0) + (data.giftCardFee ?? originalDoc?.giftCardFee ?? 0)
   }
   const number = data.number ?? originalDoc?.number
   const name = data.customer?.name ?? originalDoc?.customer?.name ?? ''
@@ -108,6 +108,7 @@ export const Orders: CollectionConfig = {
                 { value: 'amman', label: l('Amman', 'داخل عمّان') },
                 { value: 'jordan', label: l('Other cities in Jordan', 'مدن أخرى في الأردن') },
                 { value: 'intl', label: l('International (DHL Express)', 'دولي (DHL Express)') },
+                { value: 'intl_standard', label: l('International (standard shipping)', 'دولي (شحن عادي)') },
               ],
             },
             { name: 'country', type: 'text', label: l('Country', 'الدولة'), defaultValue: 'Jordan' },
@@ -140,7 +141,7 @@ export const Orders: CollectionConfig = {
           type: 'array',
           label: l('Personalization', 'التخصيص'),
           labels: { singular: l('Detail', 'تفصيل'), plural: l('Details', 'تفاصيل') },
-          admin: { description: l('Name, style, finish, chain, stone and gift options, as the customer chose them.', 'الاسم والخط واللون والسلسلة والحجر وخيارات الهدية كما اختارها العميل.') },
+          admin: { description: l('Name, style, finish, chain and stone, as the customer chose them.', 'الاسم والخط واللون والسلسلة والحجر كما اختارها العميل.') },
           fields: [
             {
               type: 'row',
@@ -154,15 +155,25 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
+      name: 'giftMessage',
+      type: 'textarea',
+      label: l('Gift card: what to write', 'بطاقة الإهداء: ما يُكتب عليها'),
+      admin: {
+        condition: (data) => Boolean(data?.giftMessage || data?.giftCardFee),
+        description: l('Write this on the card and leave the prices out of the box.', 'اكتب هذا على البطاقة ولا تضع الأسعار داخل العلبة.'),
+      },
+    },
+    {
       type: 'row',
       fields: [
-        { name: 'subtotal', type: 'number', label: l('Subtotal (JOD)', 'المجموع الفرعي (د.أ)'), admin: { readOnly: true, width: '33%' } },
-        { name: 'deliveryFee', type: 'number', label: l('Delivery (JOD)', 'التوصيل (د.أ)'), min: 0, defaultValue: 0, admin: { width: '33%' } },
+        { name: 'subtotal', type: 'number', label: l('Subtotal (JOD)', 'المجموع الفرعي (د.أ)'), admin: { readOnly: true, width: '25%' } },
+        { name: 'deliveryFee', type: 'number', label: l('Delivery (JOD)', 'التوصيل (د.أ)'), min: 0, defaultValue: 0, admin: { width: '25%' } },
+        { name: 'giftCardFee', type: 'number', label: l('Gift card (JOD)', 'بطاقة الإهداء (د.أ)'), min: 0, defaultValue: 0, admin: { width: '25%' } },
         {
           name: 'total',
           type: 'number',
           label: l('Total (JOD)', 'الإجمالي (د.أ)'),
-          admin: { readOnly: true, width: '33%', components: { Cell: '/components/admin/OrderCells#TotalCell' } },
+          admin: { readOnly: true, width: '25%', components: { Cell: '/components/admin/OrderCells#TotalCell' } },
         },
       ],
     },

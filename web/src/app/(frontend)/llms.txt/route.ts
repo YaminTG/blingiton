@@ -1,6 +1,7 @@
 import type { Category, Product } from '@/payload-types'
 import { getIndexables, getSettings, listCategories } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
+import { feesFrom } from '@/lib/shipping'
 import { absolute, money, paths } from '@/lib/urls'
 import { BRAND } from '@/seo/rules'
 
@@ -45,13 +46,20 @@ export async function GET() {
   if (facts.length) out.push('', '## About the jewelry', '', ...facts.map((f) => `- ${f}`))
 
   if (d) {
+    const fees = feesFrom(d)
+    const zones = (m: 'intl' | 'intl_standard') =>
+      `Middle East & Gulf ${money(fees[m].me, 'en')}, Europe ${money(fees[m].europe, 'en')}, USA and rest of world ${money(fees[m].us, 'en')}`
     out.push(
       '',
       '## Delivery and payment',
       '',
-      `- ${t.co.amman}: ${money(d.amman, 'en')}, ${t.co.ammanTime}`,
-      `- ${t.co.jordanCities}: ${money(d.jordan, 'en')}, ${t.co.jordanTime}`,
-      `- ${t.co.intl}: ${money(d.international, 'en')}, ${t.co.intlTime}`,
+      `- ${t.co.amman}: ${money(fees.amman, 'en')}, ${t.co.ammanTime}`,
+      `- ${t.co.jordanCities}: ${money(fees.jordan, 'en')}, ${t.co.jordanTime}`,
+      `- ${t.co.intl}, ${t.co.intlTime}: ${zones('intl')}`,
+      `- ${t.co.intlStd}, ${t.co.intlStdTime}: ${zones('intl_standard')}`,
+      `- ${t.co.madeNote}`,
+      `- ${t.co.surcharge}`,
+      `- ${t.co.giftCard}: ${money(fees.giftCard, 'en')}`,
       `- ${t.madeLine}`,
       `- ${t.deliveryBody}`,
     )
