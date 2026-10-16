@@ -69,8 +69,11 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
 
   return (
     <section className="bl-dash" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Styled like the gift bag: florals down both edges, the glitter logo in the middle. */}
       <header className="bl-dash__hello">
-        <div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- decorative, served as-is */}
+        <img className="bl-dash__badge" src="/logo.png" alt="" width={112} height={112} />
+        <div className="bl-dash__greet">
           <h2>{t.hello(firstName)}</h2>
           <p>{t.intro}</p>
         </div>

@@ -40,6 +40,8 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    // Always the light, gift-bag pink look; no dark theme.
+    theme: 'light',
     meta: {
       titleSuffix: ' · Blingiton',
       icons: [{ rel: 'icon', type: 'image/png', url: '/icon-96.png' }],

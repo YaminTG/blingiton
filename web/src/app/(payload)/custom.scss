@@ -9,6 +9,8 @@
   --bl-pink-hover: #a92a5d;
   --bl-pink-soft: #fdebee;
   --bl-ink: #4e0f2a;
+  --bl-bag: #f394ba; // the gift bag's pink
+  --bl-blush: #fde9ef;
   --bl-good: #1f7a4d;
   --bl-good-soft: #e3f3ea;
   --bl-fair: #b26a00;
@@ -26,9 +28,15 @@ html[lang='ar'] {
   --font-body: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
 }
 
+// The admin is pinned to the light theme (payload.config.ts) so it always wears the bag's pinks.
 html[data-theme='light'] {
-  --theme-bg: #fffaf9;
+  --theme-bg: #fff6f8;
   --theme-input-bg: #ffffff;
+}
+
+// Blush side nav, like the bag's tissue paper.
+.nav {
+  background: linear-gradient(180deg, var(--bl-blush), #fff6f8);
 }
 
 html[data-theme='dark'] {
@@ -83,6 +91,64 @@ html[data-theme='dark'] {
 .bl-icon {
   display: block;
   border-radius: 50%;
+}
+
+// Gift-bag florals (public/admin/*.svg): camellias, gold leaves, blossoms and sparkles from the
+// Bling It On! bag. floral-edge.svg hugs a left edge, so the right-hand copy is mirrored.
+%bl-floral-edge {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 160px;
+  background: url('/admin/floral-edge.svg') 0 -6px / 160px auto repeat-y;
+  pointer-events: none;
+}
+
+// Login, forgot-password and first-user pages: blush backdrop with flowers down both sides.
+.template-minimal {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    url('/admin/sparkles.svg') center / 360px,
+    linear-gradient(180deg, var(--bl-blush), #f9cfdc);
+
+  &::before,
+  &::after {
+    @extend %bl-floral-edge;
+    z-index: -1;
+  }
+
+  &::before { left: 0; }
+  &::after { right: 0; transform: scaleX(-1); }
+
+  @media (max-width: 760px) {
+    &::before,
+    &::after { width: 64px; background-size: 112px auto; }
+  }
+}
+
+.template-minimal__wrap {
+  padding: 32px;
+  border-radius: 22px;
+  background: var(--theme-elevation-0);
+  box-shadow: 0 24px 50px -24px rgb(200 51 111 / 45%);
+}
+
+.card--has-onclick:hover {
+  background: var(--bl-pink-soft);
+  border-color: var(--bl-pink);
+}
+
+// A sprig above the log-out button at the foot of the side nav.
+.nav__controls::before {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 64px;
+  margin-bottom: -10px;
+  background: url('/admin/sprig.svg') no-repeat;
 }
 
 // Products list: photo column and roomier rows.
@@ -312,22 +378,80 @@ html[data-theme='dark'] {
 
   p { margin: 4px 0 0; color: var(--theme-elevation-500); }
 
+  // The gift bag: pink with a fold line near the top, gold sparkles, flowers down both edges and
+  // the glitter logo as the sticker.
   &__hello {
+    --ink: var(--bl-ink);
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 22px 24px;
+    justify-content: center;
+    gap: 16px 28px;
+    min-height: 230px;
+    padding: 40px 200px 32px;
     border-radius: var(--style-radius-l);
-    background: linear-gradient(120deg, var(--bl-pink-soft), var(--theme-elevation-0));
-    border: 1px solid var(--theme-elevation-100);
+    overflow: hidden;
+    color: var(--ink);
+    background:
+      linear-gradient(transparent 22px, rgb(255 255 255 / 40%) 22px 23px, transparent 23px),
+      url('/admin/sparkles.svg') center / 240px,
+      linear-gradient(180deg, #f6a6c5, var(--bl-bag) 55%, #ef89b1);
+    box-shadow: 0 18px 36px -22px rgb(200 51 111 / 70%);
+
+    &::before,
+    &::after {
+      @extend %bl-floral-edge;
+      z-index: -1;
+      width: 190px;
+      background-size: 190px auto;
+    }
+
+    &::before { left: 0; }
+    &::after { right: 0; transform: scaleX(-1); }
+
+    h2 { color: var(--ink); }
+    p { color: var(--ink); font-weight: 600; opacity: 0.85; }
+
+    @media (max-width: 900px) {
+      padding-inline: 92px;
+
+      &::before,
+      &::after { width: 84px; background-size: 120px auto; }
+    }
+
+    @media (max-width: 560px) {
+      padding-inline: 52px;
+
+      &::before,
+      &::after { width: 44px; background-size: 96px auto; }
+    }
   }
+
+  &__badge {
+    flex: none;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 30%),
+      0 14px 26px -10px rgb(140 20 70 / 60%);
+  }
+
+  &__greet { min-width: 0; }
 
   &__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  &__hello &__actions {
+    flex-basis: 100%;
+    justify-content: center;
+
+    .bl-btn { border-color: transparent; box-shadow: 0 6px 14px -8px rgb(140 20 70 / 60%); }
   }
 
   &__stats {
@@ -374,12 +498,40 @@ html[data-theme='dark'] {
   background: var(--theme-elevation-0);
 }
 
+// A camellia sprig tucked into the top corner of each dashboard card; headings keep clear of it.
+.bl-card {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 72px;
+    height: 48px;
+    background: url('/admin/sprig.svg') 0 0 / 72px 48px no-repeat;
+    pointer-events: none;
+  }
+
+  > h3,
+  > .bl-note { padding-inline-end: 64px; }
+}
+
+[dir='rtl'] .bl-card::after {
+  right: auto;
+  left: 0;
+  transform: scaleX(-1);
+}
+
 .bl-stat {
   --c: var(--theme-text);
   display: grid;
   gap: 2px;
   color: inherit;
   text-decoration: none;
+  background:
+    url('/admin/sparkles.svg') right -96px top -24px / 200px no-repeat,
+    linear-gradient(160deg, var(--bl-pink-soft), var(--theme-elevation-0) 55%);
   transition: border-color 0.15s, transform 0.15s;
 
   &:hover { border-color: var(--bl-pink); transform: translateY(-1px); }
