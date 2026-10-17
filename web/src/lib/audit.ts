@@ -37,6 +37,8 @@ export const AUDIT_ACTIONS = [
   'password.reset',
   '2fa.enabled',
   'recovery.script',
+  'customers.export',
+  'customers.forget',
   'create',
   'update',
   'delete',

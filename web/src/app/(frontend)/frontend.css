@@ -195,6 +195,15 @@ html[dir="rtl"] .sort-btn { padding: 0 18px 0 14px; }
 .rc .icon { color: var(--pink); }
 .ship-note { margin: 0; }
 .co-gift { margin-top: 24px; }
+.co-remember { margin-top: 18px; padding: 0 18px; }
+.co-remember small a { color: var(--pink); text-decoration: underline; }
+/* /[locale]/your-data */
+.me { max-width: 680px; margin: 0 auto; padding: 40px 0 64px; }
+.me h1 { margin: 0 0 6px; }
+.me h2 { margin: 28px 0 8px; font-size: 20px; }
+.me p { color: var(--ink-soft); }
+.me-status { margin-top: 14px; padding: 16px 18px; border-radius: var(--r); background: var(--blush-soft); font-weight: 700; }
+.me-status .btn { margin-top: 12px; }
 .err-sum { margin-top: 20px; padding: 16px 18px; border-radius: var(--r-sm); border: 2px solid var(--error); background: #FFF1F0; color: var(--error); font-weight: 700; }
 .err-sum ul { margin: 8px 0 0; padding-inline-start: 20px; }
 .err-sum a { color: var(--error); text-decoration: underline; }

@@ -13,6 +13,8 @@ import { choiceSoldOut, resolve, sizeCm, stepRank, withSingles, type Answers, ty
 import { dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import { stoneLabel, stones } from '@/lib/stones'
+import { choiceDetail } from '@/lib/activity'
+import { noteActivity, watchActiveTime } from '@/lib/customerTrack'
 import { track } from '@/lib/track'
 
 import { announcePick } from './live'
@@ -133,9 +135,14 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   }, [started, price, r.photo])
 
   // Shop funnel: the product was seen, and (for name pieces) someone started typing a name.
+  // Customer insights, for a recognised returning customer only (lib/customerTrack.ts): the view,
+  // the time spent on it, and each option they pick.
   useEffect(() => {
     track('view', p.id)
+    noteActivity({ type: 'view', product: p.id })
+    return watchActiveTime(p.id)
   }, [p.id])
+  const notePick = (key: string, value: string | number) => noteActivity({ type: 'choice', product: p.id, detail: choiceDetail(key, value) })
   useEffect(() => {
     if (personal && name.trim()) track('personalize', p.id)
   }, [personal, name, p.id])
@@ -169,6 +176,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
   }
   const pickChoice = (s: Step, c: Choice) => {
     setRaw((prev) => ({ ...prev, [s.id]: c.id }))
+    notePick(`q:${s.id}`, c.id)
     // A finish choice also turns the live previews silver or gold.
     if (s.look === 'finish' && (c.picture === 'gold' || c.picture === 'silver')) setMetal(c.picture)
     settle(s.id)
@@ -331,6 +339,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
                 chain === n,
                 () => {
                   setChain(n)
+                  notePick('chain', n)
                   markDone('length')
                 },
                 <span className="b-label">
@@ -351,6 +360,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
               done.has('stone') && stone === null,
               () => {
                 setStone(null)
+                notePick('stone', 'none')
                 markDone('stone')
               },
               <Icon name="x" />,
@@ -362,6 +372,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
                 stone === s.i,
                 () => {
                   setStone(s.i)
+                  notePick('stone', s.i)
                   markDone('stone')
                 },
                 null,
@@ -436,6 +447,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
                 done.has('font') && style === s,
                 () => {
                   setStyle(s)
+                  notePick('font', s)
                   markDone('font')
                 },
                 <>
@@ -458,6 +470,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
                 done.has('metal') && metal === m,
                 () => {
                   setMetal(m)
+                  notePick('finish', m)
                   markDone('metal')
                 },
                 <>

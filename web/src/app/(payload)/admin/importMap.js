@@ -4,6 +4,8 @@ import { TotalCell as TotalCell_76d4865f7a4c9abd72d6825af89c725d } from '../../.
 import { OriginCell as OriginCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
 import { OrderActions as OrderActions_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
 import { OrderStatusTabs as OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae } from '../../../components/admin/OrderStatusTabs'
+import { CustomerListTools as CustomerListTools_70ce3d2acf4b1035a5d5a5690297e312 } from '../../../components/admin/CustomerTools'
+import { CustomerView as CustomerView_49aacabbc697841a69bf6a1dfdaeee49 } from '../../../components/admin/CustomerView'
 import { PhotoCell as PhotoCell_009ca56fd1cbef94569a34a9ca15afce } from '../../../components/admin/PhotoCell'
 import { AvailabilityCell as AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
 import { RestockCell as RestockCell_28ed3dae73b0ea5b9003d6daff4035d0 } from '../../../components/admin/ProductCells'
@@ -43,8 +45,10 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { Icon as Icon_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
 import { Logo as Logo_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
+import { InsightsNavLink as InsightsNavLink_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
 import { Dashboard as Dashboard_16b88e9b8c48e393fa86591406efd08f } from '../../../components/admin/Dashboard'
 import { TwoFactor as TwoFactor_ec5ad3e68a8d3607f431737845532f4c } from '../../../components/admin/TwoFactor'
+import { CustomerInsights as CustomerInsights_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -56,6 +60,8 @@ export const importMap = {
   "/components/admin/OrderCells#OriginCell": OriginCell_76d4865f7a4c9abd72d6825af89c725d,
   "/components/admin/OrderActions#OrderActions": OrderActions_42735e497e40d1f2d21d56bf07558f53,
   "/components/admin/OrderStatusTabs#OrderStatusTabs": OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae,
+  "/components/admin/CustomerTools#CustomerListTools": CustomerListTools_70ce3d2acf4b1035a5d5a5690297e312,
+  "/components/admin/CustomerView#CustomerView": CustomerView_49aacabbc697841a69bf6a1dfdaeee49,
   "/components/admin/PhotoCell#PhotoCell": PhotoCell_009ca56fd1cbef94569a34a9ca15afce,
   "/components/admin/ProductCells#AvailabilityCell": AvailabilityCell_28ed3dae73b0ea5b9003d6daff4035d0,
   "/components/admin/ProductCells#RestockCell": RestockCell_28ed3dae73b0ea5b9003d6daff4035d0,
@@ -95,8 +101,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/Brand#Icon": Icon_81fda60f3e3709e861f40982a767707d,
   "/components/admin/Brand#Logo": Logo_81fda60f3e3709e861f40982a767707d,
+  "/components/admin/CustomerInsights#InsightsNavLink": InsightsNavLink_4166967e9771cb21609c8edf0337ec61,
   "/components/admin/Dashboard#Dashboard": Dashboard_16b88e9b8c48e393fa86591406efd08f,
   "/components/admin/TwoFactor#TwoFactor": TwoFactor_ec5ad3e68a8d3607f431737845532f4c,
+  "/components/admin/CustomerInsights#CustomerInsights": CustomerInsights_4166967e9771cb21609c8edf0337ec61,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

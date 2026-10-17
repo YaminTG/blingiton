@@ -89,7 +89,8 @@ async function takeStock(payload: Payload, ids: number[], fromProduct: Map<numbe
   }
 }
 
-export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod }
+/** `customer`: the customer record the order was linked to; stays on the server. */
+export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod; customer: number | null; locale: Locale }
 
 /**
  * Turns a checkout submission into an order. Prices, fees and the total are worked out here from
@@ -192,7 +193,8 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
     try {
       const order = await payload.create({ collection: 'orders', data })
       await takeStock(payload, [...new Set([...takeProduct.keys(), ...takeVariant.keys()])], takeProduct, takeVariant)
-      return { number: order.number!, total: order.total ?? 0, status, payment }
+      const customer = typeof order.customerRecord === 'object' ? (order.customerRecord?.id ?? null) : (order.customerRecord ?? null)
+      return { number: order.number!, total: order.total ?? 0, status, payment, customer, locale }
     } catch (err) {
       const unique = err instanceof Error && /unique|number/i.test(err.message)
       if (!unique || attempt >= 3) throw err

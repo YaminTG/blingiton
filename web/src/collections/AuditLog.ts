@@ -18,6 +18,8 @@ const ACTION_LABELS: Record<(typeof AUDIT_ACTIONS)[number], { en: string; ar: st
   'password.reset': l('Password reset', 'إعادة تعيين كلمة المرور'),
   '2fa.enabled': l('Two-factor set up', 'تفعيل التحقق بخطوتين'),
   'recovery.script': l('Recovery script', 'سكربت الاسترداد'),
+  'customers.export': l('Customers exported', 'تصدير العملاء'),
+  'customers.forget': l('Customer browsing erased', 'حذف تصفح عميل'),
   create: l('Created', 'إنشاء'),
   update: l('Changed', 'تعديل'),
   delete: l('Deleted', 'حذف'),

@@ -28,6 +28,7 @@ type Form = {
   pay: Pay
   gift: boolean
   giftMessage: string
+  remember: boolean
 }
 type Field = 'name' | 'phone' | 'email' | 'city' | 'address' | 'giftMessage'
 type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string }
@@ -54,7 +55,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const ar = locale === 'ar'
   const { cart, products, clear, ready, currency } = useStore()
   const { fmt, total: sum } = useMoney()
-  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 'JO', city: '', address: '', method: 'amman', pay: 'carddel', gift: false, giftMessage: '' })
+  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', country: 'JO', city: '', address: '', method: 'amman', pay: 'carddel', gift: false, giftMessage: '', remember: false })
   const [errors, setErrors] = useState<Field[]>([])
   const [sending, setSending] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
@@ -126,6 +127,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           payment: f.pay === 'cash' ? 'cash' : 'card_on_delivery',
           giftCard: f.gift ? { message: f.giftMessage } : null,
           origin: readOrigin(),
+          remember: f.remember,
         }),
       })
       const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; error?: string }
@@ -454,6 +456,19 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           </label>
           {f.gift ? <div className="gift-note">{field('giftMessage', c.giftMsg, { area: true, ph: c.giftMsgPh, max: 300 })}</div> : null}
         </div>
+        {/* Opt-in, unticked by default: browsing insights for returning customers (lib/activity.ts). */}
+        <label className="check co-remember">
+          <input type="checkbox" checked={f.remember} onChange={(e) => set('remember', e.target.checked)} />
+          <span>
+            {c.remember}
+            <small>
+              {c.rememberHelp}{' '}
+              <Link href={paths.yourData(locale)} target="_blank">
+                {c.rememberLink}
+              </Link>
+            </small>
+          </span>
+        </label>
         <button className="btn btn-primary btn-block place" type="submit" disabled={sending} aria-busy={sending || undefined}>
           <Icon name="bag" />
           <span>

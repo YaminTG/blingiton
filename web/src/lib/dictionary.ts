@@ -254,6 +254,9 @@ const en = {
     giftMsgPh: 'Happy birthday, Lina! Love, Sara',
     giftMsgErr: 'Write the message for the gift card.',
     giftLine: 'Gift card',
+    remember: 'Remember me on this device',
+    rememberHelp: 'Once your order has been delivered, we’ll note which pieces you look at here, so we can suggest ones you’ll love. Only the Blingiton team sees it; we never sell or share it.',
+    rememberLink: 'Change your mind anytime',
   },
 
   // Order emails (src/lib/orderEmails.ts).
@@ -316,6 +319,28 @@ const en = {
     soundOn: 'Turn sound on',
     soundOff: 'Turn sound off',
   },
+
+  // /[locale]/your-data
+  me: {
+    title: 'Your data',
+    heading: 'Your data & personal suggestions',
+    lead: 'What Blingiton keeps about you, and how to change it.',
+    orderTitle: 'Your orders',
+    orderBody:
+      'When you order, we keep your name, phone, email, address and what you bought, to make, deliver and support your order, and to understand which pieces our customers love. Only the Blingiton team can see it.',
+    browseTitle: 'Personal suggestions',
+    browseBody:
+      'If you ticked “Remember me on this device” at checkout, then after your first order is delivered we note which pieces you look at on that device, the options you try and roughly how long you spend on each. It helps us choose what to make and what to suggest. Nothing is noted before a delivered order, or for anyone who didn’t tick the box, and these notes are deleted after a year.',
+    on: 'This device is remembered.',
+    waiting: 'This device is remembered. Nothing is noted until your order has been delivered.',
+    off: 'This device isn’t remembered. Nothing you look at here is linked to you.',
+    stop: 'Stop and delete my browsing history',
+    stopping: 'Stopping…',
+    stopped: 'Done. We’ve stopped, on every device, and deleted what we noted.',
+    failed: 'That didn’t work. Please try again, or message us on WhatsApp.',
+    other: 'To see, correct or delete anything else we hold about you, message us on WhatsApp or reply to any order email.',
+  },
+  yourData: 'Your data',
 
   notFoundTitle: 'We couldn’t find that page',
   notFoundLead: 'It may have moved. Have a look around the shop instead.',
@@ -568,6 +593,9 @@ const ar: Dictionary = {
     giftMsgPh: 'كل عام وأنتِ بخير يا لينا! مع حبي، سارة',
     giftMsgErr: 'اكتب رسالة بطاقة الإهداء.',
     giftLine: 'بطاقة الإهداء',
+    remember: 'تذكّرني على هذا الجهاز',
+    rememberHelp: 'بعد تسليم طلبك، نسجّل القطع التي تشاهدها هنا لنقترح عليك ما ستحبه. لا يراها إلا فريق Blingiton، ولا نبيعها أو نشاركها أبداً.',
+    rememberLink: 'يمكنك تغيير رأيك في أي وقت',
   },
 
   mail: {
@@ -629,6 +657,26 @@ const ar: Dictionary = {
     soundOn: 'تشغيل الصوت',
     soundOff: 'كتم الصوت',
   },
+
+  me: {
+    title: 'بياناتك',
+    heading: 'بياناتك واقتراحاتك الشخصية',
+    lead: 'ما تحتفظ به Blingiton عنك، وكيف تغيّره.',
+    orderTitle: 'طلباتك',
+    orderBody: 'عندما تطلب، نحتفظ باسمك وهاتفك وبريدك وعنوانك وما اشتريته، لنصنع طلبك ونوصله ونخدمك، ولنفهم القطع التي يحبها عملاؤنا. لا يراها إلا فريق Blingiton.',
+    browseTitle: 'اقتراحات شخصية',
+    browseBody:
+      'إذا اخترت «تذكّرني على هذا الجهاز» عند الطلب، فبعد تسليم أول طلب لك نسجّل القطع التي تشاهدها على ذلك الجهاز، والخيارات التي تجرّبها، والوقت التقريبي لكل قطعة. هذا يساعدنا في اختيار ما نصنعه وما نقترحه. لا نسجّل شيئاً قبل تسليم طلب، ولا لمن لم يختر ذلك، وتُحذف هذه الملاحظات بعد سنة.',
+    on: 'هذا الجهاز مُتذكَّر.',
+    waiting: 'هذا الجهاز مُتذكَّر. لن نسجّل شيئاً حتى يُسلَّم طلبك.',
+    off: 'هذا الجهاز غير مُتذكَّر. لا يرتبط بك أي شيء تشاهده هنا.',
+    stop: 'أوقف واحذف سجل تصفّحي',
+    stopping: 'جارٍ الإيقاف…',
+    stopped: 'تم. أوقفنا التسجيل على كل أجهزتك وحذفنا ما سجّلناه.',
+    failed: 'لم ينجح ذلك. حاول مرة أخرى، أو راسلنا عبر واتساب.',
+    other: 'لرؤية أي بيانات أخرى لدينا عنك أو تصحيحها أو حذفها، راسلنا عبر واتساب أو ردّ على أي رسالة طلب.',
+  },
+  yourData: 'بياناتك',
 
   notFoundTitle: 'لم نجد هذه الصفحة',
   notFoundLead: 'ربما تغيّر مكانها. تجوّل في المتجر بدلاً من ذلك.',

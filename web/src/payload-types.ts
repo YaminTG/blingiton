@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     orders: Order;
+    customers: Customer;
     products: Product;
     categories: Category;
     reviews: Review;
@@ -75,6 +76,7 @@ export interface Config {
     media: Media;
     users: User;
     events: Event;
+    'customer-activity': CustomerActivity;
     'audit-log': AuditLog;
     'two-factor': TwoFactor;
     redirects: Redirect;
@@ -85,12 +87,16 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    customers: {
+      orders: 'orders';
+    };
     categories: {
       products: 'products';
     };
   };
   collectionsSelect: {
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
@@ -98,6 +104,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'customer-activity': CustomerActivitySelect<false> | CustomerActivitySelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'two-factor': TwoFactorSelect<false> | TwoFactorSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -113,9 +120,11 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'ar') | ('en' | 'ar')[];
   globals: {
     'site-settings': SiteSetting;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'en' | 'ar';
   widgets: {
@@ -125,6 +134,7 @@ export interface Config {
   jobs: {
     tasks: {
       'seo-refresh': TaskSeoRefresh;
+      'prune-activity': TaskPruneActivity;
       inline: {
         input: unknown;
         output: unknown;
@@ -168,6 +178,10 @@ export interface Order {
    * Only the team sees this.
    */
   note?: string | null;
+  /**
+   * Linked by email or phone when the order is saved.
+   */
+  customerRecord?: (number | null) | Customer;
   customer: {
     name: string;
     phone: string;
@@ -234,6 +248,180 @@ export interface Order {
   };
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Everyone who has ordered, filled in from their orders. Filter by country, segment or spending; open a customer for their orders and insights.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  name: string;
+  /**
+   * From their latest order.
+   */
+  country?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  phoneKey?: string | null;
+  orderCount?: number | null;
+  verifiedOrders?: number | null;
+  totalSpent?: number | null;
+  averageOrder?: number | null;
+  firstOrderAt?: string | null;
+  lastOrderAt?: string | null;
+  daysBetween?: number | null;
+  firstVerifiedAt?: string | null;
+  segment?: ('none' | 'one-time' | 'returning' | 'loyal') | null;
+  favoriteCategory?: (number | null) | Category;
+  /**
+   * Only the team sees this.
+   */
+  note?: string | null;
+  /**
+   * Only with the customer’s consent at checkout, and only after a completed order. Withdraw from the Insights tab.
+   */
+  tracking?: {
+    consent?: boolean | null;
+    consentAt?: string | null;
+    source?: string | null;
+    version?: string | null;
+    withdrawnAt?: string | null;
+    epoch?: number | null;
+  };
+  orders?: {
+    docs?: (number | Order)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  parent?: (number | null) | Category;
+  image?: (number | null) | Media;
+  /**
+   * Shown at the top of the category page. Written automatically if empty.
+   */
+  intro?: string | null;
+  /**
+   * What customers type into Google for this category, separated by commas. Used when writing SEO text.
+   */
+  keywords?: string | null;
+  order?: number | null;
+  showOnHome?: boolean | null;
+  /**
+   * Keep it to 3 or 4.
+   */
+  inMenu?: boolean | null;
+  products?: {
+    docs?: (number | Product)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  /**
+   * Filled in automatically from the name.
+   */
+  slug?: string | null;
+  seoStatus?: ('pending' | 'done' | 'attention') | null;
+  legacy?: {
+    wooId?: number | null;
+    url?: string | null;
+    name?: string | null;
+    description?: string | null;
+  };
+  ai?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Drag in as many photos as you like. Phone photos are resized and compressed automatically. Click a photo to set its focus point so square crops keep the piece in view.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describes the photo for Google and screen readers. Filled in automatically if left empty.
+   */
+  alt?: string | null;
+  /**
+   * Narrower than 800px, so it may look blurry on the product page. A bigger photo is better.
+   */
+  lowResolution?: boolean | null;
+  sha256?: string | null;
+  ai?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  wooId?: number | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumb?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -411,131 +599,6 @@ export interface Product {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  name: string;
-  parent?: (number | null) | Category;
-  image?: (number | null) | Media;
-  /**
-   * Shown at the top of the category page. Written automatically if empty.
-   */
-  intro?: string | null;
-  /**
-   * What customers type into Google for this category, separated by commas. Used when writing SEO text.
-   */
-  keywords?: string | null;
-  order?: number | null;
-  showOnHome?: boolean | null;
-  /**
-   * Keep it to 3 or 4.
-   */
-  inMenu?: boolean | null;
-  products?: {
-    docs?: (number | Product)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-  };
-  /**
-   * Filled in automatically from the name.
-   */
-  slug?: string | null;
-  seoStatus?: ('pending' | 'done' | 'attention') | null;
-  legacy?: {
-    wooId?: number | null;
-    url?: string | null;
-    name?: string | null;
-    description?: string | null;
-  };
-  ai?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Drag in as many photos as you like. Phone photos are resized and compressed automatically. Click a photo to set its focus point so square crops keep the piece in view.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  /**
-   * Describes the photo for Google and screen readers. Filled in automatically if left empty.
-   */
-  alt?: string | null;
-  /**
-   * Narrower than 800px, so it may look blurry on the product page. A bigger photo is better.
-   */
-  lowResolution?: boolean | null;
-  sha256?: string | null;
-  ai?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  wooId?: number | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumb?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    card?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    large?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
  * Customers review their order from the link in the "on its way" email. New reviews wait here until you tick Approved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -659,6 +722,21 @@ export interface Event {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-activity".
+ */
+export interface CustomerActivity {
+  id: number;
+  customer: number | Customer;
+  type: 'view' | 'choice' | 'add' | 'time';
+  product: number;
+  detail?: string | null;
+  seconds?: number | null;
+  device?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Logins, two-factor events and every change made by the team. Entries can’t be edited or deleted.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -681,6 +759,8 @@ export interface AuditLog {
     | 'password.reset'
     | '2fa.enabled'
     | 'recovery.script'
+    | 'customers.export'
+    | 'customers.forget'
     | 'create'
     | 'update'
     | 'delete';
@@ -843,7 +923,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'seo-refresh';
+        taskSlug: 'inline' | 'seo-refresh' | 'prune-activity';
         taskID: string;
         input?:
           | {
@@ -876,10 +956,19 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'seo-refresh') | null;
+  taskSlug?: ('inline' | 'seo-refresh' | 'prune-activity') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -893,6 +982,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
       } | null)
     | ({
         relationTo: 'products';
@@ -921,6 +1014,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'customer-activity';
+        value: number | CustomerActivity;
       } | null)
     | ({
         relationTo: 'audit-log';
@@ -986,6 +1083,7 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   locale?: T;
   note?: T;
+  customerRecord?: T;
   customer?:
     | T
     | {
@@ -1051,6 +1149,41 @@ export interface OrdersSelect<T extends boolean = true> {
         receivedAt?: T;
         completedAt?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  name?: T;
+  country?: T;
+  email?: T;
+  phone?: T;
+  phoneKey?: T;
+  orderCount?: T;
+  verifiedOrders?: T;
+  totalSpent?: T;
+  averageOrder?: T;
+  firstOrderAt?: T;
+  lastOrderAt?: T;
+  daysBetween?: T;
+  firstVerifiedAt?: T;
+  segment?: T;
+  favoriteCategory?: T;
+  note?: T;
+  tracking?:
+    | T
+    | {
+        consent?: T;
+        consentAt?: T;
+        source?: T;
+        version?: T;
+        withdrawnAt?: T;
+        epoch?: T;
+      };
+  orders?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1311,6 +1444,20 @@ export interface EventsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-activity_select".
+ */
+export interface CustomerActivitySelect<T extends boolean = true> {
+  customer?: T;
+  type?: T;
+  product?: T;
+  detail?: T;
+  seconds?: T;
+  device?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audit-log_select".
  */
 export interface AuditLogSelect<T extends boolean = true> {
@@ -1398,6 +1545,7 @@ export interface PayloadJobsSelect<T extends boolean = true> {
   queue?: T;
   waitUntil?: T;
   processing?: T;
+  meta?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1539,6 +1687,24 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -1626,6 +1792,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -1643,6 +1819,14 @@ export interface TaskSeoRefresh {
     collection: 'products' | 'categories' | 'pages';
     id: string;
   };
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPrune-activity".
+ */
+export interface TaskPruneActivity {
+  input?: unknown;
   output?: unknown;
 }
 /**

@@ -175,6 +175,11 @@ export default async function LocaleLayout({ children, params }: { children: Rea
                   <li>
                     <Link href={custom}>{t.customOrders}</Link>
                   </li>
+                  <li>
+                    <Link href={paths.yourData(locale)} prefetch={false}>
+                      {t.yourData}
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div>

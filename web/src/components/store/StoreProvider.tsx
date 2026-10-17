@@ -2,8 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 
+import { bagDetail } from '@/lib/activity'
 import { sameItem, type BagProduct, type CartItem } from '@/lib/cart'
 import { CURRENCY_COOKIE, isCurrency, type Currency, type Rates } from '@/lib/currency'
+import { noteActivity } from '@/lib/customerTrack'
 import type { Locale } from '@/lib/locales'
 import { ensureOrigin, track } from '@/lib/track'
 
@@ -186,6 +188,7 @@ export function StoreProvider({ locale, addedText, rates, children }: { locale: 
       const same = current.find((x) => sameItem(x, { ...item, qty: 0 }))
       save(same ? current.map((x) => (x === same ? { ...x, qty: x.qty + 1 } : x)) : [...current, { ...item, qty: 1 }])
       track('add', item.id)
+      noteActivity({ type: 'add', product: item.id, detail: bagDetail(item) })
       setBump((n) => n + 1)
       setToast({ text: addedText, key: Date.now(), visible: true })
       if (open) setDrawer('bag')

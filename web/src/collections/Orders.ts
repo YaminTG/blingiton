@@ -1,8 +1,10 @@
-import type { CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { admins, loggedIn } from '@/access'
 import { l } from '@/fields/label'
 import { later } from '@/hooks/revalidate'
+import { normalEmail, normalPhone } from '@/lib/customerStats'
+import { linkCustomer, refreshCustomers } from '@/lib/customers'
 import { sendOrderEmails } from '@/lib/orderEmails'
 import { FIRST_ORDER_NUMBER, orderStatuses, paymentMethods, type OrderStatus } from '@/lib/orderOptions'
 import type { Order } from '@/payload-types'
@@ -25,7 +27,26 @@ const orderBeforeChange: CollectionBeforeChangeHook<Order> = async ({ data, orig
   const number = data.number ?? originalDoc?.number
   const name = data.customer?.name ?? originalDoc?.customer?.name ?? ''
   data.title = `#${number} ${name}`.trim()
+
+  // The customer this order belongs to (src/lib/customers.ts): found by email or phone, created on
+  // first sight, and looked up again when staff change the email or phone.
+  const who = { ...originalDoc?.customer, ...data.customer, country: data.shipping?.country ?? originalDoc?.shipping?.country }
+  const same =
+    originalDoc?.customerRecord &&
+    normalEmail(who.email) === normalEmail(originalDoc.customer?.email) &&
+    normalPhone(who.phone) === normalPhone(originalDoc.customer?.phone)
+  if (!same) data.customerRecord = await linkCustomer(req, who)
   return data
+}
+
+/** Customer totals follow their orders: this one's customer, and the previous one if it moved. */
+const refreshTotals: CollectionAfterChangeHook<Order> = ({ doc, previousDoc, req, context }) => {
+  if (!context.orderEmails) later(() => refreshCustomers(req.payload, [doc.customerRecord, previousDoc?.customerRecord]))
+  return doc
+}
+const refreshAfterOrderDelete: CollectionAfterDeleteHook<Order> = ({ doc, req }) => {
+  later(() => refreshCustomers(req.payload, [doc.customerRecord]))
+  return doc
 }
 
 const orderAfterChange: CollectionAfterChangeHook<Order> = ({ doc, previousDoc, operation, context, req }) => {
@@ -51,7 +72,7 @@ export const Orders: CollectionConfig = {
   },
   defaultSort: '-createdAt',
   access: { read: loggedIn, create: loggedIn, update: loggedIn, delete: admins },
-  hooks: { beforeChange: [orderBeforeChange], afterChange: [orderAfterChange] },
+  hooks: { beforeChange: [orderBeforeChange], afterChange: [orderAfterChange, refreshTotals], afterDelete: [refreshAfterOrderDelete] },
   fields: [
     // "#20001 Sara Ahmad": the list's first column and the page title. Kept in step by the hook above.
     { name: 'title', type: 'text', label: l('Order', 'الطلب'), index: true, admin: { readOnly: true, condition: () => false } },
@@ -78,6 +99,14 @@ export const Orders: CollectionConfig = {
       admin: { position: 'sidebar', description: l('Emails go out in this language.', 'تُرسل الرسائل بهذه اللغة.') },
     },
     { name: 'note', type: 'textarea', label: l('Staff note', 'ملاحظة داخلية'), admin: { position: 'sidebar', description: l('Only the team sees this.', 'يراها الفريق فقط.') } },
+    {
+      name: 'customerRecord',
+      type: 'relationship',
+      relationTo: 'customers',
+      label: l('Customer record', 'سجل العميل'),
+      index: true,
+      admin: { position: 'sidebar', readOnly: true, description: l('Linked by email or phone when the order is saved.', 'يُربط بالبريد أو الهاتف عند حفظ الطلب.') },
+    },
     {
       type: 'row',
       fields: [

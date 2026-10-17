@@ -1,7 +1,8 @@
 import config from '@payload-config'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 
+import { deviceCookies, rememberDevice } from '@/lib/customers'
 import { OrderError, placeOrder } from '@/lib/orders'
 
 // A few orders per visitor in a short window is plenty; this keeps scripts from filling the order
@@ -34,8 +35,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const order = await placeOrder(await getPayload({ config }), body)
-    return Response.json(order, { headers })
+    const payload = await getPayload({ config })
+    const { customer, locale, ...order } = await placeOrder(payload, body)
+    const res = NextResponse.json(order, { headers })
+    // "Remember me on this device" (unticked by default): records the consent on the customer and
+    // gives this browser the signed device cookie. Browsing is only recorded once an order is
+    // completed (src/lib/activity.ts). Failing here never fails the order.
+    if ((body as { remember?: unknown }).remember === true && customer) {
+      try {
+        for (const c of deviceCookies(await rememberDevice(payload, customer, locale))) res.cookies.set(c)
+      } catch (err) {
+        console.error('[place-order] remember', err)
+      }
+    }
+    return res
   } catch (err) {
     if (err instanceof OrderError) return Response.json({ error: err.code }, { status: err.code === 'gone' ? 409 : 400, headers })
     console.error('[place-order]', err)
