@@ -351,7 +351,7 @@ html[lang="ar"] .sp-eyebrow { letter-spacing: 0; font-size: 16px; }
 html[lang="ar"] .sp-prize { line-height: 1.4; }
 .sp-claim { margin: 0; color: var(--ink); font-weight: 600; }
 .sp-time { margin: 8px 0 0; color: var(--ink-soft); font-size: 13px; }
-.sp-actions { margin-top: 18px; }
+.sp-actions { margin-top: 18px; display: grid; gap: 10px; }
 @keyframes spFade { from { opacity: 0; } }
 @keyframes spPop { from { opacity: 0; transform: translateY(40px) scale(.8); } }
 /* The floating WhatsApp button would sit on top of the spin button on phones. */

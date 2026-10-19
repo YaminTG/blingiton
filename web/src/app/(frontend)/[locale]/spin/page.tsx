@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { SpinWheel } from '@/components/spin/SpinWheel'
+import { getSettings } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
 import { isLocale } from '@/lib/locales'
 import { prizes } from '@/lib/spinPrizes'
@@ -20,5 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SpinPage({ params }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
-  return <SpinWheel locale={locale} t={dictionary(locale).spin} prizes={prizes} shopHref={paths.shop(locale)} />
+  const settings = await getSettings(locale)
+  return (
+    <SpinWheel
+      locale={locale}
+      t={dictionary(locale).spin}
+      prizes={prizes}
+      shopHref={paths.shop(locale)}
+      instagramHref={settings.social?.instagram || null}
+    />
+  )
 }

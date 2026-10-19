@@ -4,11 +4,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 
+import { Icon } from '@/components/Icon'
 import type { Dictionary } from '@/lib/dictionary'
 import type { Locale } from '@/lib/locales'
 import type { Prize } from '@/lib/spinPrizes'
 
-type Props = { locale: Locale; t: Dictionary['spin']; prizes: Prize[]; shopHref: string }
+type Props = { locale: Locale; t: Dictionary['spin']; prizes: Prize[]; shopHref: string; instagramHref: string | null }
 type Win = { id: string; at: number }
 
 // One spin per phone: the win is kept here and shown again on reload. `?reset` clears it (for testing).
@@ -30,6 +31,8 @@ const rad = (deg: number) => (deg * Math.PI) / 180
 // Angle clockwise from 12 o'clock → SVG point.
 const at = (r: number, deg: number) => `${(r * Math.sin(rad(deg))).toFixed(3)} ${(-r * Math.cos(rad(deg))).toFixed(3)}`
 const sizeFor = (text: string, sizes: [number, number, number]) => (text.length <= 4 ? sizes[0] : text.length <= 6 ? sizes[1] : sizes[2])
+// Which of the four fills slice i gets. With 5, 9, … slices the last would match the first, so it takes white.
+const fillOf = (i: number, n: number) => (i === n - 1 && i > 0 && i % 4 === 0 ? 1 : i % 4)
 
 function pick(prizes: Prize[]) {
   let r = Math.random() * prizes.reduce((sum, p) => sum + p.weight, 0)
@@ -134,7 +137,7 @@ function confetti(canvas: HTMLCanvasElement) {
   }
 }
 
-export function SpinWheel({ locale, t, prizes, shopHref }: Props) {
+export function SpinWheel({ locale, t, prizes, shopHref, instagramHref }: Props) {
   const n = prizes.length
   const slice = 360 / n
   const [spinning, setSpinning] = useState(false)
@@ -357,10 +360,11 @@ export function SpinWheel({ locale, t, prizes, shopHref }: Props) {
               {prizes.map((p, i) => {
                 const words = p[locale]
                 const mid = i * slice + slice / 2
+                const f = fillOf(i, n)
                 return (
                   <g key={p.id}>
-                    <path d={`M0 0 L${at(92, i * slice)} A92 92 0 0 1 ${at(92, (i + 1) * slice)} Z`} fill={FILLS[i % 4]} />
-                    <g transform={`rotate(${mid})`} fill={INKS[i % 4]} textAnchor="middle" fontWeight="800" className={i % 4 === 0 ? 'sp-on-glitter' : undefined}>
+                    <path d={`M0 0 L${at(92, i * slice)} A92 92 0 0 1 ${at(92, (i + 1) * slice)} Z`} fill={FILLS[f]} />
+                    <g transform={`rotate(${mid})`} fill={INKS[f]} textAnchor="middle" fontWeight="800" className={f === 0 ? 'sp-on-glitter' : undefined}>
                       <text y="-63" fontSize={sizeFor(words.big, [17, 12.5, 9.5])}>
                         {words.big}
                       </text>
@@ -425,6 +429,12 @@ export function SpinWheel({ locale, t, prizes, shopHref }: Props) {
                   <Link className="btn btn-primary btn-block" href={shopHref}>
                     {t.shop}
                   </Link>
+                  {instagramHref ? (
+                    <a className="btn btn-outline btn-block" href={instagramHref} target="_blank" rel="noopener">
+                      <Icon name="instagram" />
+                      {t.instagram}
+                    </a>
+                  ) : null}
                 </div>
               </>
             ) : null}
