@@ -2,7 +2,7 @@ import { createHash } from 'crypto'
 import { readFile } from 'fs/promises'
 import { ValidationError, type CollectionBeforeChangeHook, type CollectionBeforeValidateHook, type CollectionConfig } from 'payload'
 
-import { anyone, loggedIn } from '@/access'
+import { anyone, may } from '@/access'
 import { l } from '@/fields/label'
 import { aiField } from '@/fields/seo'
 import { refreshAfterChange } from '@/hooks/lifecycle'
@@ -48,9 +48,9 @@ export const Media: CollectionConfig = {
   labels: { singular: l('Photo', 'صورة'), plural: l('Photos', 'الصور') },
   access: {
     read: anyone,
-    create: loggedIn,
-    update: loggedIn,
-    delete: loggedIn,
+    create: may('catalog'),
+    update: may('catalog'),
+    delete: may('catalog'),
   },
   admin: {
     useAsTitle: 'filename',

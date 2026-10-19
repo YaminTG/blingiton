@@ -31,7 +31,7 @@ type Form = {
   remember: boolean
 }
 type Field = 'name' | 'phone' | 'email' | 'city' | 'address' | 'giftMessage'
-type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string }
+type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string; track: string | null }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
@@ -130,7 +130,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           remember: f.remember,
         }),
       })
-      const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; error?: string }
+      const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; track?: string; error?: string }
       if (!res.ok || !result.number) {
         setFailure(result.error === 'gone' ? c.goneErr : c.placeErr)
         setTimeout(() => errRef.current?.focus(), 0)
@@ -146,6 +146,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
         item: first?.it ?? null,
         product: first?.p ?? null,
         wa: `https://wa.me/${whatsapp}?text=${encodeURIComponent(c.waAbout(no))}`,
+        track: typeof result.track === 'string' && result.track.startsWith('/') ? result.track : null,
       })
       clear()
     } catch {
@@ -205,7 +206,12 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
         </h1>
         <div className="rope" aria-hidden="true" />
         <p>{done.abroad ? c.thanksIntl(done.no, done.email) : c.thanksP(done.no, done.email)}</p>
-        <a className="btn btn-primary" href={done.wa} target="_blank" rel="noopener">
+        {done.track ? (
+          <Link className="btn btn-primary" href={done.track}>
+            {t.os.trackThanks}
+          </Link>
+        ) : null}
+        <a className={`btn ${done.track ? 'btn-outline' : 'btn-primary'}`} href={done.wa} target="_blank" rel="noopener">
           <Icon name="whatsapp" />
           <span>{c.openAgain}</span>
         </a>

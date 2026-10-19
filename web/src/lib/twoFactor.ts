@@ -1,8 +1,17 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto'
 import { jwtVerify } from 'jose'
-import type { CollectionAfterLoginHook, CollectionAfterLogoutHook, CollectionBeforeDeleteHook, Endpoint, Payload, PayloadRequest } from 'payload'
+import type {
+  CollectionAfterLoginHook,
+  CollectionAfterLogoutHook,
+  CollectionBeforeChangeHook,
+  CollectionBeforeDeleteHook,
+  Endpoint,
+  Payload,
+  PayloadRequest,
+} from 'payload'
 import { generateExpiredPayloadCookie, parseCookies } from 'payload/shared'
 
+import { later } from '@/hooks/revalidate'
 import type { TwoFactor, User } from '@/payload-types'
 
 import { audit, auditLater, whoAndWhere } from './audit'
@@ -23,13 +32,21 @@ import { checkCode, hashRecovery, looksLikeRecovery, newRecoveryCodes, newSecret
  * An account without two-factor yet is shown a QR code to set it up on its next login, and gets
  * ten one-time recovery codes. A recovery code logs in without the phone and goes straight to
  * setting up a new one. `scripts/admin-recovery.ts` resets an account from the server.
+ *
+ * "Trust this browser" on the code step sets an httpOnly cookie with a random token (only its hash
+ * is stored, in `trusted`). For 30 days a login from that browser needs only the password. Password
+ * resets always ask for the code. A recovery code, a password change, a password reset, or the
+ * recovery script forgets every trusted browser of the account.
  */
 
 const MAX_TRIES_PER_LOGIN = 5
 const MAX_FAILURES_PER_HOUR = 10
 const HOUR = 60 * 60 * 1000
+const TRUST_DAYS = 30
+const MAX_TRUSTED = 10
 
 type Pending = { sid: string; createdAt: string; expiresAt: string; ip: string; attempts: number; recovered?: boolean }
+type Trusted = { hash: string; createdAt: string; expiresAt: string; lastUsedAt?: string; ip: string; agent?: string }
 type Session = { id: string; createdAt?: string | Date | null; expiresAt: string | Date }
 
 // --- Secrets at rest: AES-256-GCM with a key derived from PAYLOAD_SECRET ----------------------
@@ -58,6 +75,9 @@ const live = (list: unknown): Pending[] =>
 
 const recentFailures = (list: unknown) => (Array.isArray(list) ? (list as number[]) : []).filter((t) => typeof t === 'number' && Date.now() - t < HOUR)
 
+const liveTrusted = (list: unknown): Trusted[] =>
+  (Array.isArray(list) ? (list as Trusted[]) : []).filter((d) => d && typeof d.hash === 'string' && new Date(d.expiresAt).getTime() > Date.now())
+
 export async function recordFor(payload: Payload, userId: number, req?: PayloadRequest): Promise<TwoFactor | null> {
   const found = await payload.find({ collection: 'two-factor', where: { user: { equals: userId } }, limit: 1, depth: 0, pagination: false, req })
   return found.docs[0] ?? null
@@ -76,6 +96,47 @@ const setSessions = (payload: Payload, id: number, sessions: Session[], req?: Pa
 
 export const hasTwoFactor = (rec: TwoFactor | null) => Boolean(rec?.secret && rec.enabledAt)
 
+// --- Trusted browsers -------------------------------------------------------------------------
+
+// One cookie per account, sent only to the users API (login and reset-password live there).
+const trustCookieName = (payload: Payload, userId: number) => `${payload.config.cookiePrefix}-trust-${userId}`
+const trustCookiePath = (payload: Payload) => `${payload.config.routes.api}/users`
+const hashToken = (token: string) => createHash('sha256').update(token).digest('base64url')
+
+function trustCookie(payload: Payload, userId: number, token: string) {
+  const secure = payload.collections.users.config.auth.cookies?.secure || process.env.NODE_ENV === 'production'
+  return [
+    `${trustCookieName(payload, userId)}=${token}`,
+    `Path=${trustCookiePath(payload)}`,
+    `Max-Age=${TRUST_DAYS * 24 * 60 * 60}`,
+    'HttpOnly',
+    'SameSite=Lax',
+    ...(secure ? ['Secure'] : []),
+  ].join('; ')
+}
+
+/** This browser's trusted entry for the account, if its cookie matches one that hasn't expired. */
+function trustedBrowser(req: PayloadRequest, userId: number, rec: TwoFactor | null) {
+  const token = parseCookies(req.headers).get(trustCookieName(req.payload, userId))
+  if (!token) return null
+  const hash = hashToken(token)
+  return liveTrusted(rec?.trusted).find((d) => d.hash === hash) ?? null
+}
+
+/** Forgets every trusted browser of the account, so the next login from each asks for a code. */
+export async function forgetTrusted(payload: Payload, userId: number, req?: PayloadRequest) {
+  const rec = await recordFor(payload, userId, req)
+  if (rec && liveTrusted(rec.trusted).length) await saveRecord(payload, userId, rec, { trusted: [] }, req)
+}
+
+/** A new password (from the account page or an admin) means old trusted browsers ask for a code again. */
+export const forgetTrustedOnPasswordChange: CollectionBeforeChangeHook = async ({ data, operation, originalDoc, req }) => {
+  if (operation === 'update' && typeof data?.password === 'string' && data.password && originalDoc?.id) {
+    await forgetTrusted(req.payload, originalDoc.id, req)
+  }
+  return data
+}
+
 // --- Login: park the new session --------------------------------------------------------------
 
 export const holdForTwoFactor: CollectionAfterLoginHook = async ({ user, req }) => {
@@ -85,12 +146,30 @@ export const holdForTwoFactor: CollectionAfterLoginHook = async ({ user, req }) 
   const session = sessions.at(-1)
   if (!session?.id) throw new Error('Two-factor login needs Payload sessions (auth.useSessions).')
 
+  const rec = await recordFor(req.payload, user.id, req)
+  const place = placeOf(req.headers)
+  const viaReset = /reset-password/.test(new URL(req.url ?? '/', 'http://localhost').pathname)
+
+  // A trusted browser keeps its session: the password was enough.
+  const trusted = !viaReset && hasTwoFactor(rec) ? trustedBrowser(req, user.id, rec) : null
+  if (trusted) {
+    const now = new Date().toISOString()
+    const list = liveTrusted(rec?.trusted).map((d) => (d.hash === trusted.hash ? { ...d, lastUsedAt: now, ip: place.ip } : d))
+    await saveRecord(req.payload, user.id, rec, { trusted: list }, req)
+    auditLater(req.payload, {
+      action: 'login.success',
+      summary: `${user.email} logged in from a trusted browser (no code needed, trusted since ${trusted.createdAt.slice(0, 10)})`,
+      ...whoAndWhere(req, user),
+    })
+    // After the login's own transaction, which holds the user row.
+    later(() => noteLoginPlace(req.payload, user, place))
+    return user
+  }
+
   const rest = sessions.filter((s) => s.id !== session.id)
   await setSessions(req.payload, user.id, rest, req)
   user.sessions = rest
 
-  const rec = await recordFor(req.payload, user.id, req)
-  const place = placeOf(req.headers)
   const entry: Pending = {
     sid: session.id,
     createdAt: new Date().toISOString(),
@@ -100,9 +179,9 @@ export const holdForTwoFactor: CollectionAfterLoginHook = async ({ user, req }) 
   }
   const data: Partial<TwoFactor> = { pending: [...live(rec?.pending), entry].slice(-5) }
   if (!hasTwoFactor(rec) && !rec?.setupSecret) data.setupSecret = seal(newSecret())
+  if (viaReset) data.trusted = []
   await saveRecord(req.payload, user.id, rec, data, req)
 
-  const viaReset = /reset-password/.test(new URL(req.url ?? '/', 'http://localhost').pathname)
   auditLater(req.payload, {
     action: viaReset ? 'password.reset' : 'login.password-ok',
     summary: `${user.email}: ${viaReset ? 'password reset, waiting for two-factor code' : 'password accepted, waiting for two-factor code'}${hasTwoFactor(rec) ? '' : ' (setup)'}`,
@@ -162,7 +241,8 @@ export type VerifyResult =
   | { setup: true }
   | { error: 'expired' | 'restart' | 'blocked' | 'wrong'; left?: number }
 
-export async function verifyCode(payload: Payload, req: PayloadRequest, code: string): Promise<VerifyResult> {
+/** `setCookie` (when the browser asked to be trusted) goes into the response header, never the reply body. */
+export async function verifyCode(payload: Payload, req: PayloadRequest, code: string, trust = false): Promise<VerifyResult & { setCookie?: string }> {
   const login = await readPending(payload, req.headers)
   if (!login) return { error: 'expired' }
   const { user, rec, pending, needsSetup } = login
@@ -193,6 +273,8 @@ export async function verifyCode(payload: Payload, req: PayloadRequest, code: st
         recoveryCodes: hashes.filter((x) => x !== h),
         setupSecret: seal(newSecret()),
         pending: [...others, { ...pending, recovered: true, attempts: 0 }],
+        // The lost phone may have gone with a trusted laptop.
+        trusted: [],
       })
       await audit(payload, { action: 'login.recovery-code', summary: `${user.email} used a recovery code (${hashes.length - 1} left) and is setting up a new authenticator app`, ...who })
       await securityAlert(payload, 'recovery-used', place, user.email, [`Recovery codes left: ${hashes.length - 1}`])
@@ -223,15 +305,27 @@ export async function verifyCode(payload: Payload, req: PayloadRequest, code: st
   const fresh = await rawUser(payload, user.id)
   const sessions = (fresh?.sessions ?? []).filter((s) => new Date(s.expiresAt).getTime() > now)
   await setSessions(payload, user.id, [...sessions, { id: pending.sid, createdAt: pending.createdAt, expiresAt: pending.expiresAt }])
+  let trustToken: string | undefined
+  if (trust) {
+    trustToken = randomBytes(32).toString('base64url')
+    const device: Trusted = {
+      hash: hashToken(trustToken),
+      createdAt: new Date(now).toISOString(),
+      expiresAt: new Date(now + TRUST_DAYS * 24 * HOUR).toISOString(),
+      ip: place.ip,
+      agent: req.headers.get('user-agent')?.slice(0, 200) ?? undefined,
+    }
+    data.trusted = [...liveTrusted(rec.trusted), device].slice(-MAX_TRUSTED)
+  }
   await saveRecord(payload, user.id, rec, { ...data, lastStep: step, pending: others, failures: [] })
 
   if (freshCodes) {
     await audit(payload, { action: '2fa.enabled', summary: `${user.email} set up two-factor login${pending.recovered ? ' on a new phone (after a recovery code)' : ''}`, ...who })
     await securityAlert(payload, '2fa-enabled', place, user.email)
   }
-  await audit(payload, { action: 'login.success', summary: `${user.email} logged in`, ...who })
+  await audit(payload, { action: 'login.success', summary: `${user.email} logged in${trust ? ` and trusted this browser for ${TRUST_DAYS} days` : ''}`, ...who })
   await noteLoginPlace(payload, user, place)
-  return { ok: true, ...(freshCodes ? { recoveryCodes: freshCodes } : {}) }
+  return { ok: true, ...(freshCodes ? { recoveryCodes: freshCodes } : {}), ...(trustToken ? { setCookie: trustCookie(payload, user.id, trustToken) } : {}) }
 }
 
 export async function cancelPending(payload: Payload, req: PayloadRequest) {
@@ -241,12 +335,12 @@ export async function cancelPending(payload: Payload, req: PayloadRequest) {
   await audit(payload, { action: 'login.cancelled', summary: `${login.user.email}: login cancelled at the two-factor step`, ...whoAndWhere(req, login.user) })
 }
 
-/** POST /api/users/two-factor  { action: 'verify', code } | { action: 'cancel' } */
+/** POST /api/users/two-factor  { action: 'verify', code, trust? } | { action: 'cancel' } */
 export const twoFactorEndpoint: Endpoint = {
   path: '/two-factor',
   method: 'post',
   handler: async (req) => {
-    const body = (await req.json?.().catch(() => null)) as { action?: string; code?: string } | null
+    const body = (await req.json?.().catch(() => null)) as { action?: string; code?: string; trust?: boolean } | null
     if (body?.action === 'cancel') {
       await cancelPending(req.payload, req)
       const cookie = generateExpiredPayloadCookie({
@@ -257,9 +351,11 @@ export const twoFactorEndpoint: Endpoint = {
     }
     const code = typeof body?.code === 'string' ? body.code.slice(0, 32) : ''
     if (!code.trim()) return Response.json({ error: 'wrong' }, { status: 400 })
-    const result = await verifyCode(req.payload, req, code)
+    const { setCookie, ...result } = await verifyCode(req.payload, req, code, body?.trust === true)
     const status = 'error' in result ? (result.error === 'wrong' ? 400 : result.error === 'blocked' ? 429 : 401) : 200
-    return Response.json(result, { status, headers: { 'Cache-Control': 'no-store' } })
+    const headers = new Headers({ 'Cache-Control': 'no-store' })
+    if (setCookie) headers.append('Set-Cookie', setCookie)
+    return Response.json(result, { status, headers })
   },
 }
 

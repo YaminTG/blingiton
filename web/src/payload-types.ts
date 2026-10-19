@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     orders: Order;
+    'order-cases': OrderCase;
     customers: Customer;
     products: Product;
     categories: Category;
@@ -87,6 +88,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    orders: {
+      cases: 'order-cases';
+    };
     customers: {
       orders: 'orders';
     };
@@ -96,6 +100,7 @@ export interface Config {
   };
   collectionsSelect: {
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    'order-cases': OrderCasesSelect<false> | OrderCasesSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
@@ -120,10 +125,12 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'ar') | ('en' | 'ar')[];
   globals: {
     'site-settings': SiteSetting;
+    'security-state': SecurityState;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'security-state': SecurityStateSelect<false> | SecurityStateSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'en' | 'ar';
@@ -135,6 +142,9 @@ export interface Config {
     tasks: {
       'seo-refresh': TaskSeoRefresh;
       'prune-activity': TaskPruneActivity;
+      'stuck-orders': TaskStuckOrders;
+      backup: TaskBackup;
+      'restore-test': TaskRestoreTest;
       inline: {
         input: unknown;
         output: unknown;
@@ -170,6 +180,32 @@ export interface Order {
   title?: string | null;
   number?: number | null;
   status: 'pending' | 'processing' | 'on-hold' | 'completed' | 'cancelled' | 'refunded' | 'failed';
+  /**
+   * Where the order is now. Shipped or delivered marks it Completed. Customers are emailed per Site settings → Orders & alerts.
+   */
+  stage?: ('paid' | 'preparing' | 'packed' | 'shipped' | 'delivered') | null;
+  /**
+   * Shown to the customer in the “shipped” email and on their order page.
+   */
+  tracking?: {
+    carrier?: ('own' | 'courier' | 'dhl' | 'post' | 'pickup') | null;
+    number?: string | null;
+    /**
+     * Not needed for DHL: the number is enough.
+     */
+    url?: string | null;
+  };
+  stageSince?: string | null;
+  stuckAt?: string | null;
+  stuckAlertedAt?: string | null;
+  stageHistory?:
+    | {
+        step: string;
+        at: string;
+        by?: (number | null) | User;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Emails go out in this language.
    */
@@ -242,12 +278,61 @@ export interface Order {
     landingPage?: string | null;
     referrer?: string | null;
   };
+  cases?: {
+    docs?: (number | OrderCase)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   emails?: {
     receivedAt?: string | null;
+    preparingAt?: string | null;
+    packedAt?: string | null;
     completedAt?: string | null;
+    deliveredAt?: string | null;
   };
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name: string;
+  role: 'admin' | 'staff';
+  /**
+   * Staff only: admins can do everything, and only admins manage the team, the audit log and the security page.
+   */
+  permissions?: ('orders' | 'catalog' | 'customers' | 'settings')[] | null;
+  loginPlaces?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * Everyone who has ordered, filled in from their orders. Filter by country, segment or spending; open a customer for their orders and insights.
@@ -599,6 +684,62 @@ export interface Product {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Every cancellation, return, exchange and refund, with the reason, so you can see what goes wrong and how often. Add one from the order too.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-cases".
+ */
+export interface OrderCase {
+  id: number;
+  title?: string | null;
+  order: number | Order;
+  type: 'cancellation' | 'return' | 'exchange' | 'refund';
+  caseStatus: 'open' | 'waiting' | 'done' | 'declined';
+  reason:
+    | 'wrong-item'
+    | 'damaged'
+    | 'size'
+    | 'late'
+    | 'not-as-pictured'
+    | 'changed-mind'
+    | 'unreachable'
+    | 'duplicate'
+    | 'other';
+  /**
+   * So mistakes that are ours can be counted and fixed.
+   */
+  fault?: ('shop' | 'courier' | 'customer' | 'none') | null;
+  /**
+   * Leave empty when it’s the whole order.
+   */
+  items?:
+    | {
+        name: string;
+        quantity?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The new piece, size or name. Make a new order if it costs more.
+   */
+  exchangeFor?: string | null;
+  refundAmount?: number | null;
+  refundMethod?: ('cash' | 'card' | 'cliq' | 'bank' | 'credit') | null;
+  refundedAt?: string | null;
+  /**
+   * Only the team sees this.
+   */
+  note?: string | null;
+  customer?: (number | null) | Customer;
+  openedBy?: (number | null) | User;
+  /**
+   * Marking a cancellation “Done” cancels the order; a refund of the full total marks it refunded.
+   */
+  closedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Customers review their order from the link in the "on its way" email. New reviews wait here until you tick Approved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -670,43 +811,6 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name: string;
-  role: 'admin' | 'staff';
-  loginPlaces?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
 export interface Event {
@@ -757,10 +861,16 @@ export interface AuditLog {
     | 'logout'
     | 'password.reset-requested'
     | 'password.reset'
+    | 'login.new-place'
     | '2fa.enabled'
     | 'recovery.script'
     | 'customers.export'
     | 'customers.forget'
+    | 'activity.burst'
+    | 'security.reviewed'
+    | 'backup.ok'
+    | 'backup.failed'
+    | 'backup.restore-test'
     | 'create'
     | 'update'
     | 'delete';
@@ -815,6 +925,15 @@ export interface TwoFactor {
     | boolean
     | null;
   failures?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  trusted?:
     | {
         [k: string]: unknown;
       }
@@ -923,7 +1042,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'seo-refresh' | 'prune-activity';
+        taskSlug: 'inline' | 'seo-refresh' | 'prune-activity' | 'stuck-orders' | 'backup' | 'restore-test';
         taskID: string;
         input?:
           | {
@@ -956,7 +1075,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'seo-refresh' | 'prune-activity') | null;
+  taskSlug?: ('inline' | 'seo-refresh' | 'prune-activity' | 'stuck-orders' | 'backup' | 'restore-test') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -982,6 +1101,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'order-cases';
+        value: number | OrderCase;
       } | null)
     | ({
         relationTo: 'customers';
@@ -1081,6 +1204,25 @@ export interface OrdersSelect<T extends boolean = true> {
   title?: T;
   number?: T;
   status?: T;
+  stage?: T;
+  tracking?:
+    | T
+    | {
+        carrier?: T;
+        number?: T;
+        url?: T;
+      };
+  stageSince?: T;
+  stuckAt?: T;
+  stuckAlertedAt?: T;
+  stageHistory?:
+    | T
+    | {
+        step?: T;
+        at?: T;
+        by?: T;
+        id?: T;
+      };
   locale?: T;
   note?: T;
   customerRecord?: T;
@@ -1143,12 +1285,45 @@ export interface OrdersSelect<T extends boolean = true> {
         landingPage?: T;
         referrer?: T;
       };
+  cases?: T;
   emails?:
     | T
     | {
         receivedAt?: T;
+        preparingAt?: T;
+        packedAt?: T;
         completedAt?: T;
+        deliveredAt?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-cases_select".
+ */
+export interface OrderCasesSelect<T extends boolean = true> {
+  title?: T;
+  order?: T;
+  type?: T;
+  caseStatus?: T;
+  reason?: T;
+  fault?: T;
+  items?:
+    | T
+    | {
+        name?: T;
+        quantity?: T;
+        id?: T;
+      };
+  exchangeFor?: T;
+  refundAmount?: T;
+  refundMethod?: T;
+  refundedAt?: T;
+  note?: T;
+  customer?: T;
+  openedBy?: T;
+  closedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1408,6 +1583,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  permissions?: T;
   loginPlaces?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1489,6 +1665,7 @@ export interface TwoFactorSelect<T extends boolean = true> {
   setupSecret?: T;
   pending?: T;
   failures?: T;
+  trusted?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1664,6 +1841,36 @@ export interface SiteSetting {
     returnDays?: number | null;
     personalisedReturns?: boolean | null;
   };
+  orderFlow?: {
+    /**
+     * 24 = one day, 120 = five days. 0 = never alert for that stage.
+     */
+    limits?: {
+      paid?: number | null;
+      preparing?: number | null;
+      packed?: number | null;
+      shippedLocal?: number | null;
+      shippedDhl?: number | null;
+      shippedStandard?: number | null;
+    };
+    /**
+     * Separate addresses with commas. Empty = the shop email on the Business tab.
+     */
+    alertEmails?: string | null;
+    /**
+     * While an order stays stuck.
+     */
+    remindHours?: number | null;
+    /**
+     * The “we’ve got your order” email always goes out. Each email is sent once per order, with a link to a page showing where the order is.
+     */
+    notify?: {
+      preparing?: boolean | null;
+      packed?: boolean | null;
+      shipped?: boolean | null;
+      delivered?: boolean | null;
+    };
+  };
   seoWriting?: {
     /**
      * One per line, e.g. “silver name necklace Jordan”.
@@ -1682,6 +1889,35 @@ export interface SiteSetting {
      */
     avoid?: string | null;
   };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-state".
+ */
+export interface SecurityState {
+  id: number;
+  reviewedUntil?: string | null;
+  reviewedBy?: string | null;
+  backups?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  restoreTests?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1778,6 +2014,30 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         returnDays?: T;
         personalisedReturns?: T;
       };
+  orderFlow?:
+    | T
+    | {
+        limits?:
+          | T
+          | {
+              paid?: T;
+              preparing?: T;
+              packed?: T;
+              shippedLocal?: T;
+              shippedDhl?: T;
+              shippedStandard?: T;
+            };
+        alertEmails?: T;
+        remindHours?: T;
+        notify?:
+          | T
+          | {
+              preparing?: T;
+              packed?: T;
+              shipped?: T;
+              delivered?: T;
+            };
+      };
   seoWriting?:
     | T
     | {
@@ -1786,6 +2046,19 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         voice?: T;
         avoid?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-state_select".
+ */
+export interface SecurityStateSelect<T extends boolean = true> {
+  reviewedUntil?: T;
+  reviewedBy?: T;
+  backups?: T;
+  restoreTests?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1826,6 +2099,30 @@ export interface TaskSeoRefresh {
  * via the `definition` "TaskPrune-activity".
  */
 export interface TaskPruneActivity {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskStuck-orders".
+ */
+export interface TaskStuckOrders {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskBackup".
+ */
+export interface TaskBackup {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskRestore-test".
+ */
+export interface TaskRestoreTest {
   input?: unknown;
   output?: unknown;
 }

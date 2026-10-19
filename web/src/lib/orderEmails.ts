@@ -5,25 +5,34 @@ import type { Order, SiteSetting } from '@/payload-types'
 import { dictionary } from './dictionary'
 import type { Locale } from './locales'
 import { paymentMethods } from './orderOptions'
+import { carrierLink, trackLink } from './orderTrack'
 import { reviewLink } from './reviewCheck'
 import { serverUrl } from './site'
 import { money } from './urls'
 
-type Kind = 'received' | 'completed'
+/** "received" when the order comes in; the rest follow the order's stage (orderStages.ts). */
+export type Kind = 'received' | 'preparing' | 'packed' | 'shipped' | 'delivered'
+
+/** Where each email's "sent" time is kept. The shipped email kept WooCommerce's "completed" name. */
+const SENT = { received: 'receivedAt', preparing: 'preparingAt', packed: 'packedAt', shipped: 'completedAt', delivered: 'deliveredAt' } as const
 
 const esc = (s: string | null | undefined) => (s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!)
 
+/** Whether the shop wants customers emailed at this stage (Site settings → Orders & alerts). */
+const wanted = (settings: SiteSetting, kind: Kind) => kind === 'received' || settings.orderFlow?.notify?.[kind] !== false
+
 /**
- * The customer's email when an order comes in or is completed, plus a "new order" note to the shop
- * (Site settings → email). Each email goes out once per order; `emails.*At` records it.
- * Without SMTP settings, Payload prints the emails to the server log instead of sending them.
+ * The customer's email when an order comes in and as it moves through the stages the shop chose,
+ * plus a "new order" note to the shop (Site settings → email). Each email goes out once per order;
+ * `emails.*At` records it. Without SMTP settings, Payload prints the emails to the server log.
  */
 export async function sendOrderEmails(payload: Payload, id: number, kind: Kind) {
   const order = await payload.findByID({ collection: 'orders', id, depth: 0 })
-  const field = kind === 'received' ? 'receivedAt' : 'completedAt'
+  const field = SENT[kind]
   if (order.emails?.[field]) return
   const locale: Locale = order.locale === 'ar' ? 'ar' : 'en'
   const settings = await payload.findGlobal({ slug: 'site-settings', locale, depth: 0 })
+  if (!wanted(settings, kind)) return
   const shopEmail = settings.email || undefined
 
   const sends: Promise<unknown>[] = []
@@ -60,15 +69,28 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
   const no = `#${order.number}`
   const first = order.customer.name.split(/\s+/)[0]
   const abroad = order.payment.method === 'whatsapp'
-  const subject = kind === 'received' ? m.receivedSubject(no) : m.completedSubject(no)
-  const heading = kind === 'received' ? m.receivedHeading(first) : m.completedHeading(first)
-  const intro = kind === 'completed' ? m.completedIntro : abroad ? m.receivedIntl : m.receivedIntro
+  const words = {
+    received: [m.receivedSubject(no), m.receivedHeading(first), abroad ? m.receivedIntl : m.receivedIntro],
+    preparing: [m.preparingSubject(no), m.preparingHeading(first), m.preparingIntro],
+    packed: [m.packedSubject(no), m.packedHeading(first), m.packedIntro],
+    shipped: [m.completedSubject(no), m.completedHeading(first), m.completedIntro],
+    delivered: [m.deliveredSubject(no), m.deliveredHeading(first), m.deliveredIntro],
+  }
+  const [subject, heading, intro] = words[kind]
+  // The full receipt goes with the first email and the "on its way" one; the others stay short.
+  const receipt = kind === 'received' || kind === 'shipped'
   const payLabel = paymentMethods.find((p) => p.value === order.payment.method)?.label[locale] ?? ''
   const methodLabel = methodName(order, locale)
   const gift = order.giftCardFee || order.giftMessage ? `${t.co.giftLine}${order.giftMessage ? `: “${order.giftMessage}”` : ''}` : null
   const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(t.co.waAbout(no))}` : null
   const font = ar ? "Tahoma, 'Segoe UI', Arial, sans-serif" : "'Helvetica Neue', Arial, sans-serif"
-  const review = kind === 'completed' ? reviewLink(locale, order.id) : null
+  // The review ask comes with the "delivered" email, or with "on its way" when the shop doesn't send that one.
+  const askReview = kind === 'delivered' || (kind === 'shipped' && !wanted(settings, 'delivered'))
+  const review = askReview ? reviewLink(locale, order.id) : null
+  const reviewAsk = kind === 'delivered' ? m.reviewAskDelivered : m.reviewAsk
+  const track = trackLink(locale, order.id)
+  const trackingNo = kind === 'shipped' ? order.tracking?.number?.trim() || null : null
+  const parcel = kind === 'shipped' ? order.tracking?.url?.trim() || carrierLink(order.tracking?.carrier, order.tracking?.number) : null
 
   const itemsHtml = (order.items ?? [])
     .map((it) => {
@@ -97,8 +119,12 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
     <h1 style="margin:0 0 10px;font-size:24px;line-height:1.3;color:${INK}">${esc(heading)}</h1>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:${INK}">${esc(intro)}</p>
     <p style="margin:0;font-size:14px;font-weight:800;color:${PINK}">${esc(m.order(no))}</p>
+    ${trackingNo ? `<p style="margin:6px 0 0;font-size:14px;color:${INK}"><span dir="ltr">${esc(m.trackingNo(trackingNo))}</span>${parcel ? ` · <a href="${esc(parcel)}" style="color:${PINK};font-weight:700">${esc(m.trackParcel)}</a>` : ''}</p>` : ''}
+    <p style="margin:16px 0 4px"><a href="${esc(track)}" style="display:inline-block;padding:11px 20px;border-radius:999px;border:2px solid ${PINK};color:${PINK};font-weight:800;text-decoration:none">${esc(m.trackBtn)}</a></p>
   </td></tr>
-  <tr><td style="padding:4px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px">${itemsHtml}</table></td></tr>
+  ${
+    receipt
+      ? `<tr><td style="padding:4px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px">${itemsHtml}</table></td></tr>
   <tr><td style="padding:12px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px">
     ${row(t.subtotal, money(order.subtotal ?? 0, locale))}
     ${row(`${t.co.delivery} (${methodLabel})`, money(order.deliveryFee ?? 0, locale))}
@@ -111,13 +137,15 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
       <div style="font-weight:800;margin-bottom:4px">${esc(m.deliverTo)}</div>
       ${esc(order.customer.name)}<br>${esc(order.shipping.address)}<br>${esc(order.shipping.city)}${order.shipping.country ? `, ${esc(order.shipping.country)}` : ''}<br><span dir="ltr">${esc(order.customer.phone)}</span>
     </div>
-  </td></tr>
+  </td></tr>`
+      : ''
+  }
   ${
     review
       ? `<tr><td style="padding:22px 28px 0">
     <div style="padding:18px;border-radius:12px;border:2px solid #f3d9e1;text-align:center">
       <div style="font-size:22px;letter-spacing:4px;color:${PINK}">★★★★★</div>
-      <p style="margin:8px 0 14px;font-size:15px;line-height:1.6;color:${INK}">${esc(m.reviewAsk)}</p>
+      <p style="margin:8px 0 14px;font-size:15px;line-height:1.6;color:${INK}">${esc(reviewAsk)}</p>
       <a href="${esc(review)}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:${INK};color:#ffffff;font-weight:800;text-decoration:none">${esc(m.reviewBtn)}</a>
     </div>
   </td></tr>`
@@ -138,20 +166,27 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
     intro,
     '',
     m.order(no),
-    ...(order.items ?? []).flatMap((it) => [
-      `${it.quantity} × ${it.name} · ${money(it.lineTotal ?? 0, locale)}`,
-      ...(it.details ?? []).map((d) => `   ${d.label ? `${d.label}: ` : ''}${d.value}`),
-    ]),
+    ...(trackingNo ? [m.trackingNo(trackingNo), ...(parcel ? [`${m.trackParcel}: ${parcel}`] : [])] : []),
+    `${m.trackBtn}: ${track}`,
     '',
-    `${t.subtotal}: ${money(order.subtotal ?? 0, locale)}`,
-    `${t.co.delivery} (${methodLabel}): ${money(order.deliveryFee ?? 0, locale)}`,
-    ...(gift ? [`${gift}: ${money(order.giftCardFee ?? 0, locale)}`] : []),
-    `${t.co.total}: ${money(order.total ?? 0, locale)}`,
-    `${t.co.payment}: ${payLabel}`,
-    '',
-    `${m.deliverTo}: ${order.customer.name}, ${order.shipping.address}, ${order.shipping.city}${order.shipping.country ? `, ${order.shipping.country}` : ''}`,
-    '',
-    ...(review ? [m.reviewAsk, `${m.reviewBtn}: ${review}`, ''] : []),
+    ...(receipt
+      ? [
+          ...(order.items ?? []).flatMap((it) => [
+            `${it.quantity} × ${it.name} · ${money(it.lineTotal ?? 0, locale)}`,
+            ...(it.details ?? []).map((d) => `   ${d.label ? `${d.label}: ` : ''}${d.value}`),
+          ]),
+          '',
+          `${t.subtotal}: ${money(order.subtotal ?? 0, locale)}`,
+          `${t.co.delivery} (${methodLabel}): ${money(order.deliveryFee ?? 0, locale)}`,
+          ...(gift ? [`${gift}: ${money(order.giftCardFee ?? 0, locale)}`] : []),
+          `${t.co.total}: ${money(order.total ?? 0, locale)}`,
+          `${t.co.payment}: ${payLabel}`,
+          '',
+          `${m.deliverTo}: ${order.customer.name}, ${order.shipping.address}, ${order.shipping.city}${order.shipping.country ? `, ${order.shipping.country}` : ''}`,
+          '',
+        ]
+      : []),
+    ...(review ? [reviewAsk, `${m.reviewBtn}: ${review}`, ''] : []),
     m.questions,
     wa ?? '',
   ].join('\n')

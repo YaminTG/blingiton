@@ -51,3 +51,7 @@ node_modules/
 
 # importer output
 /scripts/output
+
+# Local database backups (scripts/backup.ts without a bucket) and decrypted dumps
+/backups/
+*.dump

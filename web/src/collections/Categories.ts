@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, loggedIn } from '@/access'
+import { anyone, may } from '@/access'
 import { l } from '@/fields/label'
 import { aiField, legacyField, seoStatusField, seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
@@ -22,9 +22,9 @@ export const Categories: CollectionConfig = {
   },
   access: {
     read: anyone,
-    create: loggedIn,
-    update: loggedIn,
-    delete: loggedIn,
+    create: may('catalog'),
+    update: may('catalog'),
+    delete: may('catalog'),
   },
   fields: [
     {

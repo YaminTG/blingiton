@@ -79,8 +79,8 @@ if (env.UNLOCK || env.NEW_PASSWORD) {
 if (env.LOGOUT || env.RESET_2FA || env.NEW_PASSWORD) {
   await payload.db.updateOne({ collection: 'users', id: user.id, data: { sessions: [] }, returning: false })
   const rec = await recordFor(payload, user.id)
-  if (rec) await payload.update({ collection: 'two-factor', id: rec.id, data: { pending: [] } })
-  done.push('ended every session')
+  if (rec) await payload.update({ collection: 'two-factor', id: rec.id, data: { pending: [], trusted: [] } })
+  done.push('ended every session and forgot every trusted browser')
 }
 
 if (!done.length) {

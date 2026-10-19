@@ -1,8 +1,10 @@
 import { StatusCell as StatusCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
+import { StageCell as StageCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
+import { OrderTimeline as OrderTimeline_56867a5a6eff441b80743a5a2de0ad10 } from '../../../components/admin/OrderTimeline'
 import { ItemRowLabel as ItemRowLabel_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
 import { TotalCell as TotalCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
 import { OriginCell as OriginCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
-import { OrderActions as OrderActions_42735e497e40d1f2d21d56bf07558f53 } from '../../../components/admin/OrderActions'
+import { ActionsCell as ActionsCell_76d4865f7a4c9abd72d6825af89c725d } from '../../../components/admin/OrderCells'
 import { OrderStatusTabs as OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae } from '../../../components/admin/OrderStatusTabs'
 import { CustomerListTools as CustomerListTools_70ce3d2acf4b1035a5d5a5690297e312 } from '../../../components/admin/CustomerTools'
 import { CustomerView as CustomerView_49aacabbc697841a69bf6a1dfdaeee49 } from '../../../components/admin/CustomerView'
@@ -46,19 +48,23 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { Icon as Icon_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
 import { Logo as Logo_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
 import { InsightsNavLink as InsightsNavLink_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
+import { SecurityNavLink as SecurityNavLink_f415a3060de3d1de26f265be1a303833 } from '../../../components/admin/Security'
 import { Dashboard as Dashboard_16b88e9b8c48e393fa86591406efd08f } from '../../../components/admin/Dashboard'
 import { TwoFactor as TwoFactor_ec5ad3e68a8d3607f431737845532f4c } from '../../../components/admin/TwoFactor'
 import { CustomerInsights as CustomerInsights_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
+import { Security as Security_f415a3060de3d1de26f265be1a303833 } from '../../../components/admin/Security'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
   "/components/admin/OrderCells#StatusCell": StatusCell_76d4865f7a4c9abd72d6825af89c725d,
+  "/components/admin/OrderCells#StageCell": StageCell_76d4865f7a4c9abd72d6825af89c725d,
+  "/components/admin/OrderTimeline#OrderTimeline": OrderTimeline_56867a5a6eff441b80743a5a2de0ad10,
   "/components/admin/OrderActions#ItemRowLabel": ItemRowLabel_42735e497e40d1f2d21d56bf07558f53,
   "/components/admin/OrderCells#TotalCell": TotalCell_76d4865f7a4c9abd72d6825af89c725d,
   "/components/admin/OrderCells#OriginCell": OriginCell_76d4865f7a4c9abd72d6825af89c725d,
-  "/components/admin/OrderActions#OrderActions": OrderActions_42735e497e40d1f2d21d56bf07558f53,
+  "/components/admin/OrderCells#ActionsCell": ActionsCell_76d4865f7a4c9abd72d6825af89c725d,
   "/components/admin/OrderStatusTabs#OrderStatusTabs": OrderStatusTabs_54d0f5e17137b28d5f5890e70353d5ae,
   "/components/admin/CustomerTools#CustomerListTools": CustomerListTools_70ce3d2acf4b1035a5d5a5690297e312,
   "/components/admin/CustomerView#CustomerView": CustomerView_49aacabbc697841a69bf6a1dfdaeee49,
@@ -102,9 +108,11 @@ export const importMap = {
   "/components/admin/Brand#Icon": Icon_81fda60f3e3709e861f40982a767707d,
   "/components/admin/Brand#Logo": Logo_81fda60f3e3709e861f40982a767707d,
   "/components/admin/CustomerInsights#InsightsNavLink": InsightsNavLink_4166967e9771cb21609c8edf0337ec61,
+  "/components/admin/Security#SecurityNavLink": SecurityNavLink_f415a3060de3d1de26f265be1a303833,
   "/components/admin/Dashboard#Dashboard": Dashboard_16b88e9b8c48e393fa86591406efd08f,
   "/components/admin/TwoFactor#TwoFactor": TwoFactor_ec5ad3e68a8d3607f431737845532f4c,
   "/components/admin/CustomerInsights#CustomerInsights": CustomerInsights_4166967e9771cb21609c8edf0337ec61,
+  "/components/admin/Security#Security": Security_f415a3060de3d1de26f265be1a303833,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

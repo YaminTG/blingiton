@@ -1,51 +1,71 @@
 'use client'
 
-import type { DefaultCellComponentProps } from 'payload'
-
 import { toast, useConfig, useRowLabel, useTranslation } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import type { OrderStatus } from '@/lib/orderOptions'
+import { nextStage, orderStages, type Stage } from '@/lib/orderStages'
 
 const copy = {
-  en: { processing: 'Processing', complete: 'Complete', whatsapp: 'WhatsApp the customer', saved: (no: string) => `Order ${no} updated`, failed: 'Couldn’t update the order' },
-  ar: { processing: 'قيد التجهيز', complete: 'إكمال', whatsapp: 'راسل العميل على واتساب', saved: (no: string) => `تم تحديث الطلب ${no}`, failed: 'تعذّر تحديث الطلب' },
+  en: {
+    confirm: 'Confirm',
+    to: 'Mark as',
+    whatsapp: 'WhatsApp the customer an update',
+    saved: (no: string) => `Order ${no} updated`,
+    failed: 'Couldn’t update the order',
+  },
+  ar: {
+    confirm: 'تأكيد',
+    to: 'انقل إلى',
+    whatsapp: 'أرسل للعميل تحديثاً على واتساب',
+    saved: (no: string) => `تم تحديث الطلب ${no}`,
+    failed: 'تعذّر تحديث الطلب',
+  },
 }
 
 /** Local Jordanian numbers (07…) become 9627…, so wa.me opens the right chat. */
-const waNumber = (phone: string) => {
+export const waNumber = (phone: string) => {
   let d = phone.replace(/\D/g, '').replace(/^00/, '')
   if (d.startsWith('0')) d = `962${d.slice(1)}`
   return d
 }
 
-type Row = { id: number; status?: OrderStatus; title?: string; customer?: { phone?: string } }
+/** `reload`: on the order page, so the form shows the new stage and a later Save can't send the old one back. */
+type Props = { id: number; title: string; status: OrderStatus; stage: Stage | null; phone: string; update: string; reload?: boolean }
 
-/** Quick status buttons in the orders list, like WooCommerce's: pending/on hold → Processing → Complete. */
-export function OrderActions({ rowData }: DefaultCellComponentProps) {
-  const row = rowData as Row
+/**
+ * Quick buttons in the orders list and on the order page: pending / on hold → Confirm; then one step along
+ * the pipeline (paid → preparing → packed → shipped → delivered). The WhatsApp button opens the
+ * chat with a message saying where the order is, in the customer's language, with their order link.
+ */
+export function OrderActions({ id, title, status, stage, phone, update, reload }: Props) {
   const { i18n } = useTranslation()
-  const t = copy[i18n.language === 'ar' ? 'ar' : 'en']
+  const lang = i18n.language === 'ar' ? 'ar' : 'en'
+  const t = copy[lang]
   const { config } = useConfig()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
 
-  const next: OrderStatus | null = row.status === 'pending' || row.status === 'on-hold' ? 'processing' : row.status === 'processing' ? 'completed' : null
-  const phone = row.customer?.phone ? waNumber(row.customer.phone) : ''
+  // Pending payment, or on hold while payment is arranged on WhatsApp: confirm first.
+  const unconfirmed = status === 'pending' || status === 'on-hold'
+  const next = unconfirmed ? null : nextStage(stage)
+  const nextLabel = orderStages.find((s) => s.value === next)?.label[lang]
+  const wa = phone ? `https://wa.me/${waNumber(phone)}${update ? `?text=${encodeURIComponent(update)}` : ''}` : ''
 
-  async function move(status: OrderStatus) {
+  async function save(data: { status: OrderStatus } | { stage: Stage }) {
     setBusy(true)
     try {
-      const res = await fetch(`${config.serverURL}${config.routes.api}/orders/${row.id}`, {
+      const res = await fetch(`${config.serverURL}${config.routes.api}/orders/${id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(data),
       })
       if (!res.ok) throw new Error(String(res.status))
-      toast.success(t.saved(row.title?.split(' ')[0] ?? ''))
-      router.refresh()
+      toast.success(t.saved(title.split(' ')[0] ?? ''))
+      if (reload) window.location.reload()
+      else router.refresh()
     } catch {
       toast.error(t.failed)
     } finally {
@@ -55,14 +75,17 @@ export function OrderActions({ rowData }: DefaultCellComponentProps) {
 
   return (
     <span className="bl-actions">
-      {next ? (
-        <button type="button" className={`bl-action bl-action--${next}`} disabled={busy} onClick={() => move(next)} title={next === 'processing' ? t.processing : t.complete}>
-          {next === 'processing' ? '⋯' : '✓'}
-          <span>{next === 'processing' ? t.processing : t.complete}</span>
+      {unconfirmed ? (
+        <button type="button" className="bl-action" disabled={busy} onClick={() => save({ status: 'processing' })}>
+          ✓ <span>{t.confirm}</span>
+        </button>
+      ) : next ? (
+        <button type="button" className={`bl-action bl-action--${next}`} disabled={busy} onClick={() => save({ stage: next })} title={`${t.to}: ${nextLabel}`}>
+          → <span>{nextLabel}</span>
         </button>
       ) : null}
-      {phone ? (
-        <a className="bl-action bl-action--wa" href={`https://wa.me/${phone}`} target="_blank" rel="noopener noreferrer" title={t.whatsapp} aria-label={t.whatsapp}>
+      {wa ? (
+        <a className="bl-action bl-action--wa" href={wa} target="_blank" rel="noopener noreferrer" title={t.whatsapp} aria-label={t.whatsapp}>
           <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
             <path
               fill="currentColor"

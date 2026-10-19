@@ -1,16 +1,49 @@
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
-import { admins, loggedIn } from '@/access'
+import { admins, may } from '@/access'
 import { l } from '@/fields/label'
 import { later } from '@/hooks/revalidate'
 import { normalEmail, normalPhone } from '@/lib/customerStats'
 import { linkCustomer, refreshCustomers } from '@/lib/customers'
 import { sendOrderEmails } from '@/lib/orderEmails'
 import { FIRST_ORDER_NUMBER, orderStatuses, paymentMethods, type OrderStatus } from '@/lib/orderOptions'
+import { carriers, limitsFrom, orderStages, resolveStage, stuckAtFor, type Stage } from '@/lib/orderStages'
 import type { Order } from '@/payload-types'
 
 /** Statuses that mean "we have the order", so the customer gets the confirmation email. */
 const RECEIVED: OrderStatus[] = ['processing', 'on-hold']
+
+/**
+ * Keeps stage and status in step (src/lib/orderStages.ts), stamps when the order entered its stage,
+ * logs each move with who made it, and works out when it becomes stuck. These fields are always
+ * rebuilt here from the saved order, so nothing sent from outside can rewrite the history.
+ */
+const orderStage: CollectionBeforeChangeHook<Order> = async ({ data, originalDoc, req }) => {
+  const prevStage = (originalDoc?.stage ?? null) as Stage | null
+  const prevStatus = originalDoc?.status ?? null
+  const { status, stage } = resolveStage(
+    { status: data.status ?? originalDoc?.status ?? 'processing', stage: data.stage !== undefined ? data.stage : prevStage },
+    originalDoc ? { status: prevStatus, stage: prevStage } : undefined,
+  )
+  data.status = status
+  data.stage = stage
+
+  const now = new Date().toISOString()
+  const history = [...(originalDoc?.stageHistory ?? [])]
+  const by = req.user?.collection === 'users' ? req.user.id : null
+  const moved = stage !== prevStage
+  if (moved && stage) history.push({ step: stage, at: now, by })
+  // Leaving the pipeline (cancelled, refunded…) is part of the story too.
+  else if (moved && status !== prevStatus) history.push({ step: status, at: now, by })
+  data.stageHistory = history
+  data.stageSince = moved ? now : (originalDoc?.stageSince ?? now)
+  data.stuckAlertedAt = moved ? null : (originalDoc?.stuckAlertedAt ?? null)
+
+  const settings = await req.payload.findGlobal({ slug: 'site-settings', depth: 0, req, select: { orderFlow: true } })
+  const method = data.shipping?.method ?? originalDoc?.shipping?.method
+  data.stuckAt = stuckAtFor(stage, data.stageSince, method, limitsFrom(settings.orderFlow?.limits))
+  return data
+}
 
 const orderBeforeChange: CollectionBeforeChangeHook<Order> = async ({ data, originalDoc, operation, req }) => {
   if (operation === 'create' && !data.number) {
@@ -51,10 +84,11 @@ const refreshAfterOrderDelete: CollectionAfterDeleteHook<Order> = ({ doc, req })
 
 const orderAfterChange: CollectionAfterChangeHook<Order> = ({ doc, previousDoc, operation, context, req }) => {
   if (context.orderEmails) return doc
-  const was = operation === 'create' ? undefined : previousDoc?.status
-  if (doc.status === was) return doc
-  if (RECEIVED.includes(doc.status) && !doc.emails?.receivedAt) later(() => sendOrderEmails(req.payload, doc.id, 'received'))
-  if (doc.status === 'completed' && !doc.emails?.completedAt) later(() => sendOrderEmails(req.payload, doc.id, 'completed'))
+  const was = operation === 'create' ? undefined : previousDoc
+  if (doc.status !== was?.status && RECEIVED.includes(doc.status) && !doc.emails?.receivedAt) later(() => sendOrderEmails(req.payload, doc.id, 'received'))
+  // Each stage the customer hears about (Site settings → Orders & alerts) emails them once.
+  // A brand-new order is "paid", which the received email already covers.
+  if (doc.stage && doc.stage !== 'paid' && doc.stage !== was?.stage) later(() => sendOrderEmails(req.payload, doc.id, doc.stage as Exclude<Stage, 'paid'>))
   return doc
 }
 
@@ -65,14 +99,14 @@ export const Orders: CollectionConfig = {
   labels: { singular: l('Order', 'طلب'), plural: l('Orders', 'الطلبات') },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'createdAt', 'status', 'total', 'origin', 'actions'],
+    defaultColumns: ['title', 'createdAt', 'status', 'stage', 'total', 'origin', 'actions'],
     listSearchableFields: ['title', 'customer.phone', 'customer.email'],
     group: l('Shop', 'المتجر'),
     components: { beforeListTable: ['/components/admin/OrderStatusTabs#OrderStatusTabs'] },
   },
   defaultSort: '-createdAt',
-  access: { read: loggedIn, create: loggedIn, update: loggedIn, delete: admins },
-  hooks: { beforeChange: [orderBeforeChange], afterChange: [orderAfterChange, refreshTotals], afterDelete: [refreshAfterOrderDelete] },
+  access: { read: may('orders', 'customers'), create: may('orders'), update: may('orders'), delete: admins },
+  hooks: { beforeChange: [orderBeforeChange, orderStage], afterChange: [orderAfterChange, refreshTotals], afterDelete: [refreshAfterOrderDelete] },
   fields: [
     // "#20001 Sara Ahmad": the list's first column and the page title. Kept in step by the hook above.
     { name: 'title', type: 'text', label: l('Order', 'الطلب'), index: true, admin: { readOnly: true, condition: () => false } },
@@ -86,6 +120,51 @@ export const Orders: CollectionConfig = {
       index: true,
       options: orderStatuses.map((s) => ({ ...s })),
       admin: { position: 'sidebar', components: { Cell: '/components/admin/OrderCells#StatusCell' } },
+    },
+    {
+      name: 'stage',
+      type: 'select',
+      label: l('Stage', 'المرحلة'),
+      index: true,
+      options: orderStages.map((s) => ({ ...s })),
+      admin: {
+        position: 'sidebar',
+        description: l(
+          'Where the order is now. Shipped or delivered marks it Completed. Customers are emailed per Site settings → Orders & alerts.',
+          'أين وصل الطلب الآن. تم الشحن أو التسليم يجعله مكتملاً. يُراسل العميل حسب إعدادات الموقع ← الطلبات والتنبيهات.',
+        ),
+        components: { Cell: '/components/admin/OrderCells#StageCell' },
+      },
+    },
+    {
+      name: 'tracking',
+      type: 'group',
+      label: l('Delivery tracking', 'تتبّع الشحنة'),
+      admin: {
+        position: 'sidebar',
+        condition: (data) => ['packed', 'shipped', 'delivered'].includes(data?.stage),
+        description: l('Shown to the customer in the “shipped” email and on their order page.', 'يظهر للعميل في رسالة "تم الشحن" وصفحة طلبه.'),
+      },
+      fields: [
+        { name: 'carrier', type: 'select', label: l('Carrier', 'شركة التوصيل'), options: carriers.map((c) => ({ ...c })) },
+        { name: 'number', type: 'text', label: l('Tracking number', 'رقم التتبّع') },
+        { name: 'url', type: 'text', label: l('Tracking link', 'رابط التتبّع'), admin: { description: l('Not needed for DHL: the number is enough.', 'غير مطلوب لـ DHL: يكفي الرقم.') } },
+      ],
+    },
+    // The stage history and stuck timer, shown by the timeline below; kept in step by `orderStage`.
+    { name: 'timeline', type: 'ui', admin: { position: 'sidebar', components: { Field: '/components/admin/OrderTimeline#OrderTimeline' } } },
+    { name: 'stageSince', type: 'date', admin: { hidden: true } },
+    { name: 'stuckAt', type: 'date', index: true, admin: { hidden: true } },
+    { name: 'stuckAlertedAt', type: 'date', admin: { hidden: true } },
+    {
+      name: 'stageHistory',
+      type: 'array',
+      admin: { hidden: true },
+      fields: [
+        { name: 'step', type: 'text', required: true },
+        { name: 'at', type: 'date', required: true },
+        { name: 'by', type: 'relationship', relationTo: 'users' },
+      ],
     },
     {
       name: 'locale',
@@ -287,16 +366,29 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
+      name: 'cases',
+      type: 'join',
+      collection: 'order-cases',
+      on: 'order',
+      label: l('Cancellations, returns, exchanges & refunds', 'الإلغاء والإرجاع والاستبدال والاسترداد'),
+      admin: { defaultColumns: ['type', 'caseStatus', 'reason', 'refundAmount', 'createdAt'], allowCreate: true },
+    },
+    {
       name: 'emails',
       type: 'group',
       admin: { hidden: true },
+      // When each customer email went out. `completedAt` is the "shipped" (on its way) email; it
+      // kept its WooCommerce-era name.
       fields: [
         { name: 'receivedAt', type: 'date' },
+        { name: 'preparingAt', type: 'date' },
+        { name: 'packedAt', type: 'date' },
         { name: 'completedAt', type: 'date' },
+        { name: 'deliveredAt', type: 'date' },
       ],
     },
     // List-only columns.
     { name: 'origin', type: 'ui', label: l('Origin', 'المصدر'), admin: { components: { Cell: '/components/admin/OrderCells#OriginCell' } } },
-    { name: 'actions', type: 'ui', label: l('Actions', 'إجراءات'), admin: { components: { Cell: '/components/admin/OrderActions#OrderActions' } } },
+    { name: 'actions', type: 'ui', label: l('Actions', 'إجراءات'), admin: { components: { Cell: '/components/admin/OrderCells#ActionsCell' } } },
   ],
 }

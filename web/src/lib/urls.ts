@@ -13,6 +13,7 @@ export const paths = {
   checkout: (l: Locale) => `/${l}/checkout`,
   review: (l: Locale) => `/${l}/review`,
   yourData: (l: Locale) => `/${l}/your-data`,
+  orderStatus: (l: Locale) => `/${l}/order-status`,
 }
 
 export const absolute = (path: string) => (path.startsWith('http') ? path : `${serverUrl}${path}`)

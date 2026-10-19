@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { loggedIn } from '@/access'
+import { may } from '@/access'
 import { l } from '@/fields/label'
 import { EVENT_TYPES } from '@/lib/events'
 
@@ -10,7 +10,7 @@ export const Events: CollectionConfig = {
   slug: 'events',
   labels: { singular: l('Visit step', 'خطوة زيارة'), plural: l('Visit steps', 'خطوات الزيارات') },
   admin: { hidden: true },
-  access: { read: loggedIn, create: () => false, update: () => false, delete: () => false },
+  access: { read: may('orders', 'catalog', 'customers'), create: () => false, update: () => false, delete: () => false },
   indexes: [{ fields: ['createdAt', 'type'] }],
   fields: [
     { name: 'type', type: 'select', required: true, options: EVENT_TYPES.map((v) => ({ label: v, value: v })) },

@@ -4,7 +4,7 @@ import { admins } from '@/access'
 import { l } from '@/fields/label'
 import { AUDIT_ACTIONS } from '@/lib/audit'
 
-const ACTION_LABELS: Record<(typeof AUDIT_ACTIONS)[number], { en: string; ar: string }> = {
+export const ACTION_LABELS: Record<(typeof AUDIT_ACTIONS)[number], { en: string; ar: string }> = {
   'login.password-ok': l('Password accepted, waiting for code', 'كلمة المرور صحيحة، بانتظار الرمز'),
   'login.success': l('Logged in', 'تسجيل دخول'),
   'login.failed': l('Wrong password', 'كلمة مرور خاطئة'),
@@ -16,10 +16,16 @@ const ACTION_LABELS: Record<(typeof AUDIT_ACTIONS)[number], { en: string; ar: st
   logout: l('Logged out', 'تسجيل خروج'),
   'password.reset-requested': l('Password reset requested', 'طلب إعادة تعيين كلمة المرور'),
   'password.reset': l('Password reset', 'إعادة تعيين كلمة المرور'),
+  'login.new-place': l('Login from a new place', 'دخول من مكان جديد'),
   '2fa.enabled': l('Two-factor set up', 'تفعيل التحقق بخطوتين'),
   'recovery.script': l('Recovery script', 'سكربت الاسترداد'),
   'customers.export': l('Customers exported', 'تصدير العملاء'),
   'customers.forget': l('Customer browsing erased', 'حذف تصفح عميل'),
+  'activity.burst': l('Many changes at once', 'تعديلات كثيرة دفعة واحدة'),
+  'security.reviewed': l('Security events reviewed', 'مراجعة أحداث الأمان'),
+  'backup.ok': l('Backup made', 'نسخة احتياطية'),
+  'backup.failed': l('Backup failed', 'فشل النسخ الاحتياطي'),
+  'backup.restore-test': l('Restore test', 'اختبار الاستعادة'),
   create: l('Created', 'إنشاء'),
   update: l('Changed', 'تعديل'),
   delete: l('Deleted', 'حذف'),

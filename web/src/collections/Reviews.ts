@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionConfig } from 'payload'
 
-import { loggedIn } from '@/access'
+import { may } from '@/access'
 import { l } from '@/fields/label'
 import { later, refresh } from '@/hooks/revalidate'
 import { tags } from '@/lib/tags'
@@ -41,9 +41,9 @@ export const Reviews: CollectionConfig = {
   hooks: { afterChange: [reviewAfterChange], afterDelete: [reviewAfterDelete] },
   access: {
     read: ({ req }) => (req.user ? true : { approved: { equals: true } }),
-    create: loggedIn,
-    update: loggedIn,
-    delete: loggedIn,
+    create: may('catalog'),
+    update: may('catalog'),
+    delete: may('catalog'),
   },
   fields: [
     { name: 'product', type: 'relationship', label: l('Product', 'المنتج'), relationTo: 'products', required: true, index: true },

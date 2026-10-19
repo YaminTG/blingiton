@@ -204,6 +204,28 @@ html[dir="rtl"] .sort-btn { padding: 0 18px 0 14px; }
 .me p { color: var(--ink-soft); }
 .me-status { margin-top: 14px; padding: 16px 18px; border-radius: var(--r); background: var(--blush-soft); font-weight: 700; }
 .me-status .btn { margin-top: 12px; }
+/* /[locale]/order-status: the stages joined by the silver rope, filled in as the order moves */
+.os-now { margin-top: 18px; padding: 16px 18px; border-radius: var(--r); background: var(--blush-soft); color: var(--ink) !important; font-weight: 700; }
+.os-now--ended { background: var(--paper); border: 2px solid var(--line); }
+.os-steps { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.os-steps li { position: relative; display: grid; justify-items: center; gap: 4px; padding-top: 34px; text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.3; }
+.os-steps li::before { content: ""; position: absolute; top: 0; z-index: 1; width: 24px; height: 24px; border-radius: 50%; border: 3px solid var(--line); background: var(--paper); }
+.os-steps li:not(:last-child)::after { content: ""; position: absolute; top: 10px; inset-inline-start: 50%; width: 100%; height: 4px; border-radius: 4px; background: var(--line); }
+.os-steps li.is-done::before { border-color: var(--pink); background: var(--pink); }
+.os-steps li.is-done::after { background: var(--rope); }
+.os-steps li.is-now::before { border-color: var(--pink); background: var(--glitter); box-shadow: 0 0 0 6px var(--blush); }
+.os-steps li.is-now b { color: var(--pink); }
+.os-steps li.is-todo b { font-weight: 600; }
+.os-steps small { color: var(--ink-soft); }
+@media (max-width: 560px) {
+  .os-steps { grid-template-columns: 1fr; gap: 0; }
+  .os-steps li { justify-items: start; padding: 0 0 22px; padding-inline-start: 40px; text-align: start; }
+  .os-steps li:not(:last-child)::after { top: 24px; inset-inline-start: 10px; width: 4px; height: 100%; }
+}
+.os-tracking { margin-top: 22px; }
+.os-items { margin: 0; padding-inline-start: 20px; color: var(--ink); }
+.os-help { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 32px; }
+.os-help p { flex-basis: 100%; }
 .err-sum { margin-top: 20px; padding: 16px 18px; border-radius: var(--r-sm); border: 2px solid var(--error); background: #FFF1F0; color: var(--error); font-weight: 700; }
 .err-sum ul { margin: 8px 0 0; padding-inline-start: 20px; }
 .err-sum a { color: var(--error); text-decoration: underline; }

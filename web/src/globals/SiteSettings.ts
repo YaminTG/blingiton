@@ -1,8 +1,9 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, loggedIn } from '@/access'
+import { anyone, may } from '@/access'
 import { l } from '@/fields/label'
 import { settingsAfterChange } from '@/hooks/lifecycle'
+import { restampStuck } from '@/lib/stuckOrders'
 
 // Business details (feed the JewelryStore/Organization data Google reads) and the
 // writing settings used by the automatic SEO pipeline.
@@ -10,8 +11,8 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: l('Site settings', 'إعدادات الموقع'),
   admin: { group: l('Content', 'المحتوى') },
-  access: { read: anyone, update: loggedIn },
-  hooks: { afterChange: [settingsAfterChange] },
+  access: { read: anyone, update: may('settings') },
+  hooks: { afterChange: [settingsAfterChange, restampStuck] },
   fields: [
     {
       type: 'tabs',
@@ -226,6 +227,94 @@ export const SiteSettings: GlobalConfig = {
                   label: l('Name and engraved pieces can be returned too', 'يمكن إرجاع قطع الأسماء والحفر أيضاً'),
                   defaultValue: false,
                   admin: { width: '50%' },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          // The order pipeline (src/lib/orderStages.ts): how long each stage may take before the
+          // team is alerted, and which stages email the customer.
+          name: 'orderFlow',
+          label: l('Orders & alerts', 'الطلبات والتنبيهات'),
+          description: l(
+            'Paid → preparing → packed → shipped → delivered. An order that sits in one stage longer than its time below is “stuck”: it turns red in the orders list and on the dashboard, and the team gets an email.',
+            'مدفوع ← قيد التحضير ← مغلّف ← تم الشحن ← تم التسليم. الطلب الذي يبقى في مرحلة أطول من الوقت المحدد أدناه يصبح "متأخراً": يظهر بالأحمر في قائمة الطلبات ولوحة التحكم، ويصل الفريق بريد تنبيه.',
+          ),
+          fields: [
+            {
+              name: 'limits',
+              type: 'group',
+              label: l('Hours allowed in each stage', 'الساعات المسموحة في كل مرحلة'),
+              admin: { description: l('24 = one day, 120 = five days. 0 = never alert for that stage.', '24 = يوم، 120 = خمسة أيام. 0 = بلا تنبيه لهذه المرحلة.') },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'paid', type: 'number', label: l('Paid → start preparing', 'مدفوع ← بدء التحضير'), min: 0, defaultValue: 24, admin: { width: '33%' } },
+                    { name: 'preparing', type: 'number', label: l('Preparing → packed', 'التحضير ← التغليف'), min: 0, defaultValue: 120, admin: { width: '33%' } },
+                    { name: 'packed', type: 'number', label: l('Packed → shipped', 'مغلّف ← الشحن'), min: 0, defaultValue: 24, admin: { width: '33%' } },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'shippedLocal', type: 'number', label: l('Shipped → delivered (Jordan)', 'الشحن ← التسليم (الأردن)'), min: 0, defaultValue: 72, admin: { width: '33%' } },
+                    { name: 'shippedDhl', type: 'number', label: l('Shipped → delivered (DHL Express)', 'الشحن ← التسليم (DHL Express)'), min: 0, defaultValue: 168, admin: { width: '33%' } },
+                    {
+                      name: 'shippedStandard',
+                      type: 'number',
+                      label: l('Shipped → delivered (standard abroad)', 'الشحن ← التسليم (شحن دولي عادي)'),
+                      min: 0,
+                      defaultValue: 720,
+                      admin: { width: '33%' },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'alertEmails',
+                  type: 'text',
+                  label: l('Send stuck-order alerts to', 'أرسل تنبيهات التأخير إلى'),
+                  admin: {
+                    width: '67%',
+                    placeholder: 'orders@blingitonjewels.com, owner@gmail.com',
+                    description: l('Separate addresses with commas. Empty = the shop email on the Business tab.', 'افصل العناوين بفواصل. فارغ = بريد المتجر في تبويب النشاط التجاري.'),
+                  },
+                },
+                {
+                  name: 'remindHours',
+                  type: 'number',
+                  label: l('Remind again every (hours)', 'كرّر التذكير كل (ساعة)'),
+                  min: 1,
+                  defaultValue: 24,
+                  admin: { width: '33%', description: l('While an order stays stuck.', 'ما دام الطلب متأخراً.') },
+                },
+              ],
+            },
+            {
+              name: 'notify',
+              type: 'group',
+              label: l('Email the customer when the order is…', 'راسل العميل عندما يصبح الطلب…'),
+              admin: {
+                description: l(
+                  'The “we’ve got your order” email always goes out. Each email is sent once per order, with a link to a page showing where the order is.',
+                  'رسالة "وصلنا طلبك" تُرسل دائماً. كل رسالة تُرسل مرة واحدة لكل طلب، مع رابط لصفحة تُظهر أين وصل الطلب.',
+                ),
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'preparing', type: 'checkbox', label: l('Being prepared', 'قيد التحضير'), defaultValue: true, admin: { width: '25%' } },
+                    { name: 'packed', type: 'checkbox', label: l('Packed', 'مغلّف'), defaultValue: false, admin: { width: '25%' } },
+                    { name: 'shipped', type: 'checkbox', label: l('Shipped', 'تم الشحن'), defaultValue: true, admin: { width: '25%' } },
+                    { name: 'delivered', type: 'checkbox', label: l('Delivered', 'تم التسليم'), defaultValue: true, admin: { width: '25%' } },
+                  ],
                 },
               ],
             },

@@ -1,15 +1,18 @@
 import type { ServerProps } from 'payload'
 
+import { can, isAdmin } from '@/access'
 import { serverUrl } from '@/lib/site'
 import { scoreBand } from '@/seo/score'
 
 import { Funnel } from './Funnel'
+import { OrderPipeline } from './OrderPipeline'
+import { SecuritySummary } from './Security'
 import { ScoreBadge } from './SeoScoreCell'
 
 const copy = {
   en: {
     hello: (name: string) => `Hi ${name}`,
-    intro: 'Here is how the shop looks to Google today.',
+    intro: 'Your orders first, then how the shop looks to Google today.',
     live: 'Live products',
     drafts: 'Drafts',
     average: 'Average SEO score',
@@ -24,7 +27,7 @@ const copy = {
   },
   ar: {
     hello: (name: string) => `أهلاً ${name}`,
-    intro: 'هكذا يبدو المتجر لجوجل اليوم.',
+    intro: 'طلباتك أولاً، ثم كيف يبدو المتجر لجوجل اليوم.',
     live: 'منتجات منشورة',
     drafts: 'مسودات',
     average: 'متوسط تقييم السيو',
@@ -45,6 +48,9 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
   const t = copy[lang]
   const admin = payload.config.routes.admin
   const products = `${admin}/collections/products`
+  // Each part shows only to people allowed to work on that area (src/access).
+  const orders = can(user, 'orders')
+  const catalog = can(user, 'catalog')
 
   const [live, drafts] = await Promise.all([
     payload.find({
@@ -78,18 +84,28 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
           <p>{t.intro}</p>
         </div>
         <nav className="bl-dash__actions">
-          <a className="bl-btn bl-btn--primary" href={`${products}/create`}>
-            + {t.add}
-          </a>
+          {catalog ? (
+            <a className="bl-btn bl-btn--primary" href={`${products}/create`}>
+              + {t.add}
+            </a>
+          ) : null}
           <a className="bl-btn" href={serverUrl} target="_blank" rel="noreferrer">
             {t.store} ↗
           </a>
-          <a className="bl-btn" href={`${admin}/globals/site-settings`}>
-            {t.settings}
-          </a>
+          {can(user, 'settings') ? (
+            <a className="bl-btn" href={`${admin}/globals/site-settings`}>
+              {t.settings}
+            </a>
+          ) : null}
         </nav>
       </header>
 
+      {isAdmin(user) ? <SecuritySummary payload={payload} lang={lang} admin={admin} /> : null}
+
+      {orders ? <OrderPipeline payload={payload} lang={lang} admin={admin} /> : null}
+
+      {catalog ? (
+        <>
       <div className="bl-dash__stats">
         <a className="bl-stat" href={`${products}?where[_status][equals]=published`}>
           <span className="bl-stat__value">{live.docs.length}</span>
@@ -141,8 +157,10 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
           </a>
         </div>
       </div>
+        </>
+      ) : null}
 
-      <Funnel payload={payload} lang={lang} admin={admin} />
+      {orders ? <Funnel payload={payload} lang={lang} admin={admin} /> : null}
     </section>
   )
 }

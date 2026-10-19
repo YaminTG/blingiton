@@ -35,10 +35,16 @@ export const AUDIT_ACTIONS = [
   'logout',
   'password.reset-requested',
   'password.reset',
+  'login.new-place',
   '2fa.enabled',
   'recovery.script',
   'customers.export',
   'customers.forget',
+  'activity.burst',
+  'security.reviewed',
+  'backup.ok',
+  'backup.failed',
+  'backup.restore-test',
   'create',
   'update',
   'delete',
@@ -156,6 +162,72 @@ export function changedFields(doc: Record<string, unknown>, prev: Record<string,
   return changed.slice(0, 30)
 }
 
+// Short plain values (numbers, yes/no, short text, lists of those) are copied into the log as
+// before → after, so "who changed the price from 45 to 50" can be answered. Long text and nested
+// lists are named only.
+const SHORT = 120
+const plain = (v: unknown): boolean =>
+  v === null ||
+  v === undefined ||
+  typeof v === 'number' ||
+  typeof v === 'boolean' ||
+  (typeof v === 'string' && v.length <= SHORT) ||
+  (Array.isArray(v) && v.length <= 12 && v.every((x) => typeof x === 'string' || typeof x === 'number'))
+
+/** Leaves of an object, one level of groups deep: { customer: { email } } → "customer.email". */
+function leaves(value: unknown, prefix: string, out: Map<string, unknown>, depth = 0) {
+  if (value && typeof value === 'object' && !Array.isArray(value) && depth < 2) {
+    for (const [k, v] of Object.entries(value)) if (!IGNORED.has(k) && k !== 'id') leaves(v, `${prefix}.${k}`, out, depth + 1)
+  } else if (plain(value)) out.set(prefix, value ?? null)
+}
+
+export function changedValues(doc: Record<string, unknown>, prev: Record<string, unknown> | undefined, fields: string[]) {
+  const changes: Record<string, [unknown, unknown]> = {}
+  for (const f of fields) {
+    if (f === 'password') continue
+    const before = new Map<string, unknown>()
+    const after = new Map<string, unknown>()
+    leaves(prev?.[f], f, before)
+    leaves(doc?.[f], f, after)
+    for (const k of new Set([...before.keys(), ...after.keys()])) {
+      const a = before.get(k) ?? null
+      const b = after.get(k) ?? null
+      if (canonical(a) !== canonical(b)) changes[k] = [a, b]
+    }
+  }
+  return Object.fromEntries(Object.entries(changes).slice(0, 20))
+}
+
+// --- Bursts: many deletes or changes by one person in a few minutes ----------------------------
+// A stolen session or an angry ex-teammate tends to delete or rewrite a lot at once. Normal bulk
+// edits happen too, so the bar is high and the email only says "have a look". In memory, so per
+// server instance; one email per person, kind and window.
+const BURST_WINDOW = 10 * 60 * 1000
+const BURST_LIMIT = { delete: 10, update: 60 } as const
+const bursts = new Map<string, { times: number[]; alerted: number; collections: Set<string> }>()
+
+function noteBurst(req: PayloadRequest, kind: keyof typeof BURST_LIMIT, collection: string) {
+  const user = req.user as { id?: number | string; email?: string } | null
+  if (!user?.id) return
+  const now = Date.now()
+  const key = `${kind}:${user.id}`
+  const b = bursts.get(key) ?? { times: [], alerted: 0, collections: new Set<string>() }
+  b.times = [...b.times.filter((t) => now - t < BURST_WINDOW), now]
+  b.collections.add(collection)
+  if (bursts.size > 500) bursts.clear()
+  bursts.set(key, b)
+  if (b.times.length < BURST_LIMIT[kind] || now - b.alerted < BURST_WINDOW) return
+  b.alerted = now
+  const what = `${b.times.length} ${kind === 'delete' ? 'deletes' : 'changes'} in ${BURST_WINDOW / 60000} minutes (${[...b.collections].join(', ')})`
+  auditLater(req.payload, { action: 'activity.burst', summary: `${user.email ?? 'Someone'}: ${what}`, detail: { kind, count: b.times.length, collections: [...b.collections] }, ...whoAndWhere(req) })
+  later(async () => {
+    const { securityAlert } = await import('./loginAlerts')
+    await securityAlert(req.payload, 'burst', placeOf(req.headers), user.email ?? null, [`What: ${what}`])
+  })
+}
+
+const shown = (v: unknown) => (v === null || v === undefined || v === '' ? '–' : Array.isArray(v) ? v.join(', ') || '–' : String(v))
+
 // Only changes a signed-in person made through the admin or the API. The server's own saves
 // (scripts, the SEO writer, checkout creating orders) aren't someone's action, so they're left out.
 const byPerson = (req: PayloadRequest) => Boolean(req.user) && req.payloadAPI !== 'local'
@@ -185,13 +257,18 @@ function collectionHooks(config: CollectionConfig) {
     const fields = operation === 'update' ? changedFields(doc, previousDoc, data) : []
     if (operation === 'update' && !fields.length) return
     const t = target(doc)
+    const changes = operation === 'update' ? changedValues(doc, previousDoc, fields) : {}
+    const valued = Object.entries(changes).slice(0, 3)
+    const named = valued.length ? fields.filter((f) => !valued.some(([k]) => k === f || k.startsWith(`${f}.`))) : fields
+    const said = [...valued.map(([k, [a, b]]) => `${k}: ${shown(a)} → ${shown(b)}`), ...named]
     auditLater(req.payload, {
       action: operation,
-      summary: `${actorName(req)} ${operation === 'create' ? 'created' : 'updated'} ${t}${fields.length ? ` (${fields.join(', ')})` : ''}`,
+      summary: `${actorName(req)} ${operation === 'create' ? 'created' : 'updated'} ${t}${said.length ? ` (${said.join(', ')})` : ''}`,
       target: t,
-      detail: { collection: config.slug, id: doc.id, ...(fields.length ? { fields } : {}) },
+      detail: { collection: config.slug, id: doc.id, ...(fields.length ? { fields } : {}), ...(Object.keys(changes).length ? { changes } : {}) },
       ...whoAndWhere(req),
     })
+    noteBurst(req, 'update', config.slug)
   }
 
   const afterDelete: CollectionAfterDeleteHook = ({ doc, req }) => {
@@ -204,6 +281,7 @@ function collectionHooks(config: CollectionConfig) {
       detail: { collection: config.slug, id: doc.id },
       ...whoAndWhere(req),
     })
+    noteBurst(req, 'delete', config.slug)
   }
 
   return { afterChange, afterDelete }
@@ -231,11 +309,12 @@ export function withAuditGlobal(global: GlobalConfig): GlobalConfig {
     if (!byPerson(req)) return
     const fields = changedFields(doc, previousDoc)
     if (!fields.length) return
+    const changes = changedValues(doc, previousDoc, fields)
     auditLater(req.payload, {
       action: 'update',
       summary: `${actorName(req)} updated ${label} (${fields.join(', ')})`,
       target: label,
-      detail: { global: global.slug, fields },
+      detail: { global: global.slug, fields, ...(Object.keys(changes).length ? { changes } : {}) },
       ...whoAndWhere(req),
     })
   }

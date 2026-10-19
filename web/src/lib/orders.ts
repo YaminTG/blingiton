@@ -7,6 +7,7 @@ import { toBagProduct } from './data'
 import { dictionary } from './dictionary'
 import { isLocale, type Locale } from './locales'
 import type { OrderStatus, PaymentMethod } from './orderOptions'
+import { trackPath } from './orderTrack'
 import { sanitizeOrigin } from './origin'
 import { countryByCode, deliveryFee, feesFrom, type Method } from './shipping'
 
@@ -89,8 +90,8 @@ async function takeStock(payload: Payload, ids: number[], fromProduct: Map<numbe
   }
 }
 
-/** `customer`: the customer record the order was linked to; stays on the server. */
-export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod; customer: number | null; locale: Locale }
+/** `customer`: the customer record the order was linked to; stays on the server. `track`: the customer's order page. */
+export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod; customer: number | null; locale: Locale; track: string }
 
 /**
  * Turns a checkout submission into an order. Prices, fees and the total are worked out here from
@@ -194,7 +195,7 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
       const order = await payload.create({ collection: 'orders', data })
       await takeStock(payload, [...new Set([...takeProduct.keys(), ...takeVariant.keys()])], takeProduct, takeVariant)
       const customer = typeof order.customerRecord === 'object' ? (order.customerRecord?.id ?? null) : (order.customerRecord ?? null)
-      return { number: order.number!, total: order.total ?? 0, status, payment, customer, locale }
+      return { number: order.number!, total: order.total ?? 0, status, payment, customer, locale, track: trackPath(locale, order.id) }
     } catch (err) {
       const unique = err instanceof Error && /unique|number/i.test(err.message)
       if (!unique || attempt >= 3) throw err

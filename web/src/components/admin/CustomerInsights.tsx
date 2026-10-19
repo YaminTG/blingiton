@@ -3,6 +3,7 @@ import { Gutter } from '@payloadcms/ui'
 import { redirect } from 'next/navigation'
 import type { AdminViewServerProps, ServerProps } from 'payload'
 
+import { can } from '@/access'
 import { SEGMENT_LABELS } from '@/lib/customerStats'
 import { loadInsights, PERIODS, type Period } from '@/lib/insights'
 import { ACTIVE_DAYS, type Persona } from '@/lib/personas'
@@ -164,7 +165,8 @@ const Bar = ({ value, label }: { value: number; label: string }) => (
 )
 
 /** In the side menu, after the collections. */
-export function InsightsNavLink({ i18n, payload }: ServerProps) {
+export function InsightsNavLink({ i18n, payload, user }: ServerProps) {
+  if (!can(user, 'customers')) return null
   return (
     <a className="nav__link bl-navlink" href={`${payload.config.routes.admin}/customer-insights`}>
       <span className="nav__link-label">{copy[langOf(i18n)].nav}</span>
@@ -231,6 +233,7 @@ function PersonaCard({ p, t, lang, names, cats }: { p: Persona; t: (typeof copy)
 export async function CustomerInsights({ initPageResult, i18n, locale, params, payload, permissions, searchParams, user }: AdminViewServerProps) {
   const admin = payload.config.routes.admin
   if (!initPageResult.req.user) redirect(`${admin}/login?redirect=${encodeURIComponent(`${admin}/customer-insights`)}`)
+  if (!can(initPageResult.req.user, 'customers')) redirect(admin)
   const lang = langOf(i18n)
   const t = copy[lang]
   const asked = searchParams?.period

@@ -12,6 +12,7 @@ const copy = {
     manual: 'Can’t scan? Type this key into the app instead:',
     code: 'Code',
     codeHint: 'Lost your phone? Type one of your recovery codes (xxxx-xxxx) instead.',
+    trust: 'Trust this browser for 30 days (don’t ask for a code here). Leave unticked on a shared computer.',
     verify: 'Verify',
     checking: 'Checking…',
     cancel: 'Use a different account',
@@ -36,6 +37,7 @@ const copy = {
     manual: 'لا يمكنك المسح؟ اكتب هذا المفتاح في التطبيق:',
     code: 'الرمز',
     codeHint: 'فقدت هاتفك؟ اكتب أحد رموز الاسترداد (xxxx-xxxx) بدلًا من ذلك.',
+    trust: 'الوثوق بهذا المتصفح لمدة 30 يومًا (بدون طلب رمز هنا). اتركه بدون تحديد على جهاز مشترك.',
     verify: 'تحقق',
     checking: 'جارٍ التحقق…',
     cancel: 'استخدام حساب آخر',
@@ -68,6 +70,7 @@ type Reply = { ok?: true; recoveryCodes?: string[]; setup?: true; error?: 'expir
 export function TwoFactorForm({ ar, email, setup, recovered, redirect, endpoint }: Props) {
   const t = copy[ar ? 'ar' : 'en']
   const [code, setCode] = useState('')
+  const [trust, setTrust] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [codes, setCodes] = useState<string[] | null>(null)
@@ -83,7 +86,7 @@ export function TwoFactorForm({ ar, email, setup, recovered, redirect, endpoint 
     setBusy(true)
     setError(null)
     try {
-      const reply = (await (await post({ action: 'verify', code })).json()) as Reply
+      const reply = (await (await post({ action: 'verify', code, trust })).json()) as Reply
       if (reply.ok) {
         if (reply.recoveryCodes?.length) setCodes(reply.recoveryCodes)
         else window.location.assign(redirect)
@@ -175,6 +178,9 @@ export function TwoFactorForm({ ar, email, setup, recovered, redirect, endpoint 
         disabled={busy}
       />
       {setup ? null : <p className="bl-2fa__hint">{t.codeHint}</p>}
+      <label className="bl-2fa__check">
+        <input type="checkbox" checked={trust} onChange={(e) => setTrust(e.target.checked)} disabled={busy} /> {t.trust}
+      </label>
       {error ? (
         <p className="bl-2fa__error" role="alert">
           {error}

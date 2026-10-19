@@ -1,8 +1,11 @@
 import type { CollectionBeforeChangeHook, CollectionBeforeDeleteHook, CollectionConfig, Endpoint, PayloadRequest, Where } from 'payload'
 
-import { admins, loggedIn } from '@/access'
+import { admins, may } from '@/access'
 import { l } from '@/fields/label'
+import { later } from '@/hooks/revalidate'
 import { audit, whoAndWhere } from '@/lib/audit'
+import { securityAlert } from '@/lib/loginAlerts'
+import { placeOf } from '@/lib/place'
 import { normalEmail, normalPhone, SEGMENT_LABELS, SEGMENTS } from '@/lib/customerStats'
 import { forgetCustomer } from '@/lib/customers'
 import type { Customer, User } from '@/payload-types'
@@ -83,6 +86,14 @@ const exportEndpoint: Endpoint = {
       detail: { count: found.docs.length, ...(q.where ? { where: q.where as Record<string, unknown> } : {}), ...(search ? { search } : {}) },
       ...whoAndWhere(req),
     })
+    // Every export emails the team; a whole-list or very large one is flagged as unusual.
+    const unusual = !filters.length || found.docs.length >= 200
+    later(() =>
+      securityAlert(req.payload, 'export', placeOf(req.headers), req.user?.email ?? null, [
+        `Customers in the file: ${found.docs.length}${filters.length ? ' (filtered list)' : ' (the whole list)'}`,
+        ...(unusual ? ['Unusual: this is the whole customer list or a very large part of it.'] : []),
+      ]),
+    )
     const stamp = new Date().toISOString().slice(0, 10)
     return new Response(`﻿${csv}\r\n`, {
       headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="blingiton-customers-${stamp}.csv"`, 'Cache-Control': 'no-store' },
@@ -114,7 +125,7 @@ const readOnly = { readOnly: true }
 const systemOnly = { create: () => false, update: () => false }
 
 // One row per person who has ordered, created and kept up to date from their orders
-// (src/lib/customers.ts). Staff can read and annotate; only admins export or delete.
+// (src/lib/customers.ts). Staff with the customers area can read and annotate; only admins export or delete.
 export const Customers: CollectionConfig = {
   slug: 'customers',
   labels: { singular: l('Customer', 'عميل'), plural: l('Customers', 'العملاء') },
@@ -141,7 +152,7 @@ export const Customers: CollectionConfig = {
     },
   },
   defaultSort: '-lastOrderAt',
-  access: { read: loggedIn, create: admins, update: loggedIn, delete: admins },
+  access: { read: may('customers'), create: admins, update: may('customers'), delete: admins },
   endpoints: [exportEndpoint, forgetEndpoint],
   hooks: { beforeChange: [keys], beforeDelete: [dropActivity] },
   fields: [

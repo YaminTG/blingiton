@@ -25,5 +25,7 @@ export const TwoFactor: CollectionConfig = {
     { name: 'pending', type: 'json' },
     // Times of recent wrong codes, for the per-account limit.
     { name: 'failures', type: 'json' },
+    // Browsers that skip the code for 30 days: [{ hash, createdAt, expiresAt, lastUsedAt, ip, agent }]. Only the token's hash is kept.
+    { name: 'trusted', type: 'json' },
   ],
 }

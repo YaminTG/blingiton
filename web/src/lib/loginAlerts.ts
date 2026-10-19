@@ -35,6 +35,10 @@ export type AlertKind =
   | '2fa-enabled'
   | 'team'
   | 'recovery-script'
+  | 'export'
+  | 'burst'
+  | 'backup-failed'
+  | 'restore-failed'
 
 // One email per IP and kind every 15 minutes, and at most 20 an hour overall, so an attack can't
 // flood the inbox (or the email quota). Attempts in between are counted into the next email.
@@ -60,7 +64,7 @@ function allow(key: string): { ok: boolean; missed: number } {
 }
 
 // Rare, important events that are never throttled.
-const ALWAYS: AlertKind[] = ['2fa-enabled', 'team', 'recovery-script', 'recovery-used']
+const ALWAYS: AlertKind[] = ['2fa-enabled', 'team', 'recovery-script', 'recovery-used', 'export', 'backup-failed', 'restore-failed']
 
 const TITLES: Record<AlertKind, string> = {
   failed: 'Failed login to the Blingiton admin',
@@ -73,6 +77,10 @@ const TITLES: Record<AlertKind, string> = {
   '2fa-enabled': 'Two-factor login set up on an admin account',
   team: 'Change to the Blingiton admin team',
   'recovery-script': 'Admin recovery script run on the server',
+  export: 'Customer data was exported from the Blingiton admin',
+  burst: 'Many deletes or changes at once in the Blingiton admin',
+  'backup-failed': 'The Blingiton database backup failed',
+  'restore-failed': 'The Blingiton backup restore test failed',
 }
 
 const ADVICE: Record<AlertKind, string> = {
@@ -90,6 +98,14 @@ const ADVICE: Record<AlertKind, string> = {
     'If this wasn’t the account’s owner setting up their phone, someone else had the password and linked their own app. Run the recovery script (scripts/admin-recovery.ts) to reset it and change the password.',
   team: 'If nobody on the team made this change, someone may be inside the admin: check Team → Audit log and Team → Users.',
   'recovery-script': 'Someone with access to the server ran the recovery script. If nobody on the team did, the server itself may be compromised.',
+  export:
+    'A spreadsheet of customers (names, emails, phones, spending) was downloaded. If nobody on the team meant to, treat it as a data leak: change that account’s password, run the recovery script with LOGOUT=1, and check the audit log.',
+  burst:
+    'One account deleted or changed a lot in a few minutes. A bulk edit by the team is fine. If not, log that account out (recovery script, LOGOUT=1), change its password, and check the audit log for what to put back.',
+  'backup-failed':
+    'Last night’s backup didn’t finish, so the newest safe copy is older than it should be. The security page in the admin says why; fix it today.',
+  'restore-failed':
+    'The latest backup could not be restored in the test. Backups may not be usable until this is fixed: check the security page in the admin and the server log.',
 }
 
 export async function alertRecipients(payload: Payload): Promise<string[]> {
@@ -126,6 +142,7 @@ export async function securityAlert(payload: Payload, kind: AlertKind, place: Pl
     ADVICE[kind],
     '',
     ...(place && place.ip !== 'unknown' ? [`Look up this IP (network and provider): https://ipinfo.io/${encodeURIComponent(place.ip)}`] : []),
+    `Security page: ${serverUrl}/admin/security`,
     `Audit log: ${serverUrl}/admin/collections/audit-log`,
   ]
   if (!to.length) {
@@ -184,7 +201,17 @@ export async function noteLoginPlace(payload: Payload, user: { id: number; email
   } catch (err) {
     payload.logger.error({ err }, 'Could not record the login place')
   }
-  if (known.length) later(() => securityAlert(payload, 'new-place', place, user.email))
+  if (!known.length) return
+  auditLater(payload, {
+    action: 'login.new-place',
+    summary: `${user.email} logged in from a new place: ${where(place)}`,
+    actor: user.id,
+    actorEmail: user.email,
+    ip: place.ip,
+    location: place.country ? where(place) : null,
+    agent: place.agent,
+  })
+  later(() => securityAlert(payload, 'new-place', place, user.email))
 }
 
 /** New accounts, accounts promoted to admin, and deleted accounts. */
@@ -194,6 +221,8 @@ export const alertOnTeamChange: CollectionAfterChangeHook = ({ doc, previousDoc,
   if (operation === 'create') what = `New ${doc.role} account created: ${doc.name} <${doc.email}>`
   else if (doc.role === 'admin' && previousDoc?.role !== 'admin') what = `${doc.name} <${doc.email}> was made an admin`
   else if (doc.email !== previousDoc?.email) what = `${doc.name} changed their login email from ${previousDoc?.email} to ${doc.email}`
+  else if (doc.role !== 'admin' && [...(doc.permissions ?? [])].sort().join() !== [...(previousDoc?.permissions ?? [])].sort().join())
+    what = `${doc.name} <${doc.email}> can now work on: ${(doc.permissions ?? []).join(', ') || 'nothing'} (was: ${(previousDoc?.permissions ?? []).join(', ') || 'nothing'})`
   if (!what) return
   const place = req.user ? placeOf(req.headers) : null
   later(() => securityAlert(req.payload, 'team', place, doc.email, [`Change: ${what}`, `Made by: ${by}`]))

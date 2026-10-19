@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { loggedIn, publishedOrLoggedIn } from '@/access'
+import { may, publishedOrLoggedIn } from '@/access'
 import { l } from '@/fields/label'
 import { aiField, legacyField, seoStatusField, seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
@@ -29,9 +29,9 @@ export const Products: CollectionConfig = {
   },
   access: {
     read: publishedOrLoggedIn,
-    create: loggedIn,
-    update: loggedIn,
-    delete: loggedIn,
+    create: may('catalog'),
+    update: may('catalog'),
+    delete: may('catalog'),
   },
   versions: {
     drafts: true,

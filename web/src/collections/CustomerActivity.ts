@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { loggedIn } from '@/access'
+import { may } from '@/access'
 import { l } from '@/fields/label'
 import { ACTIVITY_TYPES } from '@/lib/activity'
 
@@ -11,7 +11,7 @@ export const CustomerActivity: CollectionConfig = {
   slug: 'customer-activity',
   labels: { singular: l('Customer activity', 'نشاط عميل'), plural: l('Customer activity', 'نشاط العملاء') },
   admin: { hidden: true },
-  access: { read: loggedIn, create: () => false, update: () => false, delete: () => false },
+  access: { read: may('customers'), create: () => false, update: () => false, delete: () => false },
   indexes: [{ fields: ['customer', 'createdAt'] }],
   fields: [
     { name: 'customer', type: 'relationship', relationTo: 'customers', required: true, index: true },
