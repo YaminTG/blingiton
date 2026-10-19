@@ -20,7 +20,7 @@ function withCurrency(request: NextRequest, response: NextResponse) {
 }
 
 /**
- * - `/` → `/ar` or `/en` from the browser's language.
+ * - `/` → `/ar` or `/en` from the browser's language (`/spin` → `/ar/spin` or `/en/spin`).
  * - `/en/…`, `/ar/…` → served as-is.
  * - Anything else without a language (old WooCommerce links like `/product/x/`) → looked up in
  *   the Redirects collection by /redirect-lookup, which answers with a 301 or a 404.
@@ -29,10 +29,12 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const first = pathname.split('/')[1] ?? ''
 
-  if (pathname === '/') {
+  // `/spin` is the short link printed on the bazaar QR code. The query (utm_* tags) is kept.
+  if (pathname === '/' || pathname === '/spin') {
     const preferred = (request.headers.get('accept-language') ?? '').toLowerCase()
     const locale = preferred.startsWith('ar') ? 'ar' : 'en'
-    return withCurrency(request, NextResponse.redirect(new URL(`/${locale}`, request.url), 307))
+    const target = `/${locale}${pathname === '/spin' ? '/spin' : ''}${request.nextUrl.search}`
+    return withCurrency(request, NextResponse.redirect(new URL(target, request.url), 307))
   }
   if (locales.includes(first)) {
     if (pathname.length > 1 && pathname.endsWith('/')) {
