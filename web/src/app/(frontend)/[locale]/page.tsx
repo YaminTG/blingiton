@@ -132,6 +132,29 @@ export default async function Home({ params }: Props) {
         </div>
       </section>
 
+      <section className="section" style={{ paddingTop: 0 }} aria-labelledby="finder-h">
+        <div className="wrap">
+          <div className="finder-promo">
+            <div>
+              <span className="caps eyebrow">{t.finder.eyebrow}</span>
+              <h2 className="h2" id="finder-h">
+                {t.finder.homeH2}
+              </h2>
+              <p className="lead">{t.finder.homeLead}</p>
+              <Link className="btn btn-primary" href={paths.finder(locale)}>
+                <Icon name="sparkle" />
+                <span>{t.finder.homeCta}</span>
+              </Link>
+            </div>
+            <ul className="finder-promo__examples" aria-hidden="true">
+              {t.finder.homeExamples.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {loved.docs.length ? (
         <section className="section" style={{ paddingTop: 0 }} aria-labelledby="loved-h">
           <div className="wrap">

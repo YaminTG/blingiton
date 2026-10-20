@@ -8,21 +8,20 @@ const SOURCES = [
   'https://latest.currency-api.pages.dev/v1/currencies/jod.json',
 ]
 
-/** Today's exchange rates, refreshed once a day. Falls back to fixed rates if both sources fail. */
-export const getRates = unstable_cache(
-  async (): Promise<Rates> => {
-    for (const url of SOURCES) {
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(5000), cache: 'no-store' })
-        if (!res.ok) continue
-        const body = (await res.json()) as { jod?: Record<string, unknown> }
-        if (body.jod) return cleanRates(body.jod)
-      } catch {
-        // try the next source
-      }
+/** Today's rates from the first source that answers, or null when neither does (the shop-health check uses this too). */
+export async function fetchRates(): Promise<Rates | null> {
+  for (const url of SOURCES) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000), cache: 'no-store' })
+      if (!res.ok) continue
+      const body = (await res.json()) as { jod?: Record<string, unknown> }
+      if (body.jod) return cleanRates(body.jod)
+    } catch {
+      // try the next source
     }
-    return fallbackRates
-  },
-  ['currency-rates', 'v1'],
-  { revalidate: 86400 },
-)
+  }
+  return null
+}
+
+/** Today's exchange rates, refreshed once a day. Falls back to fixed rates if both sources fail. */
+export const getRates = unstable_cache(async (): Promise<Rates> => (await fetchRates()) ?? fallbackRates, ['currency-rates', 'v1'], { revalidate: 86400 })

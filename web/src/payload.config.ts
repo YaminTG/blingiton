@@ -17,20 +17,25 @@ import { Categories } from './collections/Categories'
 import { CustomerActivity } from './collections/CustomerActivity'
 import { Customers } from './collections/Customers'
 import { Events } from './collections/Events'
+import { HealthSignals } from './collections/HealthSignals'
 import { Media } from './collections/Media'
 import { OrderCases } from './collections/OrderCases'
 import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
 import { Products } from './collections/Products'
+import { RestockRequests } from './collections/RestockRequests'
 import { Reviews } from './collections/Reviews'
 import { TwoFactor } from './collections/TwoFactor'
 import { Users } from './collections/Users'
+import { HealthState } from './globals/HealthState'
 import { SecurityState } from './globals/SecurityState'
 import { SiteSettings } from './globals/SiteSettings'
 import { refreshAfterChange, refreshAfterDelete } from './hooks/lifecycle'
 import { pruneActivityTask } from './lib/activityPrune'
 import { withAudit, withAuditGlobal } from './lib/audit'
 import { backupTask, restoreTestTask } from './lib/backup'
+import { shopHealthTask } from './lib/health'
+import { restockNotifyTask } from './lib/restockTask'
 import { stuckOrdersTask } from './lib/stuckOrders'
 import { tags } from './lib/tags'
 import { seoRefreshTask } from './seo/tasks'
@@ -59,17 +64,18 @@ export default buildConfig({
         Icon: '/components/admin/Brand#Icon',
       },
       beforeDashboard: ['/components/admin/Dashboard#Dashboard'],
-      afterNavLinks: ['/components/admin/CustomerInsights#InsightsNavLink', '/components/admin/Security#SecurityNavLink'],
+      afterNavLinks: ['/components/admin/ShopHealth#HealthNavLink', '/components/admin/CustomerInsights#InsightsNavLink', '/components/admin/Security#SecurityNavLink'],
       // The two-factor code step, shown on the login page while a login waits for its code.
       beforeLogin: ['/components/admin/TwoFactor#TwoFactor'],
       views: {
         customerInsights: { Component: '/components/admin/CustomerInsights#CustomerInsights', path: '/customer-insights' },
         security: { Component: '/components/admin/Security#Security', path: '/security' },
+        shopHealth: { Component: '/components/admin/ShopHealth#ShopHealth', path: '/shop-health' },
       },
     },
   },
-  collections: [Orders, OrderCases, Customers, Products, Categories, Reviews, Pages, Media, Users, Events, CustomerActivity, AuditLog, TwoFactor],
-  globals: [SiteSettings, SecurityState],
+  collections: [Orders, OrderCases, Customers, Products, RestockRequests, Categories, Reviews, Pages, Media, Users, Events, CustomerActivity, HealthSignals, AuditLog, TwoFactor],
+  globals: [SiteSettings, SecurityState, HealthState],
   // Order emails go through any SMTP service (Resend, Brevo, Zoho, Google Workspace…). Without
   // SMTP_HOST, Payload writes the emails to the server log instead, which is fine for development.
   email: process.env.SMTP_HOST
@@ -120,7 +126,7 @@ export default buildConfig({
     // On an always-on server (VPS), Payload can poll the queue itself. Serverless hosts call
     // /api/payload-jobs/run from their scheduler instead.
     autoRun: process.env.JOBS_AUTORUN === 'true' ? [{ cron: '* * * * *', limit: 20 }] : undefined,
-    tasks: [seoRefreshTask, pruneActivityTask, stuckOrdersTask, backupTask, restoreTestTask],
+    tasks: [seoRefreshTask, pruneActivityTask, stuckOrdersTask, backupTask, restoreTestTask, shopHealthTask, restockNotifyTask],
   },
   sharp,
   // Largest single upload. Phone photos are 3–12 MB; anything bigger is almost certainly a mistake.
@@ -160,7 +166,7 @@ export default buildConfig({
     // records, the raw funnel and browsing rows or Payload's internal collections.
     (incoming) => ({
       ...incoming,
-      collections: withAudit(incoming.collections ?? [], ['audit-log', 'two-factor', 'events', 'customer-activity']),
+      collections: withAudit(incoming.collections ?? [], ['audit-log', 'two-factor', 'events', 'customer-activity', 'health-signals']),
       globals: (incoming.globals ?? []).map(withAuditGlobal),
     }),
   ],

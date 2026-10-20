@@ -527,3 +527,74 @@ body[data-metal="gold"] .b-chain-art rect { stroke: #C49A45; }
 @keyframes tag-in { from { opacity: 0; transform: translateY(16px) rotate(-2deg); } }
 @keyframes tag-shine { to { background-position: -30% 0; } }
 .b-add { animation: rise .4s var(--ease); }
+
+/* --- Gift finder (/[locale]/finder, src/lib/finder.ts) and its home-page section --- */
+.finder-promo { display: grid; gap: 28px; align-items: center; padding: clamp(28px, 5vw, 56px); border-radius: var(--r-lg); background: radial-gradient(120% 140% at 100% 0%, var(--blush) 0%, var(--blush-soft) 55%, var(--paper) 100%); box-shadow: var(--shadow-1); }
+.finder-promo .btn { margin-top: 24px; }
+.finder-promo__examples { display: flex; flex-wrap: wrap; gap: 10px; }
+.finder-promo__examples li { padding: 10px 16px; border-radius: 999px; background: var(--paper); color: var(--ink); font-weight: 700; font-size: 14px; box-shadow: var(--shadow-1); }
+.finder-promo__examples li:nth-child(2n) { transform: rotate(-2deg); }
+.finder-promo__examples li:nth-child(3n) { transform: rotate(1.5deg); background: var(--ink); color: #fff; }
+@media (min-width: 900px) { .finder-promo { grid-template-columns: 1.3fr 1fr; } .finder-promo__examples { justify-content: center; } }
+
+.finder { padding-block: clamp(32px, 6vw, 72px) clamp(56px, 8vw, 96px); }
+.finder-wrap { max-width: 720px; }
+.finder-title { margin-top: 8px; font-size: clamp(30px, 5vw, 44px); font-weight: 800; letter-spacing: -.015em; }
+.finder-intro { margin-top: 8px; }
+.finder-progress { display: flex; align-items: center; gap: 14px; margin-top: 24px; color: var(--ink-soft); font-size: 14px; font-weight: 700; }
+.finder-progress ol { display: flex; gap: 6px; }
+.finder-progress li { width: 28px; height: 6px; border-radius: 999px; background: var(--line); }
+.finder-progress li.is-done { background: var(--pink); }
+.finder-progress li.is-now { background: var(--ink); }
+.finder-q { margin-top: 20px; font-size: clamp(24px, 3.6vw, 32px); font-weight: 800; }
+.finder-hint { margin-top: 6px; color: var(--ink-soft); }
+.finder-options { display: grid; gap: 10px; margin-top: 22px; }
+@media (min-width: 640px) { .finder-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.finder-option { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 64px; padding: 14px 52px 14px 20px; border: 1.5px solid var(--line); border-radius: var(--r); background: var(--paper); color: var(--ink); box-shadow: var(--shadow-1); transition: border-color .15s, transform .15s var(--ease), background-color .15s; }
+[dir="rtl"] .finder-option { padding: 14px 20px 14px 52px; }
+.finder-option:hover { border-color: var(--pink); color: var(--ink); transform: translateY(-1px); }
+.finder-option:active { transform: scale(.99); }
+.finder-option[aria-current="true"] { border-color: var(--ink); background: var(--blush-soft); }
+.finder-option__label { font-weight: 800; font-size: 16px; }
+.finder-option__hint { margin-top: 2px; color: var(--ink-soft); font-size: 13px; }
+.finder-option__go { position: absolute; inset-inline-end: 18px; top: 50%; width: 20px; height: 20px; margin-top: -10px; color: var(--pink); }
+.finder-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.finder-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 800; color: var(--ink); }
+.finder-back__ico { width: 18px; height: 18px; transform: scaleX(-1); }
+[dir="rtl"] .finder-back__ico { transform: none; }
+.finder-restart { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink-soft); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+.finder-head { max-width: 720px; }
+.finder-answers { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; }
+.finder-answer { gap: 8px; }
+.finder-answer__ico { width: 14px; height: 14px; color: var(--pink); }
+.finder-notes { margin-top: 18px; display: grid; gap: 6px; }
+.finder-notes li { padding: 10px 14px; border-radius: var(--r-sm); background: var(--blush-soft); color: var(--ink); font-size: 14px; }
+.finder-picks { margin-top: 32px; }
+.finder-grid { gap: 32px 18px; }
+@media (min-width: 1024px) { .finder-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .finder-grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); } .finder-grid:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.finder-pick { display: flex; flex-direction: column; }
+.finder-why { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.finder-why h2 { color: var(--pink); font-size: 11px; }
+.finder-why ul { margin-top: 8px; display: grid; gap: 6px; }
+.finder-why li { display: flex; gap: 6px; align-items: flex-start; color: var(--ink); font-size: 13.5px; line-height: 1.4; }
+.finder-why li .icon { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--ok); }
+.finder-why li.is-over .icon { color: var(--ink-soft); }
+.finder-variants { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+.finder-empty { margin-top: 32px; padding: 24px; border-radius: var(--r); background: var(--blush-soft); font-weight: 700; }
+.finder-custom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 48px; padding: 24px; border-radius: var(--r); border: 1.5px dashed var(--blush-deep); }
+.finder-custom__h { font-size: 20px; font-weight: 800; }
+.finder-custom p { margin-top: 4px; color: var(--ink-soft); }
+.finder-options, .finder-progress ol, .finder-why ul, .finder-notes, .finder-promo__examples { list-style: none; margin-inline: 0; padding: 0; }
+
+/* --- Back in stock (components/product/NotifyMe.tsx) --- */
+.notify { display: grid; gap: 8px; padding: 16px; border-radius: var(--r); background: var(--blush-soft); }
+.notify-title { font-weight: 800; font-size: 16px; }
+.notify-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.notify-row .input { flex: 1 1 200px; }
+.notify-row .btn { flex: 0 0 auto; min-height: 50px; }
+.notify-trap { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.notify-error { color: var(--error); font-size: 14px; font-weight: 700; }
+.notify-privacy { font-size: 12px; }
+.notify-done { display: flex; align-items: flex-start; gap: 8px; padding: 14px 16px; border-radius: var(--r); background: var(--blush-soft); font-weight: 700; }
+.notify-done .icon { flex: none; width: 20px; height: 20px; color: var(--ok); }

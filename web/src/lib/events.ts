@@ -5,7 +5,8 @@
 
 import type { OriginType } from './origin'
 
-export const EVENT_TYPES = ['visit', 'view', 'personalize', 'add', 'checkout', 'whatsapp'] as const
+// The gift finder adds its own steps: started, saw its picks (the path keeps the answers), clicked a pick.
+export const EVENT_TYPES = ['visit', 'view', 'personalize', 'add', 'checkout', 'whatsapp', 'finder', 'finder-done', 'finder-click'] as const
 export type EventType = (typeof EVENT_TYPES)[number]
 
 /** Crawlers, link previews and audit tools: not shoppers. Also used by the proxy for the currency cookie. */

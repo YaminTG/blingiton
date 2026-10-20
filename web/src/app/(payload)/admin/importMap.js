@@ -47,12 +47,14 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { Icon as Icon_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
 import { Logo as Logo_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
+import { HealthNavLink as HealthNavLink_3bdc8fef582dec4d3cf576d7ce70694d } from '../../../components/admin/ShopHealth'
 import { InsightsNavLink as InsightsNavLink_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
 import { SecurityNavLink as SecurityNavLink_f415a3060de3d1de26f265be1a303833 } from '../../../components/admin/Security'
 import { Dashboard as Dashboard_16b88e9b8c48e393fa86591406efd08f } from '../../../components/admin/Dashboard'
 import { TwoFactor as TwoFactor_ec5ad3e68a8d3607f431737845532f4c } from '../../../components/admin/TwoFactor'
 import { CustomerInsights as CustomerInsights_4166967e9771cb21609c8edf0337ec61 } from '../../../components/admin/CustomerInsights'
 import { Security as Security_f415a3060de3d1de26f265be1a303833 } from '../../../components/admin/Security'
+import { ShopHealth as ShopHealth_3bdc8fef582dec4d3cf576d7ce70694d } from '../../../components/admin/ShopHealth'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -107,12 +109,14 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/Brand#Icon": Icon_81fda60f3e3709e861f40982a767707d,
   "/components/admin/Brand#Logo": Logo_81fda60f3e3709e861f40982a767707d,
+  "/components/admin/ShopHealth#HealthNavLink": HealthNavLink_3bdc8fef582dec4d3cf576d7ce70694d,
   "/components/admin/CustomerInsights#InsightsNavLink": InsightsNavLink_4166967e9771cb21609c8edf0337ec61,
   "/components/admin/Security#SecurityNavLink": SecurityNavLink_f415a3060de3d1de26f265be1a303833,
   "/components/admin/Dashboard#Dashboard": Dashboard_16b88e9b8c48e393fa86591406efd08f,
   "/components/admin/TwoFactor#TwoFactor": TwoFactor_ec5ad3e68a8d3607f431737845532f4c,
   "/components/admin/CustomerInsights#CustomerInsights": CustomerInsights_4166967e9771cb21609c8edf0337ec61,
   "/components/admin/Security#Security": Security_f415a3060de3d1de26f265be1a303833,
+  "/components/admin/ShopHealth#ShopHealth": ShopHealth_3bdc8fef582dec4d3cf576d7ce70694d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

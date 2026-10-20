@@ -363,6 +363,8 @@ export const Orders: CollectionConfig = {
             { name: 'referrer', type: 'text', label: l('Referrer', 'الصفحة المُحيلة'), admin: { readOnly: true, width: '33%' } },
           ],
         },
+        // The customer clicked one of the gift finder's picks on the visit they ordered in.
+        { name: 'finder', type: 'checkbox', label: l('Used the gift finder', 'استخدم دليل الهدايا'), admin: { readOnly: true } },
       ],
     },
     {

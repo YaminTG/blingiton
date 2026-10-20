@@ -86,6 +86,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
     goldPlated: Boolean(pers?.goldPlated),
     chains: (pers?.chainLengths ?? []).map(Number).sort((a, b) => a - b),
     madeToOrder: product.availability === 'made_to_order' || personal,
+    oneOff: product.restock === 'one_off',
   }
   const url = absolute(paths.product(locale, slug))
   const askHref = settings.whatsapp ? `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(t.askMessage(product.name, url))}` : null

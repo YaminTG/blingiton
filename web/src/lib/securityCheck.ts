@@ -92,6 +92,25 @@ async function auditBreak(payload: Payload): Promise<number | null> {
   return null
 }
 
+/** The backup and restore-test checks, from the security state. The shop-health check uses them too. */
+export function backupChecks(state: { backups?: unknown; restoreTests?: unknown }, now = Date.now()) {
+  const checks: Check[] = []
+  const backups = (Array.isArray(state.backups) ? state.backups : []) as BackupRun[]
+  const restoreTests = (Array.isArray(state.restoreTests) ? state.restoreTests : []) as RestoreRun[]
+  const setup = backupSetupProblems()
+  for (const problem of setup) checks.push({ kind: 'backup-setup', level: problem === 'shared-bucket' ? 'warning' : 'critical', problem })
+  const lastOk = backups.find((b) => b.ok)
+  if (backups[0] && !backups[0].ok) checks.push({ kind: 'backup-failed', level: 'critical', at: backups[0].at, error: backups[0].error ?? '' })
+  else if (!setup.includes('no-key') && (!lastOk || now - new Date(lastOk.at).getTime() > BACKUP_STALE_HOURS * 3600_000))
+    checks.push({ kind: 'backup-stale', level: 'critical', at: lastOk?.at ?? null })
+  else if (lastOk && !setup.length) checks.push({ kind: 'backups-ok', level: 'ok' })
+  const lastTest = restoreTests[0]
+  if (lastTest && !lastTest.ok) checks.push({ kind: 'restore-failed', level: 'critical', at: lastTest.at, error: lastTest.error ?? '' })
+  else if (lastOk && (!lastTest || now - new Date(lastTest.at).getTime() > RESTORE_STALE_DAYS * DAY)) checks.push({ kind: 'restore-stale', level: 'warning', at: lastTest?.at ?? null })
+  else if (lastTest?.ok) checks.push({ kind: 'restore-ok', level: 'ok' })
+  return { checks, backups, restoreTests }
+}
+
 export async function securityReport(payload: Payload, days = 14): Promise<SecurityReport> {
   const now = Date.now()
   const since = new Date(now - days * DAY).toISOString()
@@ -143,19 +162,8 @@ export async function securityReport(payload: Payload, days = 14): Promise<Secur
   if (admins > MAX_ADMINS) checks.push({ kind: 'many-admins', level: 'warning', count: admins })
 
   // --- Backups
-  const backups = (Array.isArray(state.backups) ? state.backups : []) as BackupRun[]
-  const restoreTests = (Array.isArray(state.restoreTests) ? state.restoreTests : []) as RestoreRun[]
-  const setup = backupSetupProblems()
-  for (const problem of setup) checks.push({ kind: 'backup-setup', level: problem === 'shared-bucket' ? 'warning' : 'critical', problem })
-  const lastOk = backups.find((b) => b.ok)
-  if (backups[0] && !backups[0].ok) checks.push({ kind: 'backup-failed', level: 'critical', at: backups[0].at, error: backups[0].error ?? '' })
-  else if (!setup.includes('no-key') && (!lastOk || now - new Date(lastOk.at).getTime() > BACKUP_STALE_HOURS * 3600_000))
-    checks.push({ kind: 'backup-stale', level: 'critical', at: lastOk?.at ?? null })
-  else if (lastOk && !setup.length) checks.push({ kind: 'backups-ok', level: 'ok' })
-  const lastTest = restoreTests[0]
-  if (lastTest && !lastTest.ok) checks.push({ kind: 'restore-failed', level: 'critical', at: lastTest.at, error: lastTest.error ?? '' })
-  else if (lastOk && (!lastTest || now - new Date(lastTest.at).getTime() > RESTORE_STALE_DAYS * DAY)) checks.push({ kind: 'restore-stale', level: 'warning', at: lastTest?.at ?? null })
-  else if (lastTest?.ok) checks.push({ kind: 'restore-ok', level: 'ok' })
+  const { checks: backupCheckList, backups, restoreTests } = backupChecks(state, now)
+  checks.push(...backupCheckList)
 
   // --- Alerts reach someone
   const smtp = Boolean(process.env.SMTP_HOST)

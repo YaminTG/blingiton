@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { ReportMissing } from '@/components/store/HealthWatch'
+
 // Rendered inside the [locale] layout without access to the locale, so the text is shown in both languages.
 export default function NotFound() {
   return (
@@ -20,6 +22,7 @@ export default function NotFound() {
           تسوّق الآن
         </Link>
       </p>
+      <ReportMissing />
     </section>
   )
 }

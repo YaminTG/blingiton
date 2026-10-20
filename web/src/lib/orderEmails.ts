@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import type { Order, SiteSetting } from '@/payload-types'
 
 import { dictionary } from './dictionary'
+import { recordSignal } from './healthSignal'
 import type { Locale } from './locales'
 import { paymentMethods } from './orderOptions'
 import { carrierLink, trackLink } from './orderTrack'
@@ -41,7 +42,13 @@ export async function sendOrderEmails(payload: Payload, id: number, kind: Kind) 
     sends.push(payload.sendEmail({ to: order.customer.email, replyTo: shopEmail, ...mail }))
   }
   if (kind === 'received' && shopEmail) sends.push(payload.sendEmail({ to: shopEmail, ...shopNotice(order) }))
-  await Promise.all(sends)
+  try {
+    await Promise.all(sends)
+  } catch (err) {
+    // The shop-health check retries missing confirmations and alerts the team if they keep failing.
+    await recordSignal(payload, { kind: 'email-failed', path: `order:${order.id}`, detail: `${kind} email for #${order.number}: ${err instanceof Error ? err.message : String(err)}` })
+    throw err
+  }
 
   await payload.update({
     collection: 'orders',

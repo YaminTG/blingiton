@@ -4,9 +4,12 @@ import { can, isAdmin } from '@/access'
 import { serverUrl } from '@/lib/site'
 import { scoreBand } from '@/seo/score'
 
+import { FinderStats } from './FinderStats'
 import { Funnel } from './Funnel'
 import { OrderPipeline } from './OrderPipeline'
+import { RestockDemand } from './RestockDemand'
 import { SecuritySummary } from './Security'
+import { ShopHealthStrip } from './ShopHealth'
 import { ScoreBadge } from './SeoScoreCell'
 
 const copy = {
@@ -100,6 +103,9 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
         </nav>
       </header>
 
+      {/* Sales first: a business emergency outranks everything else on the page. */}
+      {orders ? <ShopHealthStrip payload={payload} lang={lang} admin={admin} /> : null}
+
       {isAdmin(user) ? <SecuritySummary payload={payload} lang={lang} admin={admin} /> : null}
 
       {orders ? <OrderPipeline payload={payload} lang={lang} admin={admin} /> : null}
@@ -160,7 +166,11 @@ export async function Dashboard({ payload, i18n, user }: ServerProps) {
         </>
       ) : null}
 
+      {catalog ? <RestockDemand payload={payload} lang={lang} admin={admin} /> : null}
+
       {orders ? <Funnel payload={payload} lang={lang} admin={admin} /> : null}
+
+      {orders ? <FinderStats payload={payload} lang={lang} admin={admin} /> : null}
     </section>
   )
 }

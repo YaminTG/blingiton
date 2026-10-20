@@ -1,8 +1,10 @@
 import config from '@payload-config'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getPayload } from 'payload'
+import { getPayload, type Payload } from 'payload'
 
+import { later } from '@/hooks/revalidate'
 import { deviceCookies, rememberDevice } from '@/lib/customers'
+import { recordSignal, sourceOf } from '@/lib/healthSignal'
 import { OrderError, placeOrder } from '@/lib/orders'
 
 // A few orders per visitor in a short window is plenty; this keeps scripts from filling the order
@@ -34,8 +36,9 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'invalid' }, { status: 400, headers })
   }
 
+  let payload: Payload | null = null
   try {
-    const payload = await getPayload({ config })
+    payload = await getPayload({ config })
     const { customer, locale, ...order } = await placeOrder(payload, body)
     const res = NextResponse.json(order, { headers })
     // "Remember me on this device" (unticked by default): records the consent on the customer and
@@ -43,15 +46,23 @@ export async function POST(request: NextRequest) {
     // completed (src/lib/activity.ts). Failing here never fails the order.
     if ((body as { remember?: unknown }).remember === true && customer) {
       try {
-        for (const c of deviceCookies(await rememberDevice(payload, customer, locale))) res.cookies.set(c)
+        for (const c of deviceCookies(await rememberDevice(payload!, customer, locale))) res.cookies.set(c)
       } catch (err) {
         console.error('[place-order] remember', err)
       }
     }
     return res
   } catch (err) {
-    if (err instanceof OrderError) return Response.json({ error: err.code }, { status: err.code === 'gone' ? 409 : 400, headers })
+    // Refusals and crashes both feed the shop-health check (src/lib/health.ts).
+    // Without a database there's nowhere to record it; the browser reports it instead.
+    const source = sourceOf(ip)
+    const p = payload
+    if (err instanceof OrderError) {
+      if (p) later(() => recordSignal(p, { kind: 'checkout-rejected', source, detail: err.code, product: err.product ?? null }))
+      return Response.json({ error: err.code }, { status: err.code === 'gone' ? 409 : 400, headers })
+    }
     console.error('[place-order]', err)
+    if (p) await recordSignal(p, { kind: 'checkout-error', source, detail: err instanceof Error ? err.message : String(err) })
     return Response.json({ error: 'server' }, { status: 500, headers })
   }
 }

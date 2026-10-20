@@ -45,7 +45,8 @@ export function track(type: EventType, product?: number) {
       sourceType: origin.type,
       source: origin.source,
       locale: document.documentElement.lang === 'ar' ? 'ar' : 'en',
-      path: location.pathname,
+      // The finder's answers live in the query; nothing else's path needs it.
+      path: type === 'finder-done' ? location.pathname + location.search : location.pathname,
     })
     const blob = new Blob([body], { type: 'application/json' })
     if (!navigator.sendBeacon?.('/track', blob)) void fetch('/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {})

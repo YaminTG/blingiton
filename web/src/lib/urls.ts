@@ -14,6 +14,7 @@ export const paths = {
   review: (l: Locale) => `/${l}/review`,
   yourData: (l: Locale) => `/${l}/your-data`,
   orderStatus: (l: Locale) => `/${l}/order-status`,
+  finder: (l: Locale) => `/${l}/finder`,
 }
 
 export const absolute = (path: string) => (path.startsWith('http') ? path : `${serverUrl}${path}`)

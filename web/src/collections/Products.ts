@@ -5,7 +5,15 @@ import { l } from '@/fields/label'
 import { aiField, legacyField, seoStatusField, seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
 import { productAfterChange, productAfterDelete } from '@/hooks/lifecycle'
+import { dictionary } from '@/lib/dictionary'
+import { OCCASIONS, TAG_RECIPIENTS, TAG_STYLES } from '@/lib/finder'
+import { restockAfterChange } from '@/lib/restockTask'
 import { availabilityOptions, choicePictures, restockOptions } from '@/lib/productOptions'
+
+// Gift-finder tag choices, worded as the finder words them for shoppers.
+const finderWords = { en: dictionary('en').finder.options, ar: dictionary('ar').finder.options }
+const tagOptions = (question: 'for' | 'occasion' | 'style', values: readonly string[]) =>
+  values.map((value) => ({ value, label: l(finderWords.en[question][value], finderWords.ar[question][value]) }))
 
 // Option lists mirror the preview store (preview/assets/data.js).
 const kinds = [
@@ -38,7 +46,8 @@ export const Products: CollectionConfig = {
     maxPerDoc: 20,
   },
   hooks: {
-    afterChange: [productAfterChange],
+    // Back in stock: emails anyone waiting for this piece once it can be ordered again.
+    afterChange: [productAfterChange, restockAfterChange],
     afterDelete: [productAfterDelete],
   },
   fields: [
@@ -399,6 +408,38 @@ export const Products: CollectionConfig = {
               label: l('Max characters (optional)', 'أقصى عدد أحرف (اختياري)'),
               min: 1,
               admin: { condition: (_, siblingData) => siblingData?.type && siblingData.type !== 'none' },
+            },
+          ],
+        },
+        {
+          // What the gift finder (/finder, src/lib/finder.ts) matches on. Labels are the words
+          // shoppers see there. Without tags the finder guesses from categories and the name.
+          name: 'finder',
+          label: l('Gift finder', 'دليل الهدايا'),
+          description: l(
+            'Who this piece suits, for which occasions, and its style. The gift finder recommends from these. Tags marked “suggested” were filled in automatically: check them, fix anything that’s off, then tick “Checked”.',
+            'لمن تناسب هذه القطعة، وفي أي مناسبات، وما أسلوبها. دليل الهدايا يقترح بناءً عليها. الوسوم «المقترحة» عُبّئت تلقائياً: راجعها وصحّح ما يلزم ثم اختر «تمت المراجعة».',
+          ),
+          fields: [
+            { name: 'forWhom', type: 'select', hasMany: true, label: l('For whom', 'لمن'), options: tagOptions('for', TAG_RECIPIENTS) },
+            { name: 'occasions', type: 'select', hasMany: true, label: l('Occasions', 'المناسبات'), options: tagOptions('occasion', OCCASIONS) },
+            { name: 'styles', type: 'select', hasMany: true, label: l('Style', 'الأسلوب'), options: tagOptions('style', TAG_STYLES) },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'checked',
+                  type: 'checkbox',
+                  label: l('Checked: these tags are right', 'تمت المراجعة: الوسوم صحيحة'),
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'suggested',
+                  type: 'checkbox',
+                  label: l('Suggested automatically', 'مقترحة تلقائياً'),
+                  admin: { width: '50%', readOnly: true, condition: (_, siblingData) => Boolean(siblingData?.suggested) },
+                },
+              ],
             },
           ],
         },

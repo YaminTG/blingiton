@@ -11,9 +11,15 @@ import { trackPath } from './orderTrack'
 import { sanitizeOrigin } from './origin'
 import { countryByCode, deliveryFee, feesFrom, type Method } from './shipping'
 
-/** `gone`: a product in the bag was unpublished, deleted or sold out. `invalid`: anything else that fails the checks. */
+/**
+ * `gone`: a product in the bag was unpublished, deleted or sold out (`product` says which, for the
+ * shop-health check). `invalid`: anything else that fails the checks.
+ */
 export class OrderError extends Error {
-  constructor(public code: 'invalid' | 'gone') {
+  constructor(
+    public code: 'invalid' | 'gone',
+    public product?: number,
+  ) {
     super(code)
   }
 }
@@ -132,7 +138,8 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   const ids = [...new Set(items.map((i) => i.id))]
   const found = await payload.find({ collection: 'products', where: { id: { in: ids } }, locale, limit: ids.length, depth: 1, overrideAccess: false })
   const byId = new Map(found.docs.map((p) => [p.id, p]))
-  if (ids.some((id) => !byId.has(id) || byId.get(id)!.availability === 'sold_out')) throw new OrderError('gone')
+  const missing = ids.find((id) => !byId.has(id) || byId.get(id)!.availability === 'sold_out')
+  if (missing) throw new OrderError('gone', missing)
 
   // Pieces each line takes: from the product (in-stock pieces) and from a combination's own count.
   const takeProduct = new Map<number, number>()
@@ -142,7 +149,7 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
     const product = byId.get(it.id)!
     if (it.finish === 'gold' && !product.personalization?.goldPlated) it.finish = 'silver'
     const p = toBagProduct(product)
-    if (p.soldOut) throw new OrderError('gone')
+    if (p.soldOut) throw new OrderError('gone', product.id)
     // Every question needs an answer that is still on offer, and a name unless it's optional.
     const r = resolveItem(p, it)
     if (!r.complete) throw new OrderError('invalid')
@@ -165,10 +172,10 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
     }
   })
 
-  for (const [id, qty] of takeProduct) if (qty > (byId.get(id)!.stock ?? 0)) throw new OrderError('gone')
+  for (const [id, qty] of takeProduct) if (qty > (byId.get(id)!.stock ?? 0)) throw new OrderError('gone', id)
   for (const [id, m] of takeVariant) {
     const variants = byId.get(id)!.personalization?.variants ?? []
-    for (const [vid, qty] of m) if (qty > (variants.find((v) => v.id === vid)?.stock ?? 0)) throw new OrderError('gone')
+    for (const [vid, qty] of m) if (qty > (variants.find((v) => v.id === vid)?.stock ?? 0)) throw new OrderError('gone', id)
   }
 
   const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
@@ -186,7 +193,7 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
     giftMessage: giftMessage || undefined,
     payment: { method: payment },
     // null rather than missing, so the "Web admin" default (for orders made in the admin) doesn't apply.
-    attribution: origin ?? { type: null },
+    attribution: { ...(origin ?? { type: null }), finder: b.finder === true },
   } as Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'title'>
 
   // Two orders at the same moment can pick the same next number; the unique index rejects one, which then retries.

@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...entry(paths.home),
     ...entry(paths.shop),
+    ...entry(paths.finder),
     ...categories.flatMap((c) => entry((l) => paths.category(l, c.slug ?? ''), c.updatedAt)),
     ...products.flatMap((p) => {
       const images = (p.images ?? []).map((m) => imageUrl(mediaOf(m), 'large')).filter((u): u is string => Boolean(u)).map(absolute)

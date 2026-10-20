@@ -44,6 +44,8 @@ export default async function YourDataPage({ params }: Props) {
         <h2>{t.browseTitle}</h2>
         <p>{t.browseBody}</p>
         <ForgetDevice locale={locale} state={state} />
+        <h2>{t.restockTitle}</h2>
+        <p>{t.restockBody}</p>
         <p>{t.other}</p>
       </article>
     </div>

@@ -10,6 +10,8 @@ import { useMoney } from '@/components/store/Money'
 import { useStore } from '@/components/store/StoreProvider'
 import { itemImage, optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
 import { dictionary } from '@/lib/dictionary'
+import { FINDER_KEY } from '@/lib/finder'
+import { reportHealth } from '@/lib/healthReport'
 import type { Locale } from '@/lib/locales'
 import { ORIGIN_KEY } from '@/lib/origin'
 import { COUNTRIES, countryByCode, deliveryFee, type Fees, type Method } from '@/lib/shipping'
@@ -36,6 +38,15 @@ type Done = { first: string; no: string; email: string; abroad: boolean; item: C
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const SPARK_COLORS = ['#D23E78', '#F070A0', '#FFFFFF', '#A01040', '#C9C8CF', '#F8D3DA']
+
+/** Clicked a gift-finder pick on this visit (components/finder/FinderTrack.tsx). */
+const usedFinder = () => {
+  try {
+    return sessionStorage.getItem(FINDER_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 const readOrigin = () => {
   try {
@@ -127,11 +138,14 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           payment: f.pay === 'cash' ? 'cash' : 'card_on_delivery',
           giftCard: f.gift ? { message: f.giftMessage } : null,
           origin: readOrigin(),
+          finder: usedFinder(),
           remember: f.remember,
         }),
       })
       const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; track?: string; error?: string }
       if (!res.ok || !result.number) {
+        // No answer of ours: the host or proxy failed before the shop could record it.
+        if (!result.error) reportHealth({ type: 'checkout', detail: `status ${res.status}` })
         setFailure(result.error === 'gone' ? c.goneErr : c.placeErr)
         setTimeout(() => errRef.current?.focus(), 0)
         return
@@ -150,6 +164,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
       })
       clear()
     } catch {
+      if (navigator.onLine) reportHealth({ type: 'checkout', detail: 'network' })
       setFailure(c.placeErr)
       setTimeout(() => errRef.current?.focus(), 0)
     } finally {

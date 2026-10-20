@@ -71,6 +71,7 @@ export interface Config {
     'order-cases': OrderCase;
     customers: Customer;
     products: Product;
+    'restock-requests': RestockRequest;
     categories: Category;
     reviews: Review;
     pages: Page;
@@ -78,6 +79,7 @@ export interface Config {
     users: User;
     events: Event;
     'customer-activity': CustomerActivity;
+    'health-signals': HealthSignal;
     'audit-log': AuditLog;
     'two-factor': TwoFactor;
     redirects: Redirect;
@@ -103,6 +105,7 @@ export interface Config {
     'order-cases': OrderCasesSelect<false> | OrderCasesSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    'restock-requests': RestockRequestsSelect<false> | RestockRequestsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
@@ -110,6 +113,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     'customer-activity': CustomerActivitySelect<false> | CustomerActivitySelect<true>;
+    'health-signals': HealthSignalsSelect<false> | HealthSignalsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'two-factor': TwoFactorSelect<false> | TwoFactorSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -126,11 +130,13 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     'security-state': SecurityState;
+    'health-state': HealthState;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'security-state': SecurityStateSelect<false> | SecurityStateSelect<true>;
+    'health-state': HealthStateSelect<false> | HealthStateSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'en' | 'ar';
@@ -145,6 +151,8 @@ export interface Config {
       'stuck-orders': TaskStuckOrders;
       backup: TaskBackup;
       'restore-test': TaskRestoreTest;
+      'shop-health': TaskShopHealth;
+      'restock-notify': TaskRestockNotify;
       inline: {
         input: unknown;
         output: unknown;
@@ -277,6 +285,7 @@ export interface Order {
     campaign?: string | null;
     landingPage?: string | null;
     referrer?: string | null;
+    finder?: boolean | null;
   };
   cases?: {
     docs?: (number | OrderCase)[];
@@ -650,6 +659,13 @@ export interface Product {
     textOptional?: boolean | null;
     maxCharacters?: number | null;
   };
+  finder?: {
+    forWhom?: ('her' | 'mom' | 'friend' | 'him' | 'child')[] | null;
+    occasions?: ('birthday' | 'love' | 'graduation' | 'eid' | 'mothers-day' | 'baby' | 'just-because')[] | null;
+    styles?: ('name' | 'heritage' | 'faith' | 'sparkle' | 'pearls' | 'everyday' | 'hearts')[] | null;
+    checked?: boolean | null;
+    suggested?: boolean | null;
+  };
   meta?: {
     title?: string | null;
     description?: string | null;
@@ -740,6 +756,39 @@ export interface OrderCase {
   createdAt: string;
 }
 /**
+ * Shoppers who asked to be emailed when a sold-out piece is back. They get one email, automatically, as soon as it can be ordered again: set the piece (or its combination) back in stock and save.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "restock-requests".
+ */
+export interface RestockRequest {
+  id: number;
+  product: number | Product;
+  /**
+   * The combination they want, when it has its own stock count.
+   */
+  wanted?: string | null;
+  variant?: string | null;
+  choices?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  email?: string | null;
+  locale?: ('en' | 'ar') | null;
+  /**
+   * Cancel to stop the email.
+   */
+  status: 'waiting' | 'notified' | 'cancelled';
+  notifiedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Customers review their order from the link in the "on its way" email. New reviews wait here until you tick Approved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -815,7 +864,7 @@ export interface Page {
  */
 export interface Event {
   id: number;
-  type: 'visit' | 'view' | 'personalize' | 'add' | 'checkout' | 'whatsapp';
+  type: 'visit' | 'view' | 'personalize' | 'add' | 'checkout' | 'whatsapp' | 'finder' | 'finder-done' | 'finder-click';
   product?: number | null;
   session: string;
   sourceType?: ('direct' | 'organic' | 'referral' | 'utm' | 'unknown') | null;
@@ -837,6 +886,21 @@ export interface CustomerActivity {
   detail?: string | null;
   seconds?: number | null;
   device?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "health-signals".
+ */
+export interface HealthSignal {
+  id: number;
+  kind: 'checkout-error' | 'checkout-failed' | 'checkout-rejected' | 'email-failed' | 'not-found' | 'image-error';
+  source?: string | null;
+  product?: number | null;
+  path?: string | null;
+  referrer?: string | null;
+  detail?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1042,7 +1106,15 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'seo-refresh' | 'prune-activity' | 'stuck-orders' | 'backup' | 'restore-test';
+        taskSlug:
+          | 'inline'
+          | 'seo-refresh'
+          | 'prune-activity'
+          | 'stuck-orders'
+          | 'backup'
+          | 'restore-test'
+          | 'shop-health'
+          | 'restock-notify';
         taskID: string;
         input?:
           | {
@@ -1075,7 +1147,18 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'seo-refresh' | 'prune-activity' | 'stuck-orders' | 'backup' | 'restore-test') | null;
+  taskSlug?:
+    | (
+        | 'inline'
+        | 'seo-refresh'
+        | 'prune-activity'
+        | 'stuck-orders'
+        | 'backup'
+        | 'restore-test'
+        | 'shop-health'
+        | 'restock-notify'
+      )
+    | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1115,6 +1198,10 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'restock-requests';
+        value: number | RestockRequest;
+      } | null)
+    | ({
         relationTo: 'categories';
         value: number | Category;
       } | null)
@@ -1141,6 +1228,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'customer-activity';
         value: number | CustomerActivity;
+      } | null)
+    | ({
+        relationTo: 'health-signals';
+        value: number | HealthSignal;
       } | null)
     | ({
         relationTo: 'audit-log';
@@ -1284,6 +1375,7 @@ export interface OrdersSelect<T extends boolean = true> {
         campaign?: T;
         landingPage?: T;
         referrer?: T;
+        finder?: T;
       };
   cases?: T;
   emails?:
@@ -1421,6 +1513,15 @@ export interface ProductsSelect<T extends boolean = true> {
         textOptional?: T;
         maxCharacters?: T;
       };
+  finder?:
+    | T
+    | {
+        forWhom?: T;
+        occasions?: T;
+        styles?: T;
+        checked?: T;
+        suggested?: T;
+      };
   meta?:
     | T
     | {
@@ -1443,6 +1544,22 @@ export interface ProductsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "restock-requests_select".
+ */
+export interface RestockRequestsSelect<T extends boolean = true> {
+  product?: T;
+  wanted?: T;
+  variant?: T;
+  choices?: T;
+  email?: T;
+  locale?: T;
+  status?: T;
+  notifiedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1629,6 +1746,20 @@ export interface CustomerActivitySelect<T extends boolean = true> {
   detail?: T;
   seconds?: T;
   device?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "health-signals_select".
+ */
+export interface HealthSignalsSelect<T extends boolean = true> {
+  kind?: T;
+  source?: T;
+  product?: T;
+  path?: T;
+  referrer?: T;
+  detail?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1923,6 +2054,44 @@ export interface SecurityState {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "health-state".
+ */
+export interface HealthState {
+  id: number;
+  lastRunAt?: string | null;
+  lastDeepAt?: string | null;
+  problems?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  deep?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  alerts?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
 export interface PayloadJobsStat {
@@ -2065,6 +2234,20 @@ export interface SecurityStateSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "health-state_select".
+ */
+export interface HealthStateSelect<T extends boolean = true> {
+  lastRunAt?: T;
+  lastDeepAt?: T;
+  problems?: T;
+  deep?: T;
+  alerts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats_select".
  */
 export interface PayloadJobsStatsSelect<T extends boolean = true> {
@@ -2123,6 +2306,22 @@ export interface TaskBackup {
  * via the `definition` "TaskRestore-test".
  */
 export interface TaskRestoreTest {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskShop-health".
+ */
+export interface TaskShopHealth {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskRestock-notify".
+ */
+export interface TaskRestockNotify {
   input?: unknown;
   output?: unknown;
 }

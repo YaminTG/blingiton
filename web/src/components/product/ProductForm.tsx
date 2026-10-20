@@ -18,6 +18,7 @@ import { noteActivity, watchActiveTime } from '@/lib/customerTrack'
 import { track } from '@/lib/track'
 
 import { announcePick } from './live'
+import { NotifyMe } from './NotifyMe'
 
 export type FormProduct = BagProduct & {
   shape: 'plate' | EngraveShape | null
@@ -26,6 +27,8 @@ export type FormProduct = BagProduct & {
   goldPlated: boolean
   chains: number[]
   madeToOrder: boolean
+  /** Gone for good once sold, so there's no "email me when it's back". */
+  oneOff: boolean
 }
 
 const STYLES: LetterStyle[] = ['script', 'classic', 'modern', 'kufi']
@@ -618,7 +621,7 @@ export function ProductForm({ locale, product: p, askHref, initial }: { locale: 
             <button className="btn btn-primary btn-block" type="button" disabled>
               {t.soldOut}
             </button>
-            <p className="help">{t.soldOutLine}</p>
+            {p.oneOff ? <p className="help">{t.notify.oneOff}</p> : <NotifyMe key={JSON.stringify(r.answers)} locale={locale} productId={p.id} choices={r.answers} />}
             {askHref ? (
               <a className="btn btn-outline btn-block" href={askHref} target="_blank" rel="noopener">
                 <Icon name="whatsapp" />

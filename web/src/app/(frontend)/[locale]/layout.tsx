@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 import { Icon } from '@/components/Icon'
 import { LangSwitch } from '@/components/LangSwitch'
 import { BagButton, Drawers, MenuButton } from '@/components/store/Chrome'
+import { HealthWatch } from '@/components/store/HealthWatch'
 import { CurrencyPicker } from '@/components/store/Money'
 import { StoreProvider } from '@/components/store/StoreProvider'
 import { CURRENCY_COOKIE } from '@/lib/currency'
@@ -84,6 +85,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
 
   const navLinks = [
     { href: paths.shop(locale), label: t.shop },
+    { href: paths.finder(locale), label: t.finder.nav },
     ...menu.map((c) => ({ href: paths.category(locale, c.slug ?? ''), label: c.name })),
     { href: custom, label: t.customOrders },
   ]
@@ -212,6 +214,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             </a>
           ) : null}
           <Drawers links={[{ href: paths.home(locale), label: t.home }, ...navLinks]} />
+          <HealthWatch />
         </StoreProvider>
       </body>
     </html>
