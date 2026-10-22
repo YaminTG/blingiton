@@ -35,6 +35,7 @@ import { pruneActivityTask } from './lib/activityPrune'
 import { withAudit, withAuditGlobal } from './lib/audit'
 import { backupTask, restoreTestTask } from './lib/backup'
 import { shopHealthTask } from './lib/health'
+import { paymentCheckTask } from './lib/paymentTask'
 import { restockNotifyTask } from './lib/restockTask'
 import { stuckOrdersTask } from './lib/stuckOrders'
 import { tags } from './lib/tags'
@@ -126,7 +127,7 @@ export default buildConfig({
     // On an always-on server (VPS), Payload can poll the queue itself. Serverless hosts call
     // /api/payload-jobs/run from their scheduler instead.
     autoRun: process.env.JOBS_AUTORUN === 'true' ? [{ cron: '* * * * *', limit: 20 }] : undefined,
-    tasks: [seoRefreshTask, pruneActivityTask, stuckOrdersTask, backupTask, restoreTestTask, shopHealthTask, restockNotifyTask],
+    tasks: [seoRefreshTask, pruneActivityTask, stuckOrdersTask, backupTask, restoreTestTask, shopHealthTask, restockNotifyTask, paymentCheckTask],
   },
   sharp,
   // Largest single upload. Phone photos are 3–12 MB; anything bigger is almost certainly a mistake.

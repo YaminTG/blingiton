@@ -2,10 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 
+import { rememberPaying, Thanks, type Done } from '@/components/checkout/Thanks'
 import { Icon } from '@/components/Icon'
-import { NamePreview } from '@/components/preview/NamePreview'
 import { useMoney } from '@/components/store/Money'
 import { useStore } from '@/components/store/StoreProvider'
 import { itemImage, optionLines, unitPrice, type BagProduct, type CartItem } from '@/lib/cart'
@@ -33,11 +33,8 @@ type Form = {
   remember: boolean
 }
 type Field = 'name' | 'phone' | 'email' | 'city' | 'address' | 'giftMessage'
-type Done = { first: string; no: string; email: string; abroad: boolean; item: CartItem | null; product: BagProduct | null; wa: string; track: string | null }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-
-const SPARK_COLORS = ['#D23E78', '#F070A0', '#FFFFFF', '#A01040', '#C9C8CF', '#F8D3DA']
 
 /** Clicked a gift-finder pick on this visit (components/finder/FinderTrack.tsx). */
 const usedFinder = () => {
@@ -58,9 +55,11 @@ const readOrigin = () => {
 
 /**
  * Checkout. The order is saved on the server (/place-order), which works out the prices itself;
- * the customer gets an email and the shop sees it under Orders in the admin.
+ * the customer gets an email and the shop sees it under Orders in the admin. Abroad, with
+ * `payOnline` (HyperPay set up), the order waits for payment and the customer goes on to the card
+ * page (/pay/…); the bag is kept until the payment goes through.
  */
-export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fees; whatsapp: string }) {
+export function Checkout({ locale, fees, whatsapp, payOnline }: { locale: Locale; fees: Fees; whatsapp: string; payOnline: boolean }) {
   const t = dictionary(locale)
   const c = t.co
   const ar = locale === 'ar'
@@ -71,9 +70,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const [sending, setSending] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
   const [done, setDone] = useState<Done | null>(null)
-  const [replay, setReplay] = useState(0)
   const errRef = useRef<HTMLDivElement>(null)
-  const thanksRef = useRef<HTMLHeadingElement>(null)
 
   // Shop funnel: checkout opened with these pieces in the bag (each counted once per visit).
   const bagIds = [...new Set(cart.map((i) => i.id))].join(',')
@@ -83,6 +80,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
 
   const zone = countryByCode(f.country)?.zone ?? 'jordan'
   const jordan = zone === 'jordan'
+  const byCard = !jordan && payOnline
   const fee = deliveryFee(fees, zone, f.method)
   const giftFee = f.gift ? fees.giftCard : 0
   const lines = cart.map((it) => ({ it, p: products[it.id] })).filter((l): l is { it: CartItem; p: BagProduct } => Boolean(l.p))
@@ -108,13 +106,6 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
   const message = (id: Field) =>
     id === 'phone' ? c.phoneErr : id === 'email' ? c.emailErr : id === 'giftMessage' ? c.giftMsgErr : c.required({ name: c.fullName, city: c.city, address: c.address }[id])
 
-  useEffect(() => {
-    if (done) {
-      window.scrollTo({ top: 0 })
-      thanksRef.current?.focus()
-    }
-  }, [done])
-
   async function placeOrder(e: FormEvent) {
     e.preventDefault()
     if (sending) return
@@ -126,6 +117,7 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
       return
     }
     setSending(true)
+    let leaving = false
     try {
       const res = await fetch('/place-order', {
         method: 'POST',
@@ -142,12 +134,19 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
           remember: f.remember,
         }),
       })
-      const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; track?: string; error?: string }
+      const result = (await res.json().catch(() => ({}))) as { number?: number; payment?: string; track?: string; pay?: string | null; error?: string }
       if (!res.ok || !result.number) {
         // No answer of ours: the host or proxy failed before the shop could record it.
         if (!result.error) reportHealth({ type: 'checkout', detail: `status ${res.status}` })
         setFailure(result.error === 'gone' ? c.goneErr : c.placeErr)
         setTimeout(() => errRef.current?.focus(), 0)
+        return
+      }
+      // To the card page. The bag stays until the payment goes through.
+      if (typeof result.pay === 'string' && result.pay.startsWith('/')) {
+        leaving = true
+        rememberPaying({ order: Number(result.pay.split('/')[3]), item: lines[0]?.it ?? null, product: lines[0]?.p ?? null })
+        window.location.assign(result.pay)
         return
       }
       const no = `#${result.number}`
@@ -168,77 +167,11 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
       setFailure(c.placeErr)
       setTimeout(() => errRef.current?.focus(), 0)
     } finally {
-      setSending(false)
+      if (!leaving) setSending(false)
     }
   }
 
-  if (done) {
-    const it = done.item
-    const showName = Boolean(it?.name && done.product && done.product.type !== 'engrave')
-    const sparks = Array.from({ length: 26 }, (_, i) => {
-      const a = -Math.PI / 2 + (((i * 37) % 26) / 26 - 0.5) * Math.PI * 1.3
-      const d = 90 + ((i * 53) % 110)
-      return {
-        background: SPARK_COLORS[i % SPARK_COLORS.length],
-        '--dx': `${Math.round(Math.cos(a) * d)}px`,
-        '--dy': `${Math.round(Math.sin(a) * d)}px`,
-        '--r': `${(i * 97) % 540}deg`,
-        animationDelay: `${(1.25 + i * 0.012).toFixed(3)}s`,
-      } as CSSProperties
-    })
-    return (
-      <section className="thanks" aria-labelledby="thanks-h">
-        <div className="unbox" aria-hidden="true" key={replay}>
-          <div className="ub-box">
-            {sparks.map((s, i) => (
-              <i key={i} className="ub-spark" style={s} />
-            ))}
-            <div className="ub-rise">
-              {showName && it ? (
-                <NamePreview shape="plate" text={it.name ?? ''} sample={it.name ?? ''} style={it.style ?? 'script'} stone={it.stone ?? null} metal={it.finish ?? 'silver'} />
-              ) : done.product?.image ? (
-                <Image src={done.product.image} alt="" width={120} height={120} />
-              ) : null}
-            </div>
-            <div className="ub-base">
-              <span>BLINGITON</span>
-            </div>
-            <div className="ub-ribbon-h" />
-            <div className="ub-lid">
-              <b>
-                BLING
-                <br />
-                IT ON!
-              </b>
-            </div>
-            <div className="ub-ribbon-v" />
-            <div className="ub-bow" />
-            <Image className="ub-sticker sticker" src="/logo.png" alt="" width={88} height={88} />
-          </div>
-        </div>
-        <h1 id="thanks-h" ref={thanksRef} tabIndex={-1}>
-          {c.thanks(done.first)}
-        </h1>
-        <div className="rope" aria-hidden="true" />
-        <p>{done.abroad ? c.thanksIntl(done.no, done.email) : c.thanksP(done.no, done.email)}</p>
-        {done.track ? (
-          <Link className="btn btn-primary" href={done.track}>
-            {t.os.trackThanks}
-          </Link>
-        ) : null}
-        <a className={`btn ${done.track ? 'btn-outline' : 'btn-primary'}`} href={done.wa} target="_blank" rel="noopener">
-          <Icon name="whatsapp" />
-          <span>{c.openAgain}</span>
-        </a>
-        <Link className="btn btn-outline" href={paths.shop(locale)}>
-          {c.keep}
-        </Link>
-        <button className="replay" type="button" onClick={() => setReplay((n) => n + 1)}>
-          {c.replay}
-        </button>
-      </section>
-    )
-  }
+  if (done) return <Thanks locale={locale} done={done} />
 
   if (!ready) return null
 
@@ -455,6 +388,15 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
                   <Icon name="truck" />
                 </label>
               </>
+            ) : byCard ? (
+              <label className="rc">
+                <input type="radio" name="pay" value="intl" checked readOnly />
+                <span>
+                  <b>{c.payCard}</b>
+                  <small>{c.payCardNote}</small>
+                </span>
+                <Icon name="card" />
+              </label>
             ) : (
               <label className="rc">
                 <input type="radio" name="pay" value="intl" checked readOnly />
@@ -497,12 +439,12 @@ export function Checkout({ locale, fees, whatsapp }: { locale: Locale; fees: Fee
               c.placing
             ) : (
               <>
-                {c.place} · <span className="price">{sum([...lineTotals, fee, giftFee])}</span>
+                {byCard ? c.toPay : c.place} · <span className="price">{sum([...lineTotals, fee, giftFee])}</span>
               </>
             )}
           </span>
         </button>
-        <p className="help place-help">{c.placeHelp}</p>
+        <p className="help place-help">{byCard ? c.toPayHelp : c.placeHelp}</p>
       </form>
 
       <aside className="summary" aria-labelledby="sum-h">

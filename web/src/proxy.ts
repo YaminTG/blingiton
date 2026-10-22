@@ -49,6 +49,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Skip Payload (admin + API), Next internals, metadata/feeds, the shop-health routes (/health,
-  // /health-report) and any file with an extension.
-  matcher: ['/((?!admin|api|_next|redirect-lookup|bag-items|place-order|submit-review|track|activity|feeds|health|restock-request|.*\\..*).*)'],
+  // /health-report), the card payment routes (/payment/…) and any file with an extension.
+  matcher: ['/((?!admin|api|_next|redirect-lookup|bag-items|place-order|submit-review|track|activity|feeds|health|restock-request|payment|.*\\..*).*)'],
 }

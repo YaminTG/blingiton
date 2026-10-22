@@ -257,6 +257,27 @@ const en = {
     remember: 'Remember me on this device',
     rememberHelp: 'Once your order has been delivered, we’ll note which pieces you look at here, so we can suggest ones you’ll love. Only the Blingiton team sees it; we never sell or share it.',
     rememberLink: 'Change your mind anytime',
+    payCard: 'Pay by card',
+    payCardNote: 'Visa or Mastercard, on the next page. You’re charged in Jordanian dinars.',
+    toPay: 'Continue to payment',
+    toPayHelp: 'You’ll pay on the next page. We email your confirmation as soon as the payment goes through.',
+  },
+
+  // The card payment page (/pay/…, components/checkout/PayCard.tsx).
+  pay: {
+    title: 'Pay for your order',
+    lead: (no: string) => `Order ${no}`,
+    amount: (amount: string) => `You’ll be charged ${amount}.`,
+    bankNote: 'Your bank may convert it to your own currency.',
+    secure: 'Your card details go straight to HyperPay, our payment provider, over a secure connection. We never see them.',
+    loading: 'Loading the secure card form…',
+    loadErr: 'The card form didn’t load. Please refresh the page, or message us on WhatsApp.',
+    failed: 'Your payment didn’t go through. Please check your card details and try again, or use another card.',
+    checking: 'We’re confirming your payment…',
+    slow: 'This is taking longer than usual. If your card was charged, there’s nothing more to do: we’ll email your confirmation as soon as it comes through.',
+    closed: 'This order can’t be paid online any more. If you still want it, place it again from checkout, or message us on WhatsApp.',
+    back: 'Back to checkout',
+    whatsapp: 'Message us on WhatsApp',
   },
 
   // Order emails (src/lib/orderEmails.ts).
@@ -783,6 +804,26 @@ const ar: Dictionary = {
     remember: 'تذكّرني على هذا الجهاز',
     rememberHelp: 'بعد تسليم طلبك، نسجّل القطع التي تشاهدها هنا لنقترح عليك ما ستحبه. لا يراها إلا فريق Blingiton، ولا نبيعها أو نشاركها أبداً.',
     rememberLink: 'يمكنك تغيير رأيك في أي وقت',
+    payCard: 'الدفع بالبطاقة',
+    payCardNote: 'فيزا أو ماستركارد في الصفحة التالية. يُخصم المبلغ بالدينار الأردني.',
+    toPay: 'المتابعة إلى الدفع',
+    toPayHelp: 'ستدفع في الصفحة التالية. نرسل لك التأكيد بالبريد الإلكتروني فور نجاح الدفع.',
+  },
+
+  pay: {
+    title: 'ادفع ثمن طلبك',
+    lead: (no) => `الطلب ${no}`,
+    amount: (amount) => `سيُخصم مبلغ ${amount}.`,
+    bankNote: 'قد يحوّله بنكك إلى عملتك.',
+    secure: 'تذهب بيانات بطاقتك مباشرة إلى HyperPay، مزوّد الدفع لدينا، عبر اتصال آمن. لا نراها أبداً.',
+    loading: 'جارٍ تحميل نموذج البطاقة الآمن…',
+    loadErr: 'لم يتم تحميل نموذج البطاقة. حدّث الصفحة أو راسلنا عبر واتساب.',
+    failed: 'لم تنجح عملية الدفع. تحقّق من بيانات بطاقتك وحاول مرة أخرى، أو استخدم بطاقة أخرى.',
+    checking: 'نتأكد من عملية الدفع…',
+    slow: 'يستغرق هذا وقتاً أطول من المعتاد. إذا خُصم المبلغ من بطاقتك فلا داعي لفعل شيء: سنرسل لك التأكيد بالبريد الإلكتروني فور وصوله.',
+    closed: 'لم يعد بالإمكان دفع ثمن هذا الطلب أونلاين. إن كنت لا تزال تريده فاطلبه من جديد من صفحة إتمام الطلب، أو راسلنا عبر واتساب.',
+    back: 'العودة إلى إتمام الطلب',
+    whatsapp: 'راسلنا عبر واتساب',
   },
 
   mail: {

@@ -85,6 +85,8 @@ export type Problem = {
 /** Statuses that are a sale (same as the customer totals). */
 export const PURCHASE = ['processing', 'on-hold', 'completed']
 const FAILED = ['failed', 'cancelled']
+/** Failed or cancelled, not counting card checkouts the customer simply never paid (cancelled after an hour). */
+const failedOrder = (o: OrderLite) => FAILED.includes(o.status) && !o.abandoned
 
 export type OrderLite = {
   id: number
@@ -95,6 +97,8 @@ export type OrderLite = {
   /** Placed through the site's checkout (not typed into the admin by staff). */
   web: boolean
   createdAt: string
+  /** An online card order that was never paid (src/lib/payments.ts). */
+  abandoned?: boolean
 }
 
 export type Baseline = {
@@ -136,7 +140,7 @@ export function buildBaseline(orders: OrderLite[], visits: { checkoutSessions: n
   // Mostly the shop's own pattern (quiet nights, busy evenings), with a little spread over every
   // hour so a quiet hour is never "impossible".
   const hourly = byHour.map((c) => (0.7 * c + (0.3 * n) / 24) / days)
-  const failed = orders.filter((o) => o.web && FAILED.includes(o.status)).length
+  const failed = orders.filter((o) => o.web && failedOrder(o)).length
   return {
     days,
     orders: n,
@@ -344,7 +348,7 @@ export function findProblems(i: HealthInput): Problem[] {
   }
 
   // --- Failed and cancelled orders
-  const failed = dayOrders.filter((o) => FAILED.includes(o.status))
+  const failed = dayOrders.filter(failedOrder)
   if (failed.length >= 3 && failed.length >= 3 * (b.failedPerDay + 0.5)) {
     out.push({
       key: 'failed-orders',
@@ -356,8 +360,10 @@ export function findProblems(i: HealthInput): Problem[] {
     })
   }
 
-  // --- Online card payments that never finished (HyperPay)
-  const pending = i.recentOrders.filter((o) => o.payment === 'card_online' && o.status === 'pending' && now - new Date(o.createdAt).getTime() > 30 * 60_000)
+  // --- Online card payments that never finished (HyperPay). The `payment-check` job settles or
+  // cancels them within about an hour of the last attempt, so one still pending after 2 hours means
+  // that job or HyperPay isn't answering.
+  const pending = i.recentOrders.filter((o) => o.payment === 'card_online' && o.status === 'pending' && now - new Date(o.createdAt).getTime() > 2 * 3600_000)
   if (pending.length) {
     out.push({
       key: 'payment-pending',

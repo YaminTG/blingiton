@@ -204,7 +204,8 @@ function customerEmail(order: Order, settings: SiteSetting, locale: Locale, kind
 /** Short English note to the shop with a link straight to the order in the admin. */
 function shopNotice(order: Order) {
   const link = `${serverUrl}/admin/collections/orders/${order.id}`
-  const pay = paymentMethods.find((p) => p.value === order.payment.method)?.label.en ?? ''
+  const card = [order.payment.cardBrand, order.payment.cardLast4 && `•••• ${order.payment.cardLast4}`].filter(Boolean).join(' ')
+  const pay = [paymentMethods.find((p) => p.value === order.payment.method)?.label.en ?? '', order.payment.paidAt ? `PAID${card ? ` (${card})` : ''}` : ''].filter(Boolean).join(' · ')
   const subject = `New order #${order.number} from ${order.customer.name} · ${money(order.total ?? 0, 'en')}`
   const lines = [
     subject,

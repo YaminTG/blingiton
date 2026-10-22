@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { Checkout } from '@/components/checkout/Checkout'
 import { getSettings } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
+import { hyperpayConfig } from '@/lib/hyperpay'
 import { isLocale } from '@/lib/locales'
 import { feesFrom } from '@/lib/shipping'
 
@@ -21,7 +22,7 @@ export default async function CheckoutPage({ params }: Props) {
   const settings = await getSettings(locale)
   return (
     <div className="wrap" id="co-root">
-      <Checkout locale={locale} fees={feesFrom(settings.delivery)} whatsapp={settings.whatsapp || '962796384424'} />
+      <Checkout locale={locale} fees={feesFrom(settings.delivery)} whatsapp={settings.whatsapp || '962796384424'} payOnline={hyperpayConfig() !== null} />
     </div>
   )
 }

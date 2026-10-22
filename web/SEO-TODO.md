@@ -147,6 +147,7 @@ These need the live domain and Search Console. Start with the first item as soon
   - Tested end to end with real browser visits and synthetic events, all deleted afterwards.
   - Later: prune or roll up events older than ~13 months, and add the Search Console numbers (item 18) next to this report.
 - 2026-10-12: Site settings → SEO writing → facts says "Pay by card, or cash on delivery inside Jordan". Abroad, card payment isn't live yet (orders go to WhatsApp). The cousin may want to reword it until HyperPay is connected.
+- 2026-10-22: HyperPay card payment is built and tested on HyperPay's test server (international orders pay by card online). `llms.txt` now says so whenever `HYPERPAY_*` is set. The SEO facts line above becomes accurate abroad once the live HyperPay keys are on the production server.
 
 ---
 

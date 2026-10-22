@@ -297,12 +297,26 @@ export const Orders: CollectionConfig = {
             { name: 'paidAt', type: 'date', label: l('Paid on', 'تاريخ الدفع'), admin: { width: '50%', date: { pickerAppearance: 'dayAndTime' } } },
           ],
         },
-        // Filled in by the HyperPay integration; read-only so the record of a payment can't be edited.
+        // Filled in by the HyperPay integration (src/lib/payments.ts); read-only so the record of a
+        // payment can't be edited.
         {
           type: 'collapsible',
           label: 'HyperPay',
           admin: { initCollapsed: true, condition: (_, siblingData) => siblingData?.method === 'card_online' },
           fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'reference',
+                  type: 'text',
+                  label: l('Reference (in HyperPay)', 'المرجع (في HyperPay)'),
+                  index: true,
+                  admin: { readOnly: true, width: '50%', description: l('Search for this in the HyperPay merchant area.', 'ابحث عنه في لوحة تاجر HyperPay.') },
+                },
+                { name: 'checkoutAt', type: 'date', label: l('Last payment attempt', 'آخر محاولة دفع'), admin: { readOnly: true, width: '50%', date: { pickerAppearance: 'dayAndTime' } } },
+              ],
+            },
             {
               type: 'row',
               fields: [
@@ -389,6 +403,9 @@ export const Orders: CollectionConfig = {
         { name: 'deliveredAt', type: 'date' },
       ],
     },
+    // Pieces this order took off the shelf at checkout ({ products: { id: qty }, variants: { id: { combination: qty } } }),
+    // so an online payment that never happens can put them back (src/lib/payments.ts).
+    { name: 'stockHeld', type: 'json', admin: { hidden: true } },
     // List-only columns.
     { name: 'origin', type: 'ui', label: l('Origin', 'المصدر'), admin: { components: { Cell: '/components/admin/OrderCells#OriginCell' } } },
     { name: 'actions', type: 'ui', label: l('Actions', 'إجراءات'), admin: { components: { Cell: '/components/admin/OrderCells#ActionsCell' } } },

@@ -14,6 +14,8 @@ export const paths = {
   review: (l: Locale) => `/${l}/review`,
   yourData: (l: Locale) => `/${l}/your-data`,
   orderStatus: (l: Locale) => `/${l}/order-status`,
+  // In the path, not the query: HyperPay adds its own query when it sends the customer back.
+  pay: (l: Locale, order: number, token: string) => `/${l}/pay/${order}/${token}`,
   finder: (l: Locale) => `/${l}/finder`,
 }
 

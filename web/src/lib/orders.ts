@@ -5,9 +5,10 @@ import type { Order } from '@/payload-types'
 import { optionLines, resolveItem, unitPrice, type CartItem, type LetterStyle } from './cart'
 import { toBagProduct } from './data'
 import { dictionary } from './dictionary'
+import { hyperpayConfig } from './hyperpay'
 import { isLocale, type Locale } from './locales'
 import type { OrderStatus, PaymentMethod } from './orderOptions'
-import { trackPath } from './orderTrack'
+import { payPath, trackPath } from './orderTrack'
 import { sanitizeOrigin } from './origin'
 import { countryByCode, deliveryFee, feesFrom, type Method } from './shipping'
 
@@ -61,22 +62,29 @@ function cleanItem(raw: unknown): CartItem {
 
 const mediaId = (v: unknown) => (v && typeof v === 'object' && 'id' in v ? (v as { id: number }).id : (v ?? null))
 
+/** What an order took off the shelf (the order's hidden `stockHeld`): pieces per product, and per combination. */
+export type StockHeld = { products: Record<string, number>; variants: Record<string, Record<string, number>> }
+
 /**
- * Takes the ordered pieces off the product's stock and its combinations' counts; a product that
- * reaches 0 becomes "sold out". Re-read fresh (not the visitor's cached copy) right before writing.
- * Not atomic: two orders in the same instant for the last piece can both go through.
+ * Takes an order's pieces off the product's stock and its combinations' counts (`dir` -1; a product
+ * that reaches 0 becomes "sold out"), or puts them back (`dir` +1, for an online payment that never
+ * happened; a product sold out by that order is back in stock). Re-read fresh (not the visitor's
+ * cached copy) right before writing. Not atomic: two orders in the same instant for the last piece
+ * can both go through.
  */
-async function takeStock(payload: Payload, ids: number[], fromProduct: Map<number, number>, fromVariants: Map<number, Map<string, number>>) {
+export async function moveStock(payload: Payload, held: StockHeld, dir: 1 | -1) {
+  const ids = [...new Set([...Object.keys(held.products), ...Object.keys(held.variants)])].map(Number)
   for (const id of ids) {
     try {
       const doc = await payload.findByID({ collection: 'products', id, depth: 0 })
       const data: Record<string, unknown> = {}
-      const qty = fromProduct.get(id)
+      const qty = held.products[id]
       if (qty && typeof doc.stock === 'number') {
-        data.stock = Math.max(0, doc.stock - qty)
+        data.stock = Math.max(0, doc.stock + dir * qty)
         if (data.stock === 0) data.availability = 'sold_out'
+        else if (dir > 0 && doc.stock === 0 && doc.availability === 'sold_out') data.availability = 'in_stock'
       }
-      const take = fromVariants.get(id)
+      const take = held.variants[id]
       if (take) {
         // Whole rows, so nothing else in the combinations changes.
         const variants = (doc.personalization?.variants ?? []).map((v) => ({
@@ -84,20 +92,23 @@ async function takeStock(payload: Payload, ids: number[], fromProduct: Map<numbe
           when: v.when,
           price: v.price,
           photo: mediaId(v.photo),
-          stock: typeof v.stock === 'number' && v.id && take.has(v.id) ? Math.max(0, v.stock - take.get(v.id)!) : v.stock,
+          stock: typeof v.stock === 'number' && v.id && take[v.id] ? Math.max(0, v.stock + dir * take[v.id]) : v.stock,
         }))
         data.personalization = { variants }
       }
       await payload.update({ collection: 'products', id, data: data as never, depth: 0, context: { skipSeo: true } })
     } catch (err) {
-      // The order is placed either way; the shop fixes the count by hand.
-      payload.logger.error({ err, product: id }, 'Could not update stock after an order')
+      // The order goes ahead either way; the shop fixes the count by hand.
+      payload.logger.error({ err, product: id }, 'Could not update stock for an order')
     }
   }
 }
 
-/** `customer`: the customer record the order was linked to; stays on the server. `track`: the customer's order page. */
-export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod; customer: number | null; locale: Locale; track: string }
+/**
+ * `customer`: the customer record the order was linked to; stays on the server. `track`: the
+ * customer's order page. `pay`: the card payment page, for an order to be paid online.
+ */
+export type PlacedOrder = { number: number; total: number; status: OrderStatus; payment: PaymentMethod; customer: number | null; locale: Locale; track: string; pay: string | null }
 
 /**
  * Turns a checkout submission into an order. Prices, fees and the total are worked out here from
@@ -129,10 +140,11 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   const giftMessage = g ? text(g.message, 300) : ''
   if (g && !giftMessage) throw new OrderError('invalid')
 
-  // Jordan: card or cash on delivery. Abroad: online card payment once HyperPay is connected;
-  // until then the shop arranges payment on WhatsApp and the order waits "on hold".
-  const payment: PaymentMethod = jordan ? (b.payment === 'cash' ? 'cash' : 'card_on_delivery') : 'whatsapp'
-  const status: OrderStatus = payment === 'whatsapp' ? 'on-hold' : 'processing'
+  // Jordan: card or cash on delivery. Abroad: card online (HyperPay), and the order waits as
+  // "pending payment" until HyperPay confirms it (src/lib/payments.ts). Without HyperPay settings the
+  // shop arranges payment on WhatsApp and the order waits "on hold".
+  const payment: PaymentMethod = jordan ? (b.payment === 'cash' ? 'cash' : 'card_on_delivery') : hyperpayConfig() ? 'card_online' : 'whatsapp'
+  const status: OrderStatus = payment === 'card_online' ? 'pending' : payment === 'whatsapp' ? 'on-hold' : 'processing'
 
   // Published products only (read as a visitor), in the customer's language.
   const ids = [...new Set(items.map((i) => i.id))]
@@ -181,6 +193,10 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
   const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
   const fees = feesFrom(settings.delivery)
   const origin = sanitizeOrigin(b.origin)
+  const stockHeld: StockHeld = {
+    products: Object.fromEntries(takeProduct),
+    variants: Object.fromEntries([...takeVariant].map(([id, m]) => [id, Object.fromEntries(m)])),
+  }
 
   const data = {
     status,
@@ -194,15 +210,25 @@ export async function placeOrder(payload: Payload, body: unknown): Promise<Place
     payment: { method: payment },
     // null rather than missing, so the "Web admin" default (for orders made in the admin) doesn't apply.
     attribution: { ...(origin ?? { type: null }), finder: b.finder === true },
+    stockHeld,
   } as Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'title'>
 
   // Two orders at the same moment can pick the same next number; the unique index rejects one, which then retries.
   for (let attempt = 1; ; attempt++) {
     try {
       const order = await payload.create({ collection: 'orders', data })
-      await takeStock(payload, [...new Set([...takeProduct.keys(), ...takeVariant.keys()])], takeProduct, takeVariant)
+      await moveStock(payload, stockHeld, -1)
       const customer = typeof order.customerRecord === 'object' ? (order.customerRecord?.id ?? null) : (order.customerRecord ?? null)
-      return { number: order.number!, total: order.total ?? 0, status, payment, customer, locale, track: trackPath(locale, order.id) }
+      return {
+        number: order.number!,
+        total: order.total ?? 0,
+        status,
+        payment,
+        customer,
+        locale,
+        track: trackPath(locale, order.id),
+        pay: payment === 'card_online' ? payPath(locale, order.id) : null,
+      }
     } catch (err) {
       const unique = err instanceof Error && /unique|number/i.test(err.message)
       if (!unique || attempt >= 3) throw err

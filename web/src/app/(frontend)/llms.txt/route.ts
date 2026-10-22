@@ -1,6 +1,7 @@
 import type { Category, Product } from '@/payload-types'
 import { getIndexables, getSettings, listCategories } from '@/lib/data'
 import { dictionary } from '@/lib/dictionary'
+import { hyperpayConfig } from '@/lib/hyperpay'
 import { feesFrom } from '@/lib/shipping'
 import { absolute, money, paths } from '@/lib/urls'
 import { BRAND } from '@/seo/rules'
@@ -31,8 +32,10 @@ export async function GET() {
   if (summary) out.push(`> ${line(summary)}`, '')
   out.push(
     `${name} is an online jewelry shop${city ? ` based in ${city}, Jordan` : ' in Jordan'}. The site is in English (${absolute(paths.home('en'))}) and Arabic (${absolute(paths.home('ar'))}).`,
-    // Mirrors placeOrder in src/lib/orders.ts. Update when HyperPay takes international card payments.
-    `Orders are placed on the website. In Jordan, customers pay by card or cash on delivery. For international orders, the shop arranges payment with the customer on WhatsApp after the order is placed.`,
+    // Mirrors placeOrder in src/lib/orders.ts.
+    hyperpayConfig()
+      ? `Orders are placed on the website. In Jordan, customers pay by card or cash on delivery. International orders are paid online by Visa or Mastercard, in Jordanian dinars.`
+      : `Orders are placed on the website. In Jordan, customers pay by card or cash on delivery. For international orders, the shop arranges payment with the customer on WhatsApp after the order is placed.`,
   )
   const contact = [
     settings.whatsapp && `WhatsApp: +${settings.whatsapp}`,

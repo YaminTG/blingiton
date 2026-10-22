@@ -126,6 +126,7 @@ export async function gather(payload: Payload, now: Date): Promise<HealthInput> 
     // Orders typed into the admin by staff (WhatsApp, Instagram) didn't come through the checkout.
     web: o.attribution?.type !== 'admin',
     createdAt: o.createdAt,
+    abandoned: o.payment?.method === 'card_online' && !o.payment?.paidAt,
   })
   const all = orders.docs.map(lite)
   const base = all.filter((o) => new Date(o.createdAt).getTime() >= t - BASE_DAYS * DAY)

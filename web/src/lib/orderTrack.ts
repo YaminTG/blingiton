@@ -27,6 +27,8 @@ export function validTrackToken(orderId: number, token: unknown): boolean {
 
 export const trackPath = (locale: Locale, orderId: number) => `${paths.orderStatus(locale)}?o=${orderId}&t=${trackToken(orderId)}`
 export const trackLink = (locale: Locale, orderId: number) => `${serverUrl}${trackPath(locale, orderId)}`
+/** The card payment page for an order waiting to be paid online (same signature as the order page). */
+export const payPath = (locale: Locale, orderId: number) => paths.pay(locale, orderId, trackToken(orderId))
 
 type Updatable = Pick<Order, 'id' | 'number' | 'locale' | 'status' | 'stage' | 'tracking'> & { customer?: { name?: string | null } | null }
 

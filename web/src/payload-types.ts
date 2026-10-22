@@ -153,6 +153,7 @@ export interface Config {
       'restore-test': TaskRestoreTest;
       'shop-health': TaskShopHealth;
       'restock-notify': TaskRestockNotify;
+      'payment-check': TaskPaymentCheck;
       inline: {
         input: unknown;
         output: unknown;
@@ -268,6 +269,11 @@ export interface Order {
   payment: {
     method: 'card_online' | 'card_on_delivery' | 'cash' | 'whatsapp';
     paidAt?: string | null;
+    /**
+     * Search for this in the HyperPay merchant area.
+     */
+    reference?: string | null;
+    checkoutAt?: string | null;
     checkoutId?: string | null;
     transactionId?: string | null;
     resultCode?: string | null;
@@ -299,6 +305,15 @@ export interface Order {
     completedAt?: string | null;
     deliveredAt?: string | null;
   };
+  stockHeld?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1114,7 +1129,8 @@ export interface PayloadJob {
           | 'backup'
           | 'restore-test'
           | 'shop-health'
-          | 'restock-notify';
+          | 'restock-notify'
+          | 'payment-check';
         taskID: string;
         input?:
           | {
@@ -1157,6 +1173,7 @@ export interface PayloadJob {
         | 'restore-test'
         | 'shop-health'
         | 'restock-notify'
+        | 'payment-check'
       )
     | null;
   queue?: string | null;
@@ -1359,6 +1376,8 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         method?: T;
         paidAt?: T;
+        reference?: T;
+        checkoutAt?: T;
         checkoutId?: T;
         transactionId?: T;
         resultCode?: T;
@@ -1387,6 +1406,7 @@ export interface OrdersSelect<T extends boolean = true> {
         completedAt?: T;
         deliveredAt?: T;
       };
+  stockHeld?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2322,6 +2342,14 @@ export interface TaskShopHealth {
  * via the `definition` "TaskRestock-notify".
  */
 export interface TaskRestockNotify {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPayment-check".
+ */
+export interface TaskPaymentCheck {
   input?: unknown;
   output?: unknown;
 }
